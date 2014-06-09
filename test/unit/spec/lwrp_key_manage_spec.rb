@@ -25,11 +25,12 @@ describe 'gpg::lwrp:key_manage' do
     # arrange
     temp_lwrp_recipe contents: <<-EOF
       gpg_key_manage 'stuff' do
+        key_filename 'thekey.gpg'
       end
     EOF
 
-    # act
-
+    # act + assert
+    expect(@chef_run).to run_execute('echo foobar')
     # assert
     pending 'Write this test'
   end

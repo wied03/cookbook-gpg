@@ -5,5 +5,5 @@ end
 use_inline_resources
 
 action :import do
-  fail 'write test'
+  #fail 'write test'
 end
