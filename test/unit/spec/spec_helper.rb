@@ -3,6 +3,7 @@ require 'rspec/expectations'
 require 'chefspec'
 require 'chefspec/berkshelf'
 require 'chef/application'
+require File.join(File.dirname(__FILE__), 'lwrp_helper')
 
 ::LOG_LEVEL = :fatal
 ::UBUNTU_OPTS = {
