@@ -21,35 +21,68 @@ describe 'gpg::lwrp:key_manage' do
     'key_manage'
   end
 
-  it 'works properly when importing a private key' do
+  it 'works properly when importing a private key that is not already there' do
     # arrange
+    # TODO: Get away a bit from inline resources and do more ourselves, using Ruby code to decide whether to execute or not
     temp_lwrp_recipe contents: <<-EOF
-      gpg_key_manage 'theuser' do
+      gpg_key_manage 'the user <user@user.com>' do
         key_contents 'thekeybitshere'
       end
     EOF
 
     # act + assert
-    resource = @chef_run.find_resource('file', '/tmp/chef_gpg_import.key')
-    resource.should_not be_nil
-    expect(resource.owner).to eq 'theuser'
-    expect(resource.content).to eq 'thekeybitshere'
-    resource = @chef_run.find_resource('execute', 'gpg2 --import /tmp/chef_gpg_import.key || shred -n 20 -z -u /tmp/chef_gpg_import.key')
-    resource.should_not be_nil
-    expect(resource.user).to eq 'theuser'
-    expect(@chef_run).to run_execute('shred -n 20 -z -u /tmp/chef_gpg_import.key')
+    # root will be default user
+    pending 'Write this test'
+  end
+
+  it 'does not do anything if the private key is already there' do
+    # arrange
+    temp_lwrp_recipe contents: <<-EOF
+      gpg_key_manage 'the user <user@user.com>' do
+        key_contents 'thekeybitshere'
+      end
+    EOF
+    # TODO: Arrange for same fingerprint for user to be there
+
+    # act
+
+    # assert
+    pending 'Write this test'
+  end
+
+  it 'works properly when run as a different user' do
+    # arrange
+    temp_lwrp_recipe contents: <<-EOF
+      gpg_key_manage 'the user <user@user.com>' do
+        key_contents 'thekeybitshere'
+        as_user 'someoneelse'
+      end
+    EOF
+
+    # act
+
+    # assert
+    pending 'Write this test'
+  end
+
+  it 'overwrites the existing key for the user if the fingerprint has changed' do
+    # arrange
+
+    # act
+
+    # assert
+    pending 'Write this test'
   end
 
   it 'removes the temporary private key file if gpg fails for any reason' do
     # arrange
     temp_lwrp_recipe contents: <<-EOF
-          gpg_key_manage 'theuser' do
-            key_contents 'thekeybitshere'
-          end
+      gpg_key_manage 'the user <user@user.com>' do
+        key_contents 'thekeybitshere'
+      end
     EOF
 
     # act + assert
-    resource = @chef_run.find_resource('execute', 'gpg2 --import /tmp/chef_gpg_import.key || shred -n 20 -z -u /tmp/chef_gpg_import.key')
-    resource.should_not be_nil
+    pending 'Write this test'
   end
 end
