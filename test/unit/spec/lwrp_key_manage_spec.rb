@@ -125,19 +125,18 @@ describe 'gpg::lwrp:key_manage' do
 
     # act
     temp_lwrp_recipe contents: <<-EOF
-      gpg_key_manage 'the user <user@user.com>' do
+      gpg_key_manage 'root' do
         key_contents 'thekeybitshere'
       end
     EOF
 
     # assert
     expect(executed).to have(4).items
-    expected[0].user.should == 'root'
-    expected[0].input.should == 'thekeybitshere'
-    expected[1].user.should == 'root'
-    expected[2].user.should == 'root'
-    expected[3].user.should == 'root'
-    pending 'Write this test'
+    executed[0].user.should == 'root'
+    executed[0].input.should == 'thekeybitshere'
+    executed[1].user.should == 'root'
+    executed[2].user.should == 'root'
+    executed[3].user.should == 'root'
   end
 
   it 'works properly when run as a different user' do
