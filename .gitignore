@@ -8,6 +8,7 @@ pkg/
 .idea/workspace.xml
 .idea/runConfigurations/*
 .idea/gpg.iml
+test/unit/spec/gen_cookbooks/*
 
 # Berkshelf
 .vagrant
