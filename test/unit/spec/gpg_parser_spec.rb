@@ -1,5 +1,7 @@
 require 'rspec'
-require File.join(File.dirname(__FILE__),'../../../libraries/gpg_parser')
+$: << File.join(File.dirname(__FILE__),'../../../libraries')
+require 'key_details'
+require 'gpg_parser'
 
 describe BswTech::Gpg::GpgParser do
 
