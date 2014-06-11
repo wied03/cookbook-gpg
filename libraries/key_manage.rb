@@ -8,6 +8,10 @@ class Chef
         super
       end
 
+      def whyrun_supported?
+        true
+      end
+
       def load_current_resource
         @current_resource ||= Chef::Resource::GpgKeyManage.new(new_resource.name)
         @current_resource.key_contents(new_resource.key_contents)
@@ -34,7 +38,7 @@ class Chef
         parser.keys
       end
 
-      def key_needs_to_be_installed(draft,current)
+      def key_needs_to_be_installed(draft, current)
         current.empty?
       end
 
@@ -48,7 +52,7 @@ class Chef
           # TODO: Use the output of these
           draft = get_draft_key_details tmp_keyring_pub.path
           current = get_current_key_details
-          if key_needs_to_be_installed(draft,current)
+          if key_needs_to_be_installed(draft, current)
             converge_by "Importing key #{draft.username} into keyring" do
               run_command 'gpg2 --import',
                           :user => @new_resource.for_user,
