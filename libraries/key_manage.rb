@@ -6,6 +6,7 @@ class Chef
     class BswGpgKeyManage < Chef::Provider
       def initialize(new_resource, run_context)
         super
+        @home_dir = run_command("/bin/sh -c \"echo ~#{@new_resource.for_user}\"").stdout
       end
 
       def whyrun_supported?
@@ -23,6 +24,7 @@ class Chef
         args << {} unless args.last.is_a? Hash
         options = args.last
         options[:user] = @new_resource.for_user
+        options[:env] = {'HOME' => @home_dir} if @home_dir
         cmd = Mixlib::ShellOut.new(*args)
         cmd.run_command
         cmd.error!
@@ -80,6 +82,8 @@ class Chef
         ensure
           run_command "shred -n 20 -z -u #{tmp_keyring_pri}"
           FileUtils.rm_rf tmp_keyring_pub
+          # GPG also leaves this file laying around
+          FileUtils.rm_rf "#{tmp_keyring_pub}~"
         end
       end
     end

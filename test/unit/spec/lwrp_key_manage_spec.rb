@@ -44,6 +44,9 @@ describe 'gpg::lwrp:key_manage' do
     @stub_setup = lambda do |shell_out|
       executed << shell_out
       case shell_out.command
+        when '/bin/sh -c "echo ~root"'
+          shell_out.stub!(:error!)
+          shell_out.stub!(:stdout).and_return('/home/root')
         when 'gpg2 --import --no-default-keyring --secret-keyring temp_file_0 --keyring temp_file_1'
           shell_out.stub!(:error!)
         when 'gpg2 --list-keys --fingerprint --no-default-keyring --keyring temp_file_1'
@@ -75,14 +78,29 @@ describe 'gpg::lwrp:key_manage' do
     EOF
 
     # assert
-    expect(executed).to have(5).items
-    executed[0].user.should == 'root'
-    executed[0].input.should == 'thekeybitshere'
-    executed[1].user.should == 'root'
-    executed[2].user.should == 'root'
-    executed[3].user.should == 'root'
-    executed[3].input.should == 'thekeybitshere'
-    executed[4].user.should == 'root'
+    command = nil
+    do_shift = lambda { command = executed.shift }
+    do_shift.call
+    command.user.should == 'root'
+    command.command.should == '/bin/sh -c "echo ~root"'
+    do_shift.call
+    command.user.should == 'root'
+    command.input.should == 'thekeybitshere'
+    command.environment['HOME'].should == '/home/root'
+    do_shift.call
+    command.user.should == 'root'
+    command.environment['HOME'].should == '/home/root'
+    do_shift.call
+    command.user.should == 'root'
+    command.environment['HOME'].should == '/home/root'
+    do_shift.call
+    command.user.should == 'root'
+    command.input.should == 'thekeybitshere'
+    command.environment['HOME'].should == '/home/root'
+    do_shift.call
+    command.user.should == 'root'
+    command.environment['HOME'].should == '/home/root'
+    expect(executed).to be_empty
     resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'root'
     expect(resource.updated_by_last_action?).to eq(true)
   end
@@ -93,6 +111,9 @@ describe 'gpg::lwrp:key_manage' do
     @stub_setup = lambda do |shell_out|
       executed << shell_out
       case shell_out.command
+        when '/bin/sh -c "echo ~root"'
+          shell_out.stub!(:error!)
+          shell_out.stub!(:stdout).and_return('/home/root')
         when 'gpg2 --import --no-default-keyring --secret-keyring temp_file_0 --keyring temp_file_1'
           shell_out.stub!(:error!)
         when 'gpg2 --list-keys --fingerprint --no-default-keyring --keyring temp_file_1'
@@ -128,12 +149,21 @@ describe 'gpg::lwrp:key_manage' do
     EOF
 
     # assert
-    expect(executed).to have(4).items
-    executed[0].user.should == 'root'
-    executed[0].input.should == 'thekeybitshere'
-    executed[1].user.should == 'root'
-    executed[2].user.should == 'root'
-    executed[3].user.should == 'root'
+    command = nil
+    do_shift = lambda { command = executed.shift }
+    do_shift.call
+    command.user.should == 'root'
+    command.command.should == '/bin/sh -c "echo ~root"'
+    do_shift.call
+    command.user.should == 'root'
+    command.input.should == 'thekeybitshere'
+    do_shift.call
+    command.user.should == 'root'
+    do_shift.call
+    command.user.should == 'root'
+    do_shift.call
+    command.user.should == 'root'
+    expect(executed).to be_empty
     resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'root'
     expect(resource.updated_by_last_action?).to eq(false)
   end
@@ -144,6 +174,9 @@ describe 'gpg::lwrp:key_manage' do
     @stub_setup = lambda do |shell_out|
       executed << shell_out
       case shell_out.command
+        when '/bin/sh -c "echo ~root"'
+          shell_out.stub!(:error!)
+          shell_out.stub!(:stdout).and_return('/home/root')
         when 'gpg2 --import --no-default-keyring --secret-keyring temp_file_0 --keyring temp_file_1'
           shell_out.stub!(:error!)
         when 'gpg2 --list-keys --fingerprint --no-default-keyring --keyring temp_file_1'
@@ -181,14 +214,24 @@ describe 'gpg::lwrp:key_manage' do
     EOF
 
     # assert
-    expect(executed).to have(5).items
-    executed[0].user.should == 'root'
-    executed[0].input.should == 'thekeybitshere'
-    executed[1].user.should == 'root'
-    executed[2].user.should == 'root'
-    executed[3].user.should == 'root'
-    executed[3].input.should == 'thekeybitshere'
-    executed[4].user.should == 'root'
+    command = nil
+    do_shift = lambda { command = executed.shift }
+    do_shift.call
+    command.user.should == 'root'
+    command.command.should == '/bin/sh -c "echo ~root"'
+    do_shift.call
+    command.user.should == 'root'
+    command.input.should == 'thekeybitshere'
+    do_shift.call
+    command.user.should == 'root'
+    do_shift.call
+    command.user.should == 'root'
+    do_shift.call
+    command.user.should == 'root'
+    command.input.should == 'thekeybitshere'
+    do_shift.call
+    command.user.should == 'root'
+    expect(executed).to be_empty
     resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'root'
     expect(resource.updated_by_last_action?).to eq(true)
   end
@@ -199,6 +242,9 @@ describe 'gpg::lwrp:key_manage' do
     @stub_setup = lambda do |shell_out|
       executed << shell_out
       case shell_out.command
+        when '/bin/sh -c "echo ~someone_else"'
+          shell_out.stub!(:error!)
+          shell_out.stub!(:stdout).and_return('/home/someone_else')
         when 'gpg2 --import --no-default-keyring --secret-keyring temp_file_0 --keyring temp_file_1'
           shell_out.stub!(:error!)
         when 'gpg2 --list-keys --fingerprint --no-default-keyring --keyring temp_file_1'
@@ -230,14 +276,24 @@ describe 'gpg::lwrp:key_manage' do
     EOF
 
     # assert
-    expect(executed).to have(5).items
-    executed[0].user.should == 'someone_else'
-    executed[0].input.should == 'thekeybitshere'
-    executed[1].user.should == 'someone_else'
-    executed[2].user.should == 'someone_else'
-    executed[3].user.should == 'someone_else'
-    executed[3].input.should == 'thekeybitshere'
-    executed[4].user.should == 'someone_else'
+    command = nil
+    do_shift = lambda { command = executed.shift }
+    do_shift.call
+    command.user.should == 'someone_else'
+    command.command.should == '/bin/sh -c "echo ~someone_else"'
+    do_shift.call
+    command.user.should == 'someone_else'
+    command.input.should == 'thekeybitshere'
+    do_shift.call
+    command.user.should == 'someone_else'
+    do_shift.call
+    command.user.should == 'someone_else'
+    do_shift.call
+    command.user.should == 'someone_else'
+    command.input.should == 'thekeybitshere'
+    do_shift.call
+    command.user.should == 'someone_else'
+    expect(executed).to be_empty
     resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'someone_else'
     expect(resource.updated_by_last_action?).to eq(true)
   end
@@ -248,6 +304,9 @@ describe 'gpg::lwrp:key_manage' do
     @stub_setup = lambda do |shell_out|
       executed << shell_out
       case shell_out.command
+        when '/bin/sh -c "echo ~root"'
+          shell_out.stub!(:error!)
+          shell_out.stub!(:stdout).and_return('/home/root')
         when 'gpg2 --delete-secret-and-public-key --batch --yes 6D1CF3288469F260C2119B9F76C95D74390AA6C9'
           shell_out.stub!(:error!)
         when 'gpg2 --import --no-default-keyring --secret-keyring temp_file_0 --keyring temp_file_1'
@@ -287,23 +346,33 @@ describe 'gpg::lwrp:key_manage' do
     EOF
 
     # assert
-    expect(executed).to have(6).items
-    executed[0].user.should == 'root'
-    executed[0].command.should include 'import'
-    executed[0].command.should include '--secret-keyring'
-    executed[0].input.should == 'thekeybitshere'
-    executed[1].user.should == 'root'
-    executed[1].command.should include 'list-keys'
-    executed[1].command.should include 'no-default-keyring'
-    executed[2].user.should == 'root'
-    executed[2].command.should include 'list-keys'
-    executed[3].command.should include 'delete'
-    executed[3].user.should == 'root'
-    executed[4].input.should == 'thekeybitshere'
-    executed[4].user.should == 'root'
-    executed[4].command.should == 'gpg2 --import'
-    executed[5].command.should include('shred')
-    executed[5].user.should == 'root'
+    command = nil
+    do_shift = lambda { command = executed.shift }
+    do_shift.call
+    command.user.should == 'root'
+    command.command.should == '/bin/sh -c "echo ~root"'
+    do_shift.call
+    command.user.should == 'root'
+    command.command.should include 'import'
+    command.command.should include '--secret-keyring'
+    command.input.should == 'thekeybitshere'
+    do_shift.call
+    command.user.should == 'root'
+    command.command.should include 'list-keys'
+    command.command.should include 'no-default-keyring'
+    do_shift.call
+    command.user.should == 'root'
+    command.command.should include 'list-keys'
+    do_shift.call
+    command.command.should include 'delete'
+    command.user.should == 'root'
+    do_shift.call
+    command.input.should == 'thekeybitshere'
+    command.user.should == 'root'
+    command.command.should == 'gpg2 --import'
+    do_shift.call
+    command.command.should include('shred')
+    command.user.should == 'root'
     resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'root'
     expect(resource.updated_by_last_action?).to eq(true)
   end
@@ -314,6 +383,9 @@ describe 'gpg::lwrp:key_manage' do
     @stub_setup = lambda do |shell_out|
       executed << shell_out
       case shell_out.command
+        when '/bin/sh -c "echo ~root"'
+          shell_out.stub!(:error!)
+          shell_out.stub!(:stdout).and_return('/home/root')
         when 'gpg2 --import --no-default-keyring --secret-keyring temp_file_0 --keyring temp_file_1'
           shell_out.stub!(:error!).and_raise 'GPG problem'
         when 'shred -n 20 -z -u temp_file_0'
@@ -332,7 +404,8 @@ describe 'gpg::lwrp:key_manage' do
     }.should raise_exception 'bsw_gpg_key_manage[root] (lwrp_gen::default line 1) had an error: RuntimeError: GPG problem'
 
     # assert
-    executed[1].command.should == 'shred -n 20 -z -u temp_file_0'
+    executed[2].command.should == 'shred -n 20 -z -u temp_file_0'
     removed.should include 'temp_file_1'
+    removed.should include 'temp_file_1~' # junk created by gpg
   end
 end
