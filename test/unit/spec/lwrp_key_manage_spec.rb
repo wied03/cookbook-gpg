@@ -71,6 +71,7 @@ describe 'gpg::lwrp:key_manage' do
       end
     end
 
+    # act
     temp_lwrp_recipe contents: <<-EOF
       gpg_key_manage 'root' do
         key_contents 'thekeybitshere'
@@ -108,25 +109,34 @@ describe 'gpg::lwrp:key_manage' do
           EOF
         when 'gpg2 --list-keys'
           shell_out.stub!(:error!)
-          shell_out.stub!(:stdout).and_return ''
-        when 'gpg2 --import'
-          shell_out.stub!(:error!)
-        when 'shred ...'
+          shell_out.stub!(:stdout).and_return <<-EOF
+                      -----------------
+                      pub   2048R/390AA6C9 2014-06-10 [expires: 2016-06-09]
+                            Key fingerprint = 4D1C F328 8469 F260 C211  9B9F 76C9 5D74 390A A6C9
+                      uid                  BSW Tech DB Backup db_dev (WAL-E/S3 Encryption key) <db_dev@wale.backup.bswtechconsulting.com>
+                      sub   2048R/1A0B6924 2014-06-10 [expires: 2016-06-09]
+          EOF
+        when 'shred -n 20 -z temp_file_0'
           #nothing to do
         else
           shell_out.stub(:error!).and_raise "Unexpected command #{shell_out.command}"
       end
     end
+
+    # act
     temp_lwrp_recipe contents: <<-EOF
       gpg_key_manage 'the user <user@user.com>' do
         key_contents 'thekeybitshere'
       end
     EOF
-    # TODO: Arrange for same fingerprint for user to be there
-
-    # act
 
     # assert
+    expect(executed).to have(4).items
+    expected[0].user.should == 'root'
+    expected[0].input.should == 'thekeybitshere'
+    expected[1].user.should == 'root'
+    expected[2].user.should == 'root'
+    expected[3].user.should == 'root'
     pending 'Write this test'
   end
 
