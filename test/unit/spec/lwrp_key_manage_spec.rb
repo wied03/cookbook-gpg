@@ -117,7 +117,7 @@ describe 'gpg::lwrp:key_manage' do
                       sub   2048R/1A0B6924 2014-06-10 [expires: 2016-06-09]
           EOF
         when 'shred -n 20 -z temp_file_0'
-          #nothing to do
+          shell_out.stub!(:error!)
         else
           shell_out.stub(:error!).and_raise "Unexpected command #{shell_out.command}"
       end
