@@ -39,7 +39,7 @@ class Chef
       end
 
       def key_needs_to_be_installed(draft, current)
-        current.empty?
+        current.all? {|x| x.fingerprint != draft.fingerprint}
       end
 
       def action_replace
@@ -49,7 +49,6 @@ class Chef
           run_command("gpg2 --import --no-default-keyring --secret-keyring #{tmp_keyring_pri.path} --keyring #{tmp_keyring_pub.path}",
                       :user => @new_resource.for_user,
                       :input => @new_resource.key_contents)
-          # TODO: Use the output of these
           draft = get_draft_key_details tmp_keyring_pub.path
           current = get_current_key_details
           if key_needs_to_be_installed(draft, current)
