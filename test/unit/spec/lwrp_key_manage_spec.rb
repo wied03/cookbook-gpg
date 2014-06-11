@@ -31,15 +31,10 @@ describe 'gpg::lwrp:key_manage' do
       cmd
     end
     @open_tempfiles = []
-    Tempfile.stub!(:new) do
+    Dir::Tmpname.stub!(:create) do
       name = "temp_file_#{@open_tempfiles.length}"
       @open_tempfiles << name
-      temp_file = double()
-      temp_file.stub(:path).and_return(name)
-      temp_file.stub(:close!) do
-        @open_tempfiles.delete name
-      end
-      temp_file
+      name
     end
   }
 
@@ -65,7 +60,7 @@ describe 'gpg::lwrp:key_manage' do
           shell_out.stub!(:stdout).and_return ''
         when 'gpg2 --import'
           shell_out.stub!(:error!)
-        when 'shred -n 20 -z temp_file_0'
+        when 'shred -n 20 -z -u temp_file_0'
           shell_out.stub!(:error!)
         else
           shell_out.stub(:error!).and_raise "Unexpected command #{shell_out.command}"
@@ -118,7 +113,7 @@ describe 'gpg::lwrp:key_manage' do
                       uid                  BSW Tech DB Backup db_dev (WAL-E/S3 Encryption key) <db_dev@wale.backup.bswtechconsulting.com>
                       sub   2048R/1A0B6924 2014-06-10 [expires: 2016-06-09]
           EOF
-        when 'shred -n 20 -z temp_file_0'
+        when 'shred -n 20 -z -u temp_file_0'
           shell_out.stub!(:error!)
         else
           shell_out.stub(:error!).and_raise "Unexpected command #{shell_out.command}"
@@ -171,7 +166,7 @@ describe 'gpg::lwrp:key_manage' do
           EOF
         when 'gpg2 --import'
           shell_out.stub!(:error!)
-        when 'shred -n 20 -z temp_file_0'
+        when 'shred -n 20 -z -u temp_file_0'
           shell_out.stub!(:error!)
         else
           shell_out.stub(:error!).and_raise "Unexpected command #{shell_out.command}"
@@ -220,7 +215,7 @@ describe 'gpg::lwrp:key_manage' do
           shell_out.stub!(:stdout).and_return ''
         when 'gpg2 --import'
           shell_out.stub!(:error!)
-        when 'shred -n 20 -z temp_file_0'
+        when 'shred -n 20 -z -u temp_file_0'
           shell_out.stub!(:error!)
         else
           shell_out.stub(:error!).and_raise "Unexpected command #{shell_out.command}"
@@ -277,7 +272,7 @@ describe 'gpg::lwrp:key_manage' do
           EOF
         when 'gpg2 --import'
           shell_out.stub!(:error!)
-        when 'shred -n 20 -z temp_file_0'
+        when 'shred -n 20 -z -u temp_file_0'
           shell_out.stub!(:error!)
         else
           shell_out.stub(:error!).and_raise "Unexpected command #{shell_out.command}"
@@ -321,11 +316,14 @@ describe 'gpg::lwrp:key_manage' do
       case shell_out.command
         when 'gpg2 --import --no-default-keyring --secret-keyring temp_file_0 --keyring temp_file_1'
           shell_out.stub!(:error!).and_raise 'GPG problem'
-        when 'shred -n 20 -z temp_file_0'
+        when 'shred -n 20 -z -u temp_file_0'
           shell_out.stub!(:error!)
       end
     end
+    removed = []
+    FileUtils.stub!(:rm_rf) { |file| removed << file }
 
+    # act
     lambda { temp_lwrp_recipe contents: <<-EOF
       bsw_gpg_key_manage 'root' do
         key_contents 'thekeybitshere'
@@ -333,7 +331,8 @@ describe 'gpg::lwrp:key_manage' do
     EOF
     }.should raise_exception 'bsw_gpg_key_manage[root] (lwrp_gen::default line 1) had an error: RuntimeError: GPG problem'
 
-    # act + assert
-    @open_tempfiles.each { |f| f.should_receive(:close!) }
+    # assert
+    executed[1].command.should == 'shred -n 20 -z -u temp_file_0'
+    removed.should include 'temp_file_1'
   end
 end
