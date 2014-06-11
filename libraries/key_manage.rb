@@ -20,6 +20,12 @@ class Chef
       end
 
       def run_command(*args)
+        username = @new_resource.for_user
+        if args.last.is_a? Hash
+          args.last[:user] = username
+        else
+          args << {:user => username}
+        end
         cmd = Mixlib::ShellOut.new(*args)
         cmd.run_command
         cmd.error!
@@ -28,14 +34,14 @@ class Chef
 
       def get_draft_key_details(public_keyring_path)
         Chef::Log.info 'Fetching fingerprints and user names of draft keys'
-        contents = run_command("gpg2 --list-keys --fingerprint --no-default-keyring --keyring #{public_keyring_path}", :user => @new_resource.for_user)
+        contents = run_command "gpg2 --list-keys --fingerprint --no-default-keyring --keyring #{public_keyring_path}"
         parser = BswTech::Gpg::GpgParser.new(contents.stdout)
         parser.keys[0]
       end
 
       def get_current_key_details()
         Chef::Log.info 'Checking currently installed keys'
-        contents = run_command('gpg2 --list-keys --fingerprint', :user => @new_resource.for_user)
+        contents = run_command 'gpg2 --list-keys --fingerprint'
         parser = BswTech::Gpg::GpgParser.new(contents.stdout)
         parser.keys
       end
@@ -50,8 +56,7 @@ class Chef
         if key_to_delete
           Chef::Log.info "Deleting existing key for #{key_to_delete.username} in order to replace it"
           no_whitespace = key_to_delete.fingerprint.gsub ' ',''
-          run_command "gpg2 --delete-secret-and-public-key --batch --yes #{no_whitespace}",
-                      :user => @new_resource.for_user
+          run_command "gpg2 --delete-secret-and-public-key --batch --yes #{no_whitespace}"
         end
       end
 
@@ -65,7 +70,6 @@ class Chef
         begin
           Chef::Log.info 'Setting up temporary keyring to compare keys'
           run_command "gpg2 --import --no-default-keyring --secret-keyring #{tmp_keyring_pri} --keyring #{tmp_keyring_pub}",
-                      :user => @new_resource.for_user,
                       :input => @new_resource.key_contents
           draft = get_draft_key_details tmp_keyring_pub
           current = get_current_key_details
@@ -73,12 +77,11 @@ class Chef
             converge_by "Importing key #{draft.username} into keyring" do
               remove_existing_keys draft, current
               run_command 'gpg2 --import',
-                          :user => @new_resource.for_user,
                           :input => @new_resource.key_contents
             end
           end
         ensure
-          run_command "shred -n 20 -z -u #{tmp_keyring_pri}", :user => @new_resource.for_user
+          run_command "shred -n 20 -z -u #{tmp_keyring_pri}"
           FileUtils.rm_rf tmp_keyring_pub
         end
       end
