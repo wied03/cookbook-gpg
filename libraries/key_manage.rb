@@ -6,7 +6,8 @@ class Chef
     class BswGpgKeyManage < Chef::Provider
       def initialize(new_resource, run_context)
         super
-        @home_dir = run_command("/bin/sh -c \"echo ~#{@new_resource.for_user}\"").stdout
+        # The way shellout works, the home directory is not set for the user and gpg needs that, easiest way is to use the shell
+        @home_dir = run_command("/bin/sh -c \"echo -n ~#{@new_resource.for_user}\"").stdout
       end
 
       def whyrun_supported?

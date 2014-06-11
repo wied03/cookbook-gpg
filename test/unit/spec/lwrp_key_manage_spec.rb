@@ -44,7 +44,7 @@ describe 'gpg::lwrp:key_manage' do
     @stub_setup = lambda do |shell_out|
       executed << shell_out
       case shell_out.command
-        when '/bin/sh -c "echo ~root"'
+        when '/bin/sh -c "echo -n ~root"'
           shell_out.stub!(:error!)
           shell_out.stub!(:stdout).and_return('/home/root')
         when 'gpg2 --import --no-default-keyring --secret-keyring temp_file_0 --keyring temp_file_1'
@@ -82,7 +82,7 @@ describe 'gpg::lwrp:key_manage' do
     do_shift = lambda { command = executed.shift }
     do_shift.call
     command.user.should == 'root'
-    command.command.should == '/bin/sh -c "echo ~root"'
+    command.command.should == '/bin/sh -c "echo -n ~root"'
     do_shift.call
     command.user.should == 'root'
     command.input.should == 'thekeybitshere'
@@ -111,7 +111,7 @@ describe 'gpg::lwrp:key_manage' do
     @stub_setup = lambda do |shell_out|
       executed << shell_out
       case shell_out.command
-        when '/bin/sh -c "echo ~root"'
+        when '/bin/sh -c "echo -n ~root"'
           shell_out.stub!(:error!)
           shell_out.stub!(:stdout).and_return('/home/root')
         when 'gpg2 --import --no-default-keyring --secret-keyring temp_file_0 --keyring temp_file_1'
@@ -153,7 +153,7 @@ describe 'gpg::lwrp:key_manage' do
     do_shift = lambda { command = executed.shift }
     do_shift.call
     command.user.should == 'root'
-    command.command.should == '/bin/sh -c "echo ~root"'
+    command.command.should == '/bin/sh -c "echo -n ~root"'
     do_shift.call
     command.user.should == 'root'
     command.input.should == 'thekeybitshere'
@@ -174,7 +174,7 @@ describe 'gpg::lwrp:key_manage' do
     @stub_setup = lambda do |shell_out|
       executed << shell_out
       case shell_out.command
-        when '/bin/sh -c "echo ~root"'
+        when '/bin/sh -c "echo -n ~root"'
           shell_out.stub!(:error!)
           shell_out.stub!(:stdout).and_return('/home/root')
         when 'gpg2 --import --no-default-keyring --secret-keyring temp_file_0 --keyring temp_file_1'
@@ -218,7 +218,7 @@ describe 'gpg::lwrp:key_manage' do
     do_shift = lambda { command = executed.shift }
     do_shift.call
     command.user.should == 'root'
-    command.command.should == '/bin/sh -c "echo ~root"'
+    command.command.should == '/bin/sh -c "echo -n ~root"'
     do_shift.call
     command.user.should == 'root'
     command.input.should == 'thekeybitshere'
@@ -242,7 +242,7 @@ describe 'gpg::lwrp:key_manage' do
     @stub_setup = lambda do |shell_out|
       executed << shell_out
       case shell_out.command
-        when '/bin/sh -c "echo ~someone_else"'
+        when '/bin/sh -c "echo -n ~someone_else"'
           shell_out.stub!(:error!)
           shell_out.stub!(:stdout).and_return('/home/someone_else')
         when 'gpg2 --import --no-default-keyring --secret-keyring temp_file_0 --keyring temp_file_1'
@@ -280,7 +280,7 @@ describe 'gpg::lwrp:key_manage' do
     do_shift = lambda { command = executed.shift }
     do_shift.call
     command.user.should == 'someone_else'
-    command.command.should == '/bin/sh -c "echo ~someone_else"'
+    command.command.should == '/bin/sh -c "echo -n ~someone_else"'
     do_shift.call
     command.user.should == 'someone_else'
     command.input.should == 'thekeybitshere'
@@ -304,7 +304,7 @@ describe 'gpg::lwrp:key_manage' do
     @stub_setup = lambda do |shell_out|
       executed << shell_out
       case shell_out.command
-        when '/bin/sh -c "echo ~root"'
+        when '/bin/sh -c "echo -n ~root"'
           shell_out.stub!(:error!)
           shell_out.stub!(:stdout).and_return('/home/root')
         when 'gpg2 --delete-secret-and-public-key --batch --yes 6D1CF3288469F260C2119B9F76C95D74390AA6C9'
@@ -350,7 +350,7 @@ describe 'gpg::lwrp:key_manage' do
     do_shift = lambda { command = executed.shift }
     do_shift.call
     command.user.should == 'root'
-    command.command.should == '/bin/sh -c "echo ~root"'
+    command.command.should == '/bin/sh -c "echo -n ~root"'
     do_shift.call
     command.user.should == 'root'
     command.command.should include 'import'
@@ -383,7 +383,7 @@ describe 'gpg::lwrp:key_manage' do
     @stub_setup = lambda do |shell_out|
       executed << shell_out
       case shell_out.command
-        when '/bin/sh -c "echo ~root"'
+        when '/bin/sh -c "echo -n ~root"'
           shell_out.stub!(:error!)
           shell_out.stub!(:stdout).and_return('/home/root')
         when 'gpg2 --import --no-default-keyring --secret-keyring temp_file_0 --keyring temp_file_1'
