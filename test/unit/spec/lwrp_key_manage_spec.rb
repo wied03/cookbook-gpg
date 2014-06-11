@@ -88,6 +88,7 @@ describe 'gpg::lwrp:key_manage' do
     executed[3].user.should == 'root'
     executed[3].input.should == 'thekeybitshere'
     executed[4].user.should == 'root'
+    pending 'test the updated set on new_resource, use standard approach in bsw_pgsql cookbook'
   end
 
   it 'does not do anything if the private key is already there' do
@@ -137,6 +138,7 @@ describe 'gpg::lwrp:key_manage' do
     executed[1].user.should == 'root'
     executed[2].user.should == 'root'
     executed[3].user.should == 'root'
+    pending 'test the updated set to false on new_resource, use standard approach in bsw_pgsql cookbook'
   end
 
   it 'works properly when run as a different user' do
@@ -150,6 +152,7 @@ describe 'gpg::lwrp:key_manage' do
     # act
 
     # assert
+    pending 'test the updated set to true on new_resource, use standard approach in bsw_pgsql cookbook'
     pending 'Write this test'
   end
 
@@ -160,6 +163,7 @@ describe 'gpg::lwrp:key_manage' do
 
     # assert
     pending 'Write this test'
+    pending 'test the updated set to true on new_resource, use standard approach in bsw_pgsql cookbook'
   end
 
   it 'removes the temporary private key file if gpg fails for any reason' do
