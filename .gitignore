@@ -6,6 +6,8 @@
 *.un~
 pkg/
 .idea/workspace.xml
+.idea/runConfigurations/*
+.idea/gpg.iml
 
 # Berkshelf
 .vagrant
