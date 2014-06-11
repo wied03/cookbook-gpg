@@ -88,7 +88,8 @@ describe 'gpg::lwrp:key_manage' do
     executed[3].user.should == 'root'
     executed[3].input.should == 'thekeybitshere'
     executed[4].user.should == 'root'
-    pending 'test the updated set on new_resource, use standard approach in bsw_pgsql cookbook'
+    resource = @chef_run.find_resource 'gpg_key_manage', 'root'
+    expect(resource.updated_by_last_action?).to eq(true)
   end
 
   it 'does not do anything if the private key is already there' do
@@ -138,7 +139,8 @@ describe 'gpg::lwrp:key_manage' do
     executed[1].user.should == 'root'
     executed[2].user.should == 'root'
     executed[3].user.should == 'root'
-    pending 'test the updated set to false on new_resource, use standard approach in bsw_pgsql cookbook'
+    resource = @chef_run.find_resource 'gpg_key_manage', 'root'
+    expect(resource.updated_by_last_action?).to eq(false)
   end
 
   it 'works properly when run as a different user' do
