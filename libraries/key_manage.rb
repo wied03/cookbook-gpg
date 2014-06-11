@@ -3,7 +3,7 @@ require 'tempfile'
 
 class Chef
   class Provider
-    class GpgKeyManage < Chef::Provider
+    class BswGpgKeyManage < Chef::Provider
       def initialize(new_resource, run_context)
         super
       end
@@ -13,7 +13,7 @@ class Chef
       end
 
       def load_current_resource
-        @current_resource ||= Chef::Resource::GpgKeyManage.new(new_resource.name)
+        @current_resource ||= Chef::Resource::BswGpgKeyManage.new(new_resource.name)
         @current_resource.key_contents(new_resource.key_contents)
         @current_resource.for_user(new_resource.for_user)
         @current_resource

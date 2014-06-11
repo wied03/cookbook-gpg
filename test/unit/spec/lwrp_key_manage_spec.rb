@@ -14,7 +14,7 @@ describe 'gpg::lwrp:key_manage' do
   }
 
   def cookbook_under_test
-    'gpg'
+    'bsw_gpg'
   end
 
   def lwrps_under_test
@@ -74,7 +74,7 @@ describe 'gpg::lwrp:key_manage' do
 
     # act
     temp_lwrp_recipe contents: <<-EOF
-      gpg_key_manage 'root' do
+      bsw_gpg_key_manage 'root' do
         key_contents 'thekeybitshere'
       end
     EOF
@@ -88,7 +88,7 @@ describe 'gpg::lwrp:key_manage' do
     executed[3].user.should == 'root'
     executed[3].input.should == 'thekeybitshere'
     executed[4].user.should == 'root'
-    resource = @chef_run.find_resource 'gpg_key_manage', 'root'
+    resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'root'
     expect(resource.updated_by_last_action?).to eq(true)
   end
 
@@ -127,7 +127,7 @@ describe 'gpg::lwrp:key_manage' do
 
     # act
     temp_lwrp_recipe contents: <<-EOF
-      gpg_key_manage 'root' do
+      bsw_gpg_key_manage 'root' do
         key_contents 'thekeybitshere'
       end
     EOF
@@ -139,7 +139,7 @@ describe 'gpg::lwrp:key_manage' do
     executed[1].user.should == 'root'
     executed[2].user.should == 'root'
     executed[3].user.should == 'root'
-    resource = @chef_run.find_resource 'gpg_key_manage', 'root'
+    resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'root'
     expect(resource.updated_by_last_action?).to eq(false)
   end
 
@@ -180,7 +180,7 @@ describe 'gpg::lwrp:key_manage' do
 
     # act
     temp_lwrp_recipe contents: <<-EOF
-      gpg_key_manage 'root' do
+      bsw_gpg_key_manage 'root' do
         key_contents 'thekeybitshere'
       end
     EOF
@@ -194,7 +194,7 @@ describe 'gpg::lwrp:key_manage' do
     executed[3].user.should == 'root'
     executed[3].input.should == 'thekeybitshere'
     executed[4].user.should == 'root'
-    resource = @chef_run.find_resource 'gpg_key_manage', 'root'
+    resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'root'
     expect(resource.updated_by_last_action?).to eq(true)
   end
 
@@ -229,7 +229,7 @@ describe 'gpg::lwrp:key_manage' do
 
     # act
     temp_lwrp_recipe contents: <<-EOF
-      gpg_key_manage 'someone_else' do
+      bsw_gpg_key_manage 'someone_else' do
         key_contents 'thekeybitshere'
       end
     EOF
@@ -243,7 +243,7 @@ describe 'gpg::lwrp:key_manage' do
     executed[3].user.should == 'someone_else'
     executed[3].input.should == 'thekeybitshere'
     executed[4].user.should == 'someone_else'
-    resource = @chef_run.find_resource 'gpg_key_manage', 'someone_else'
+    resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'someone_else'
     expect(resource.updated_by_last_action?).to eq(true)
   end
 
@@ -286,7 +286,7 @@ describe 'gpg::lwrp:key_manage' do
 
     # act
     temp_lwrp_recipe contents: <<-EOF
-      gpg_key_manage 'root' do
+      bsw_gpg_key_manage 'root' do
         key_contents 'thekeybitshere'
       end
     EOF
@@ -309,7 +309,7 @@ describe 'gpg::lwrp:key_manage' do
     executed[4].command.should == 'gpg2 --import'
     executed[5].command.should include('shred')
     executed[5].user.should == 'root'
-    resource = @chef_run.find_resource 'gpg_key_manage', 'root'
+    resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'root'
     expect(resource.updated_by_last_action?).to eq(true)
   end
 
@@ -327,11 +327,11 @@ describe 'gpg::lwrp:key_manage' do
     end
 
     lambda { temp_lwrp_recipe contents: <<-EOF
-      gpg_key_manage 'root' do
+      bsw_gpg_key_manage 'root' do
         key_contents 'thekeybitshere'
       end
     EOF
-    }.should raise_exception 'gpg_key_manage[root] (lwrp_gen::default line 1) had an error: RuntimeError: GPG problem'
+    }.should raise_exception 'bsw_gpg_key_manage[root] (lwrp_gen::default line 1) had an error: RuntimeError: GPG problem'
 
     # act + assert
     @open_tempfiles.each { |f| f.should_receive(:close!) }
