@@ -20,12 +20,9 @@ class Chef
       end
 
       def run_command(*args)
-        username = @new_resource.for_user
-        if args.last.is_a? Hash
-          args.last[:user] = username
-        else
-          args << {:user => username}
-        end
+        args << {} unless args.last.is_a? Hash
+        options = args.last
+        options[:user] = @new_resource.for_user
         cmd = Mixlib::ShellOut.new(*args)
         cmd.run_command
         cmd.error!
