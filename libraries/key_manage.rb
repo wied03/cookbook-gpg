@@ -42,17 +42,27 @@ class Chef
         current.all? {|x| x.fingerprint != draft.fingerprint}
       end
 
+      def remove_existing_keys(draft,current)
+        key_to_delete = current.find {|x| x.username == draft.username}
+        if key_to_delete
+          no_whitespace = key_to_delete.fingerprint.gsub ' ',''
+          run_command "gpg2 --delete-secret-and-public-key --batch --yes #{no_whitespace}",
+                      :user => @new_resource.for_user
+        end
+      end
+
       def action_replace
         tmp_keyring_pri = Tempfile.new 'tmp_pri_keyring'
         tmp_keyring_pub = Tempfile.new 'tmp_pub_keyring'
         begin
-          run_command("gpg2 --import --no-default-keyring --secret-keyring #{tmp_keyring_pri.path} --keyring #{tmp_keyring_pub.path}",
+          run_command "gpg2 --import --no-default-keyring --secret-keyring #{tmp_keyring_pri.path} --keyring #{tmp_keyring_pub.path}",
                       :user => @new_resource.for_user,
-                      :input => @new_resource.key_contents)
+                      :input => @new_resource.key_contents
           draft = get_draft_key_details tmp_keyring_pub.path
           current = get_current_key_details
-          if key_needs_to_be_installed(draft, current)
+          if key_needs_to_be_installed draft, current
             converge_by "Importing key #{draft.username} into keyring" do
+              remove_existing_keys draft, current
               run_command 'gpg2 --import',
                           :user => @new_resource.for_user,
                           :input => @new_resource.key_contents
