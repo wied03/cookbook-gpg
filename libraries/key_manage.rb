@@ -48,20 +48,23 @@ class Chef
 
       def key_needs_to_be_installed(draft, current)
         Chef::Log.info 'Checking if any keys are installed'
-        current.all? {|x| x.fingerprint != draft.fingerprint}
+        current.all? { |x| x.fingerprint != draft.fingerprint }
       end
 
-      def remove_existing_keys(draft,current)
-        key_to_delete = current.find {|x| x.username == draft.username}
+      def remove_existing_keys(draft, current)
+        key_to_delete = current.find { |x| x.username == draft.username }
         if key_to_delete
           Chef::Log.info "Deleting existing key for #{key_to_delete.username} in order to replace it"
-          no_whitespace = key_to_delete.fingerprint.gsub ' ',''
-          run_command "gpg2 --delete-secret-and-public-key --batch --yes #{no_whitespace}"
+          run_command "gpg2 --delete-secret-and-public-key --batch --yes #{key_to_delete.fingerprint_no_whitespace}"
         end
       end
 
       def temp_filename(prefix)
-        Dir::Tmpname.create([prefix, '.gpg']) { }
+        Dir::Tmpname.create([prefix, '.gpg']) {}
+      end
+
+      def trust_key(key)
+        run_command 'gpg2 --import-ownertrust', :input => "#{key.fingerprint_no_whitespace}:6:\n"
       end
 
       def action_replace
@@ -78,6 +81,7 @@ class Chef
               remove_existing_keys draft, current
               run_command 'gpg2 --import',
                           :input => @new_resource.key_contents
+              trust_key draft
             end
           end
         ensure

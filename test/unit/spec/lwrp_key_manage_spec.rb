@@ -31,10 +31,23 @@ describe 'gpg::lwrp:key_manage' do
       cmd
     end
     @open_tempfiles = []
+    @written_to_files = {}
     Dir::Tmpname.stub!(:create) do
       name = "temp_file_#{@open_tempfiles.length}"
       @open_tempfiles << name
       name
+    end
+    Tempfile.stub!(:new) do |prefix|
+      temp_file_stub = double()
+      name = "temp_file_#{@open_tempfiles.length}"
+      @open_tempfiles << name
+      temp_file_stub.stub!(:path).and_return "/path/to/#{name}"
+      temp_file_stub.stub!(:close)
+      temp_file_stub.stub!(:unlink)
+      temp_file_stub.stub!(:'<<') do |text|
+        @written_to_files[name] = text
+      end
+      temp_file_stub
     end
   }
 
@@ -64,6 +77,8 @@ describe 'gpg::lwrp:key_manage' do
         when 'gpg2 --import'
           shell_out.stub!(:error!)
         when 'shred -n 20 -z -u temp_file_0'
+          shell_out.stub!(:error!)
+        when 'gpg2 --import-ownertrust'
           shell_out.stub!(:error!)
         else
           shell_out.stub(:error!).and_raise "Unexpected command #{shell_out.command}"
@@ -100,6 +115,10 @@ describe 'gpg::lwrp:key_manage' do
     do_shift.call
     command.user.should == 'root'
     command.environment['HOME'].should == '/home/root'
+    command.command.should == 'gpg2 --import-ownertrust'
+    command.input.should == "4D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"
+    do_shift.call
+    command.user.should == 'root'
     expect(executed).to be_empty
     resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'root'
     expect(resource.updated_by_last_action?).to eq(true)
@@ -201,6 +220,8 @@ describe 'gpg::lwrp:key_manage' do
           shell_out.stub!(:error!)
         when 'shred -n 20 -z -u temp_file_0'
           shell_out.stub!(:error!)
+        when 'gpg2 --import-ownertrust'
+          shell_out.stub!(:error!)
         else
           shell_out.stub(:error!).and_raise "Unexpected command #{shell_out.command}"
       end
@@ -229,6 +250,8 @@ describe 'gpg::lwrp:key_manage' do
     do_shift.call
     command.user.should == 'root'
     command.input.should == 'thekeybitshere'
+    do_shift.call
+    command.command.should == 'gpg2 --import-ownertrust'
     do_shift.call
     command.user.should == 'root'
     expect(executed).to be_empty
@@ -263,6 +286,8 @@ describe 'gpg::lwrp:key_manage' do
           shell_out.stub!(:error!)
         when 'shred -n 20 -z -u temp_file_0'
           shell_out.stub!(:error!)
+        when 'gpg2 --import-ownertrust'
+          shell_out.stub!(:error!)
         else
           shell_out.stub(:error!).and_raise "Unexpected command #{shell_out.command}"
       end
@@ -291,6 +316,8 @@ describe 'gpg::lwrp:key_manage' do
     do_shift.call
     command.user.should == 'someone_else'
     command.input.should == 'thekeybitshere'
+    do_shift.call
+    command.command.should == 'gpg2 --import-ownertrust'
     do_shift.call
     command.user.should == 'someone_else'
     expect(executed).to be_empty
@@ -333,6 +360,8 @@ describe 'gpg::lwrp:key_manage' do
           shell_out.stub!(:error!)
         when 'shred -n 20 -z -u temp_file_0'
           shell_out.stub!(:error!)
+        when 'gpg2 --import-ownertrust'
+          shell_out.stub!(:error!)
         else
           shell_out.stub(:error!).and_raise "Unexpected command #{shell_out.command}"
       end
@@ -370,6 +399,8 @@ describe 'gpg::lwrp:key_manage' do
     command.input.should == 'thekeybitshere'
     command.user.should == 'root'
     command.command.should == 'gpg2 --import'
+    do_shift.call
+    command.command.should == 'gpg2 --import-ownertrust'
     do_shift.call
     command.command.should include('shred')
     command.user.should == 'root'
