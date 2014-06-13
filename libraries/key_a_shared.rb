@@ -3,7 +3,7 @@
 module BswTech
   module Gpg
     module SharedKey
-      def with_draft_key_info(options)
+      def get_draft_key_info(options)
         public_key_contents = options.include?(:public_key_contents) ?
             options[:public_key_contents] :
             cookbook_file_contents(options[:cookbook_file],options[:cookbook])
@@ -13,10 +13,9 @@ module BswTech
           Chef::Log.info 'Setting up temporary keyring'
           run_command "gpg2 --import --no-default-keyring --secret-keyring #{tmp_keyring_pri} --keyring #{tmp_keyring_pub}",
                       :input => public_key_contents
-          draft = parse_details_from_keyring tmp_keyring_pub
-          yield draft
+          parse_details_from_keyring tmp_keyring_pub
         ensure
-          run_command "shred -n 20 -z -u #{tmp_keyring_pri}"
+          run_command "shred -n 20 -z -u #{tmp_keyring_pri}" if ::File.exist?(tmp_keyring_pri)
           FileUtils.rm_rf tmp_keyring_pub
           # GPG also leaves this file laying around
           FileUtils.rm_rf "#{tmp_keyring_pub}~"
