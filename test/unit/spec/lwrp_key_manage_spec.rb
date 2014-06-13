@@ -440,7 +440,7 @@ describe 'gpg::lwrp:key_manage' do
     removed.should include 'temp_file_1~' # junk created by gpg
   end
 
-  it 'allows working with key fingerprints from the recipe' do
+  it 'allows working with key fingerprints from the recipe based on a PEM cert' do
     # arrange
     executed = []
     @stub_setup = lambda do |shell_out|
@@ -469,7 +469,7 @@ describe 'gpg::lwrp:key_manage' do
 
     # act
     temp_lwrp_recipe contents: <<-EOF
-      with_draft_key_info 'thekeybitshere' do |key|
+      with_draft_key_info(:public_key_contents => 'thekeybitshere') do |key|
         file '/some/dummy/file' do
           content key.fingerprint
         end
@@ -481,7 +481,67 @@ describe 'gpg::lwrp:key_manage' do
     EOF
 
     # assert
+    command = nil
+    do_shift = lambda { command = executed.shift }
+    do_shift.call
+    command.command.should == 'gpg2 --import --no-default-keyring --secret-keyring temp_file_0 --keyring temp_file_1'
+    command.input.should == 'thekeybitshere'
     expect(@chef_run).to render_file('/some/dummy/file').with_content('4D1C F328 8469 F260 C211  9B9F 76C9 5D74 390A A6C9')
     expect(@chef_run).to render_file('/some/dummy/file2').with_content('BSW Tech DB Backup db_dev (WAL-E/S3 Encryption key) <db_dev@wale.backup.bswtechconsulting.com>')
   end
+
+  it 'allows working with key fingerprints from the recipe based on a cookbook file' do
+     # arrange
+     executed = []
+     @stub_setup = lambda do |shell_out|
+       executed << shell_out
+       case shell_out.command
+         when '/bin/sh -c "echo -n ~root"'
+           shell_out.stub!(:error!)
+           shell_out.stub!(:stdout).and_return('/home/root')
+         when 'gpg2 --import --no-default-keyring --secret-keyring temp_file_0 --keyring temp_file_1'
+           shell_out.stub!(:error!)
+         when 'gpg2 --list-keys --fingerprint --no-default-keyring --keyring temp_file_1'
+           shell_out.stub!(:error!)
+           shell_out.stub!(:stdout).and_return <<-EOF
+         -----------------
+         pub   2048R/390AA6C9 2014-06-10 [expires: 2016-06-09]
+               Key fingerprint = 4D1C F328 8469 F260 C211  9B9F 76C9 5D74 390A A6C9
+         uid                  BSW Tech DB Backup db_dev (WAL-E/S3 Encryption key) <db_dev@wale.backup.bswtechconsulting.com>
+         sub   2048R/1A0B6924 2014-06-10 [expires: 2016-06-09]
+           EOF
+         when 'shred -n 20 -z -u temp_file_0'
+           shell_out.stub!(:error!)
+         else
+           shell_out.stub(:error!).and_raise "Unexpected command #{shell_out.command}"
+       end
+     end
+     dev_environment = File.join(cookbook_path,'files','default','dev')
+     FileUtils.mkdir_p dev_environment
+     File.open File.join(dev_environment,'thefile.pub'), 'w' do |f|
+       f << 'thekeybitshere'
+     end
+
+     # act
+     temp_lwrp_recipe contents: <<-EOF
+       with_draft_key_info(:cookbook => 'lwrp_gen',:cookbook_file => 'dev/thefile.pub') do |key|
+         file '/some/dummy/file' do
+           content key.fingerprint
+         end
+
+         file '/some/dummy/file2' do
+           content key.username
+         end
+       end
+     EOF
+
+     # assert
+     command = nil
+     do_shift = lambda { command = executed.shift }
+     do_shift.call
+     command.command.should == 'gpg2 --import --no-default-keyring --secret-keyring temp_file_0 --keyring temp_file_1'
+     command.input.should == 'thekeybitshere'
+     expect(@chef_run).to render_file('/some/dummy/file').with_content('4D1C F328 8469 F260 C211  9B9F 76C9 5D74 390A A6C9')
+     expect(@chef_run).to render_file('/some/dummy/file2').with_content('BSW Tech DB Backup db_dev (WAL-E/S3 Encryption key) <db_dev@wale.backup.bswtechconsulting.com>')
+   end
 end

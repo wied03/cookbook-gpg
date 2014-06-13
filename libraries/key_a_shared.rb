@@ -1,7 +1,12 @@
+# Named this way because it needs to be loaded before our other libraries
+
 module BswTech
   module Gpg
     module SharedKey
-      def with_draft_key_info(public_key_contents)
+      def with_draft_key_info(options)
+        public_key_contents = options.include?(:public_key_contents) ?
+            options[:public_key_contents] :
+            cookbook_file_contents(options[:cookbook_file],options[:cookbook])
         tmp_keyring_pri = temp_filename 'tmp_pri_keyring'
         tmp_keyring_pub = temp_filename 'tmp_pub_keyring'
         begin
@@ -19,6 +24,15 @@ module BswTech
       end
 
       private
+
+      def cookbook_file_contents(source, cookbook_name)
+        ::File.read(cookbook_file_location(source,cookbook_name))
+      end
+
+      def cookbook_file_location(source, cookbook_name)
+        cookbook = run_context.cookbook_collection[cookbook_name]
+        cookbook.preferred_filename_on_disk_location(node, :files, source)
+      end
 
       def temp_filename(prefix)
         Dir::Tmpname.create([prefix, '.gpg']) {}
