@@ -67,14 +67,25 @@ class Chef
         run_command 'gpg2 --import-ownertrust', :input => "#{key.fingerprint_no_whitespace}:6:\n"
       end
 
-      def action_replace
+      def with_draft_key_info
         tmp_keyring_pri = temp_filename 'tmp_pri_keyring'
         tmp_keyring_pub = temp_filename 'tmp_pub_keyring'
         begin
-          Chef::Log.info 'Setting up temporary keyring to compare keys'
+          Chef::Log.info 'Setting up temporary keyring'
           run_command "gpg2 --import --no-default-keyring --secret-keyring #{tmp_keyring_pri} --keyring #{tmp_keyring_pub}",
                       :input => @new_resource.key_contents
           draft = get_draft_key_details tmp_keyring_pub
+          yield draft
+        ensure
+          run_command "shred -n 20 -z -u #{tmp_keyring_pri}"
+          FileUtils.rm_rf tmp_keyring_pub
+          # GPG also leaves this file laying around
+          FileUtils.rm_rf "#{tmp_keyring_pub}~"
+        end
+      end
+
+      def action_replace
+        with_draft_key_info do |draft|
           current = get_current_key_details
           if key_needs_to_be_installed draft, current
             converge_by "Importing key #{draft.username} into keyring" do
@@ -84,11 +95,6 @@ class Chef
               trust_key draft
             end
           end
-        ensure
-          run_command "shred -n 20 -z -u #{tmp_keyring_pri}"
-          FileUtils.rm_rf tmp_keyring_pub
-          # GPG also leaves this file laying around
-          FileUtils.rm_rf "#{tmp_keyring_pub}~"
         end
       end
     end
