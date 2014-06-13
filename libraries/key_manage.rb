@@ -60,7 +60,7 @@ class Chef
       end
 
       def action_replace
-        with_draft_key_info do |draft|
+        with_draft_key_info(@new_resource.key_contents) do |draft|
           current = get_current_key_details
           if key_needs_to_be_installed draft, current
             converge_by "Importing key #{draft.username} into keyring" do
