@@ -19,6 +19,7 @@ class Chef
       def load_current_resource
         @current_resource ||= Chef::Resource::BswGpgKeyManage.new(new_resource.name)
         @current_resource.key_contents(new_resource.key_contents)
+        @current_resource.chef_vault_info(new_resource.chef_vault_info)
         @current_resource.for_user(new_resource.for_user)
         @current_resource
       end
@@ -58,14 +59,21 @@ class Chef
         cmd
       end
 
+      def load_from_vault
+        opts = @new_resource.chef_vault_info
+        item = ChefVault::Item.load(opts[:data_bag], opts[:item])
+        item[opts[:json_key]]
+      end
+
       def action_replace
-        draft = get_draft_key_info :public_key_contents => @new_resource.key_contents
+        key_contents = @new_resource.key_contents || load_from_vault
+        draft = get_draft_key_info :public_key_contents => key_contents
         current = get_current_key_details
         if key_needs_to_be_installed draft, current
           converge_by "Importing key #{draft.username} into keyring" do
             remove_existing_keys draft, current
             run_command 'gpg2 --import',
-                        :input => @new_resource.key_contents
+                        :input => key_contents
             trust_key draft
           end
         end

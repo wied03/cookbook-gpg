@@ -1,6 +1,7 @@
 # Encoding: utf-8
 
 require_relative 'spec_helper'
+require 'chef-vault'
 
 describe 'gpg::lwrp:key_manage' do
   include BswTech::ChefSpec::LwrpTestHelper
@@ -529,5 +530,73 @@ describe 'gpg::lwrp:key_manage' do
     command.input.should == 'thekeybitshere'
     expect(@chef_run).to render_file('/some/dummy/file').with_content('4D1C F328 8469 F260 C211  9B9F 76C9 5D74 390A A6C9')
     expect(@chef_run).to render_file('/some/dummy/file2').with_content('BSW Tech DB Backup db_dev (WAL-E/S3 Encryption key) <db_dev@wale.backup.bswtechconsulting.com>')
+  end
+
+  it 'allows supplying Chef vault info directly as opposed to key contents' do
+    # arrange
+    executed = []
+    @stub_setup = lambda do |shell_out|
+      executed << shell_out
+      case shell_out.command
+        when '/bin/sh -c "echo -n ~root"'
+          shell_out.stub!(:error!)
+          shell_out.stub!(:stdout).and_return('/home/root')
+        when 'gpg2 --import --no-default-keyring --secret-keyring temp_file_0 --keyring temp_file_1'
+          shell_out.stub!(:error!)
+        when 'gpg2 --list-keys --fingerprint --no-default-keyring --keyring temp_file_1'
+          shell_out.stub!(:error!)
+          shell_out.stub!(:stdout).and_return <<-EOF
+        -----------------
+        pub   2048R/390AA6C9 2014-06-10 [expires: 2016-06-09]
+              Key fingerprint = 4D1C F328 8469 F260 C211  9B9F 76C9 5D74 390A A6C9
+        uid                  BSW Tech DB Backup db_dev (WAL-E/S3 Encryption key) <db_dev@wale.backup.bswtechconsulting.com>
+        sub   2048R/1A0B6924 2014-06-10 [expires: 2016-06-09]
+          EOF
+        when 'gpg2 --list-keys --fingerprint'
+          shell_out.stub!(:error!)
+          shell_out.stub!(:stdout).and_return ''
+        when 'gpg2 --import'
+          shell_out.stub!(:error!)
+        when 'shred -n 20 -z -u temp_file_0'
+          shell_out.stub!(:error!)
+        when 'gpg2 --import-ownertrust'
+          shell_out.stub!(:error!)
+        else
+          shell_out.stub(:error!).and_raise "Unexpected command #{shell_out.command}"
+      end
+    end
+    stub_vault_entry = {'json_key' => 'thekeybitshere'}
+    ChefVault::Item.stub!(:load).with('thedatabag','the_item').and_return stub_vault_entry
+
+    # act
+    temp_lwrp_recipe contents: <<-EOF
+      bsw_gpg_key_manage 'root' do
+        chef_vault_info :data_bag => 'thedatabag', :item=> 'the_item', :json_key => 'json_key'
+      end
+    EOF
+
+    # assert
+    executed_cmdline = executed.inject({}) { |total, item|
+      total[item.command] = item.input
+      total }
+
+    executed_cmdline.keys.should == ['/bin/sh -c "echo -n ~root"',
+                                     'gpg2 --import --no-default-keyring --secret-keyring temp_file_0 --keyring temp_file_1',
+                                     'gpg2 --list-keys --fingerprint --no-default-keyring --keyring temp_file_1',
+                                     'shred -n 20 -z -u temp_file_0',
+                                     'gpg2 --list-keys --fingerprint',
+                                     'gpg2 --import',
+                                     'gpg2 --import-ownertrust']
+    users = executed.map { |e| e.user }.uniq
+    users.should == ['root']
+    env = executed.map { |e| e.environment['HOME'] }.uniq
+    # 1st call is to get home dir, so won't be there yet
+    env.should == [nil, '/home/root']
+    input_specified = executed_cmdline.reject { |k, v| !v }
+    input_specified.should == {'gpg2 --import --no-default-keyring --secret-keyring temp_file_0 --keyring temp_file_1' => 'thekeybitshere',
+                               'gpg2 --import' => 'thekeybitshere',
+                               'gpg2 --import-ownertrust' => "4D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"}
+    resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'root'
+    expect(resource.updated_by_last_action?).to eq(true)
   end
 end
