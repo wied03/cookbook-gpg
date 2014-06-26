@@ -5,9 +5,7 @@
 .*.sw[a-z]
 *.un~
 pkg/
-.idea/workspace.xml
-.idea/runConfigurations/*
-.idea/gpg.iml
+.idea
 test/unit/spec/gen_cookbooks/*
 
 # Berkshelf
