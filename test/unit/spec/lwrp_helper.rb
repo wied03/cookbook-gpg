@@ -15,7 +15,8 @@ module BswTech
         'lwrp_gen'
       end
 
-      def temp_lwrp_recipe(contents:,runner_options:{})
+      def temp_lwrp_recipe(contents)
+        runner_options = {}
         create_temp_cookbook(contents)
         RSpec.configure do |config|
           config.cookbook_path = [*config.cookbook_path] << generated_cookbook_path

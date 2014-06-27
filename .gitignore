@@ -14,7 +14,6 @@ test/unit/spec/gen_cookbooks/*
 Berksfile.lock
 
 # Bundler
-Gemfile.lock
 bin/*
 .bundle/*
 

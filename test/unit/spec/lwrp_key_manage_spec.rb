@@ -89,7 +89,7 @@ describe 'gpg::lwrp:key_manage' do
     end
 
     # act
-    temp_lwrp_recipe contents: <<-EOF
+    temp_lwrp_recipe  <<-EOF
       bsw_gpg_key_manage 'root' do
         key_contents 'thekeybitshere'
       end
@@ -157,7 +157,7 @@ describe 'gpg::lwrp:key_manage' do
     end
 
     # act
-    temp_lwrp_recipe contents: <<-EOF
+    temp_lwrp_recipe  <<-EOF
       bsw_gpg_key_manage 'root' do
         key_contents 'thekeybitshere'
       end
@@ -225,7 +225,7 @@ describe 'gpg::lwrp:key_manage' do
     end
 
     # act
-    temp_lwrp_recipe contents: <<-EOF
+    temp_lwrp_recipe  <<-EOF
       bsw_gpg_key_manage 'root' do
         key_contents 'thekeybitshere'
       end
@@ -291,7 +291,7 @@ describe 'gpg::lwrp:key_manage' do
     end
 
     # act
-    temp_lwrp_recipe contents: <<-EOF
+    temp_lwrp_recipe  <<-EOF
       bsw_gpg_key_manage 'someone_else' do
         key_contents 'thekeybitshere'
       end
@@ -365,7 +365,7 @@ describe 'gpg::lwrp:key_manage' do
     end
 
     # act
-    temp_lwrp_recipe contents: <<-EOF
+    temp_lwrp_recipe  <<-EOF
       bsw_gpg_key_manage 'root' do
         key_contents 'thekeybitshere'
       end
@@ -416,7 +416,7 @@ describe 'gpg::lwrp:key_manage' do
     FileUtils.stub!(:rm_rf) { |file| removed << file }
 
     # act
-    lambda { temp_lwrp_recipe contents: <<-EOF
+    lambda { temp_lwrp_recipe  <<-EOF
       bsw_gpg_key_manage 'root' do
         key_contents 'thekeybitshere'
       end
@@ -457,7 +457,7 @@ describe 'gpg::lwrp:key_manage' do
     end
 
     # act
-    temp_lwrp_recipe contents: <<-EOF
+    temp_lwrp_recipe  <<-EOF
       key = get_draft_key_info :public_key_contents => 'thekeybitshere'
       file '/some/dummy/file' do
         content key.fingerprint
@@ -511,7 +511,7 @@ describe 'gpg::lwrp:key_manage' do
     end
 
     # act
-    temp_lwrp_recipe contents: <<-EOF
+    temp_lwrp_recipe  <<-EOF
        key = get_draft_key_info :cookbook => 'lwrp_gen',:cookbook_file => 'dev/thefile.pub'
        file '/some/dummy/file' do
          content key.fingerprint
@@ -569,7 +569,7 @@ describe 'gpg::lwrp:key_manage' do
     ChefVault::Item.stub!(:load).with('thedatabag','the_item').and_return stub_vault_entry
 
     # act
-    temp_lwrp_recipe contents: <<-EOF
+    temp_lwrp_recipe  <<-EOF
       bsw_gpg_key_manage 'root' do
         chef_vault_info :data_bag => 'thedatabag', :item=> 'the_item', :json_key => 'json_key'
       end
