@@ -30,7 +30,7 @@ RSpec::Core::RakeTask.new(:spec) do |t, args|
 end
 
 # The default rake task should just run it all
-task default: ['style', 'spec', 'integration']
+task default: ['spec']
 
 begin
   require 'kitchen/rake_tasks'
