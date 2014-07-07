@@ -102,8 +102,6 @@ GEM
     hitimes (1.2.1)
     ipaddress (0.8.0)
     json (1.8.1)
-    kitchen-vagrant (0.15.0)
-      test-kitchen (~> 1.0)
     listen (2.7.7)
       celluloid (>= 0.15.2)
       rb-fsevent (>= 0.9.3)
@@ -241,7 +239,6 @@ DEPENDENCIES
   guard (>= 2.6)
   guard-foodcritic (>= 1.0.2)
   guard-rubocop (>= 1.1)
-  kitchen-vagrant
   mixlib-shellout
   rake (>= 10.2)
   rubocop (= 0.23)
