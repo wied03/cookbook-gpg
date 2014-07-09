@@ -6,13 +6,11 @@ module BswTech
       def initialize(gpg_output)
         fingerprints = []
         gpg_output.scan(/Key fingerprint = (.*)$/) do |match|
-          md = Regexp.last_match
-          fingerprints << md[1]
+          fingerprints << match[0]
         end
         names = []
         gpg_output.scan(/uid\s+(.*)$/) do |match|
-          md = Regexp.last_match
-          names << md[1]
+          names << match[0]
         end
         raise "Fingerprints/usernames do not match!" if fingerprints.length != names.length
         @keys = []
