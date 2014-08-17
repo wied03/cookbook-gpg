@@ -66,7 +66,7 @@ class Chef
 
       def action_replace
         key_contents = @new_resource.key_contents || load_from_vault
-        draft = get_draft_key_info :public_key_contents => key_contents
+        draft = get_draft_key_from_string key_contents
         current = get_current_key_details
         if key_needs_to_be_installed draft, current
           converge_by "Importing key #{draft.username} into keyring" do
