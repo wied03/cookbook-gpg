@@ -17,7 +17,7 @@ ssb   2048R/DF94190A 2014-06-11
     EOF
 
     # act
-    result = BswTech::Gpg::GpgParser.new.parse :ring, gpg_output
+    result = BswTech::Gpg::GpgParser.new.parse_output_ring gpg_output
 
     # assert
     result.should have(1).items
@@ -25,6 +25,7 @@ ssb   2048R/DF94190A 2014-06-11
     key.fingerprint.should == 'FEF5 2674 8083 5871 C5EC  3382 3180 12D6 1E7D 2809'
     key.username.should == 'Brady Wied <brady@bswtechconsulting.com>'
     key.id.should == '1E7D2809'
+    key.type.should == :secret
   end
 
   it 'parses multiple ring secret keys' do
@@ -45,7 +46,7 @@ ssb   2048R/DF94190A 2014-06-11
     EOF
 
     # act
-    result = BswTech::Gpg::GpgParser.new.parse :ring, gpg_output
+    result = BswTech::Gpg::GpgParser.new.parse_output_ring gpg_output
 
     # assert
     result.should have(2).items
@@ -53,10 +54,12 @@ ssb   2048R/DF94190A 2014-06-11
     key.fingerprint.should == 'FEF5 2674 8083 5871 C5EC  3382 3180 12D6 1E7D 2809'
     key.username.should == 'Brady Wied <brady@bswtechconsulting.com>'
     key.id.should == '1E7D2809'
+    key.type.should == :secret
     key = result[1]
     key.fingerprint.should == 'BEF5 2674 8083 5871 C5EC  3382 3180 12D6 1E7D 2809'
     key.username.should == 'Brady2 Wied <brady@bswtechconsulting.com>'
     key.id.should == '1E7D2808'
+    key.type.should == :secret
   end
 
   it 'parses 1 ring public key' do
@@ -70,7 +73,7 @@ ssb   2048R/DF94190A 2014-06-11
     EOF
 
     # act
-    result = BswTech::Gpg::GpgParser.new.parse :ring, gpg_output
+    result = BswTech::Gpg::GpgParser.new.parse_output_ring gpg_output
 
     # assert
     result.should have(1).items
@@ -78,6 +81,7 @@ ssb   2048R/DF94190A 2014-06-11
     key.fingerprint.should == '4D1C F328 8469 F260 C211  9B9F 76C9 5D74 390A A6C9'
     key.username.should == 'BSW Tech DB Backup db_dev (WAL-E/S3 Encryption key) <db_dev@wale.backup.bswtechconsulting.com>'
     key.id.should == '390AA6C9'
+    key.type.should == :public
   end
 
   it 'gets fingerprint without whitespace' do
@@ -91,7 +95,7 @@ ssb   2048R/DF94190A 2014-06-11
     EOF
 
     # act
-    result = BswTech::Gpg::GpgParser.new.parse :ring, gpg_output
+    result = BswTech::Gpg::GpgParser.new.parse_output_ring gpg_output
 
     # assert
     result.should have(1).items
@@ -104,7 +108,7 @@ ssb   2048R/DF94190A 2014-06-11
     gpg_output = ''
 
     # act
-    result = BswTech::Gpg::GpgParser.new.parse :ring, gpg_output
+    result = BswTech::Gpg::GpgParser.new.parse_output_ring gpg_output
 
     # assert
     result.should have(0).items
@@ -126,7 +130,7 @@ sub   2048R/03A096FD 2014-06-11 [expires: 2016-06-10]
     EOF
 
     # act
-    result = BswTech::Gpg::GpgParser.new.parse :ring, gpg_output
+    result = BswTech::Gpg::GpgParser.new.parse_output_ring gpg_output
 
     # assert
     result.should have(2).items
@@ -134,10 +138,12 @@ sub   2048R/03A096FD 2014-06-11 [expires: 2016-06-10]
     key.fingerprint.should == '5D1C F328 8469 F260 C211  9B9F 76C9 5D74 390A A6C9'
     key.username.should == 'CSW Tech DB Backup db_dev (WAL-E/S3 Encryption key) <db_dev@wale.backup.bswtechconsulting.com>'
     key.id.should == '390AA6C9'
+    key.type.should == :public
     key = result[1]
     key.fingerprint.should == '566F 8148 FA10 1FAD 50A1  0038 4DAF 5792 AA72 CC9B'
     key.username.should == 'BSW Tech DB Backup db_dev (WAL-E/S3 Encryption key) <db_dev@wale.backup.bswtechconsulting.com>'
     key.id.should == 'AA72CC9B'
+    key.type.should == :public
   end
 
   it 'parses 1 secret external key OK' do
@@ -149,7 +155,7 @@ sub   2048R/03A096FD 2014-06-11 [expires: 2016-06-10]
     EOF
 
     # act
-    result = BswTech::Gpg::GpgParser.new.parse :external, gpg_output
+    result = BswTech::Gpg::GpgParser.new.parse_output_external gpg_output
 
     # assert
     result.should have(1).items
@@ -157,6 +163,7 @@ sub   2048R/03A096FD 2014-06-11 [expires: 2016-06-10]
     key.fingerprint.should == '7B11 C141 0667 3B53 46A6  5351 F44B 4C68 33AE 3E6C'
     key.username.should == 'pkg_key dev (pkg_key) <dev@aptly.bswtechconsulting.com>'
     key.id.should == '33AE3E6C'
+    key.type.should == :secret
   end
 
   it 'parses 1 public external key OK' do
@@ -168,7 +175,7 @@ sub   2048R/03A096FD 2014-06-11 [expires: 2016-06-10]
     EOF
 
     # act
-    result = BswTech::Gpg::GpgParser.new.parse :external, gpg_output
+    result = BswTech::Gpg::GpgParser.new.parse_output_external gpg_output
 
     # assert
     result.should have(1).items
@@ -176,5 +183,22 @@ sub   2048R/03A096FD 2014-06-11 [expires: 2016-06-10]
     key.fingerprint.should == '7B11 C141 0667 3B53 46A6  5351 F44B 4C68 33AE 3E6C'
     key.username.should == 'pkg_key dev (pkg_key) <dev@aptly.bswtechconsulting.com>'
     key.id.should == '33AE3E6C'
+    key.type.should == :public
+  end
+
+  it 'gives an error if an unexpected key type is encountered' do
+    # arrange
+    gpg_output = <<-EOF
+        foo  2048R/33AE3E6C 2014-08-17 pkg_key dev (pkg_key) <dev@aptly.bswtechconsulting.com>
+              Key fingerprint = 7B11 C141 0667 3B53 46A6  5351 F44B 4C68 33AE 3E6C
+        sub  2048R/175EAAB1 2014-08-17 [expires: 2016-08-16]
+    EOF
+
+    # act
+    action = lambda { BswTech::Gpg::GpgParser.new.parse_output_external gpg_output }
+
+    # assert
+    expect(action).to raise_exception 'foo'
+    pending 'Write this test'
   end
 end
