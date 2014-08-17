@@ -21,17 +21,18 @@ class Chef
         @current_resource.key_contents(new_resource.key_contents)
         @current_resource.chef_vault_info(new_resource.chef_vault_info)
         @current_resource.for_user(new_resource.for_user)
+        @current_resource.key_type(new_resource.key_type)
         @current_resource
       end
 
-      def get_current_key_details()
-        Chef::Log.info 'Checking currently installed keys'
-        contents = run_command 'gpg2 --list-keys --fingerprint'
-        BswTech::Gpg::GpgParser.new.parse(contents.stdout)
+      def get_current_secret_key_details()
+        Chef::Log.info 'Retrieving currently installed secret keys'
+        contents = run_command 'gpg2 --list-secret-keys --fingerprint'
+        BswTech::Gpg::GpgParser.new.parse(:ring, contents.stdout)
       end
 
       def key_needs_to_be_installed(draft, current)
-        Chef::Log.info 'Checking if any keys are installed'
+        Chef::Log.info 'Checking if key is already installed'
         current.all? { |x| x.fingerprint != draft.fingerprint }
       end
 
@@ -67,7 +68,7 @@ class Chef
       def action_replace
         key_contents = @new_resource.key_contents || load_from_vault
         draft = get_draft_key_from_string key_contents
-        current = get_current_key_details
+        current = get_current_secret_key_details
         if key_needs_to_be_installed draft, current
           converge_by "Importing key #{draft.username} into keyring" do
             remove_existing_keys draft, current
