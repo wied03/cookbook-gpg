@@ -40,8 +40,8 @@ module BswTech
       def parse_details_from_keyring(public_keyring_path)
         Chef::Log.info 'Fetching fingerprints and user names of draft keys'
         contents = run_command "gpg2 --list-keys --fingerprint --no-default-keyring --keyring #{public_keyring_path}"
-        parser = BswTech::Gpg::GpgParser.new(contents.stdout)
-        parser.keys[0]
+        result = BswTech::Gpg::GpgParser.new.parse(contents.stdout)
+        result.first
       end
     end
   end

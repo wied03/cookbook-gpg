@@ -27,8 +27,7 @@ class Chef
       def get_current_key_details()
         Chef::Log.info 'Checking currently installed keys'
         contents = run_command 'gpg2 --list-keys --fingerprint'
-        parser = BswTech::Gpg::GpgParser.new(contents.stdout)
-        parser.keys
+        BswTech::Gpg::GpgParser.new.parse(contents.stdout)
       end
 
       def key_needs_to_be_installed(draft, current)
