@@ -41,8 +41,10 @@ module BswTech
             result[:id] = parse_key_id fields[4]
           when :user_id
             result[:id] = fields[9]
+          when :public_key
+            result[:id] = parse_key_id fields[4]
           else
-            raise "Should not get to this point"
+            raise "Should not get to this point, no case statement for record #{fields}"
         end
         result
       end

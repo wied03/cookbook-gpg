@@ -48,12 +48,12 @@ ssb::2048:1:D1D60030A73B82AE:1408315896::::::::::
     key.fingerprint.should == 'FEF5267480835871C5EC3382318012D61E7D2809'
     key.username.should == 'Brady Wied <brady@bswtechconsulting.com>'
     key.id.should == '1E7D2809'
-    key.type.should == :secret
+    key.type.should == :secret_key
     key = result[1]
     key.fingerprint.should == 'A7A5347B5F4AD499E7D1318E7E75A58532E18F7B'
     key.username.should == 'Brady Test 2 (foo) <bt@wied.us>'
     key.id.should == '32E18F7B'
-    key.type.should == :secret
+    key.type.should == :secret_key
   end
 
   it 'parses 1 ring public key' do
@@ -75,7 +75,7 @@ sub:u:2048:1:05D96AC415DB901E:1408259046:1471331046:::::esa:
     key.fingerprint.should == 'A6BB3E7C28480ADBC59864CF4463F8F9CA62B81E'
     key.username.should == 'pkg_key dev <dev@aptly.bswtechconsulting.com>'
     key.id.should == 'CA62B81E'
-    key.type.should == :public
+    key.type.should == :public_key
   end
 
   it 'deals with escaped colons properly' do
@@ -97,7 +97,7 @@ sub:u:2048:1:05D96AC415DB901E:1408259046:1471331046:::::esa:
     key.fingerprint.should == 'A6BB3E7C28480ADBC59864CF4463F8F9CA62B81E'
     key.username.should == 'pkg_key dev (something: good) <dev@aptly.bswtechconsulting.com>'
     key.id.should == 'CA62B81E'
-    key.type.should == :public
+    key.type.should == :public_key
   end
 
   it 'parses properly with no ring keys there' do
@@ -139,17 +139,17 @@ sub:u:2048:1:D1D60030A73B82AE:1408315896:1471387896:::::e:
     key.fingerprint.should == 'FEF5267480835871C5EC3382318012D61E7D2809'
     key.username.should == 'Brady Wied <brady@bswtechconsulting.com>'
     key.id.should == '1E7D2809'
-    key.type.should == :public
+    key.type.should == :public_key
     key = result[1]
     key.fingerprint.should == 'D8184DB03ECA8237A1DA9033DF4FD2ABB22D2CD5'
     key.username.should == 'keybase.io/leolaporte <leolaporte@keybase.io>'
     key.id.should == 'B22D2CD5'
-    key.type.should == :public
+    key.type.should == :public_key
     key = result[2]
     key.fingerprint.should == 'A7A5347B5F4AD499E7D1318E7E75A58532E18F7B'
     key.username.should == 'Brady Test 2 (foo) <bt@wied.us>'
     key.id.should == '32E18F7B'
-    key.type.should == :public
+    key.type.should == :public_key
   end
 
   it 'parses 1 secret external key OK' do
@@ -169,7 +169,7 @@ ssb::2048:1:05D96AC415DB901E:1408259046::::
     key.fingerprint.should == 'A6BB3E7C28480ADBC59864CF4463F8F9CA62B81E'
     key.username.should == 'pkg_key dev <dev@aptly.bswtechconsulting.com>'
     key.id.should == 'CA62B81E'
-    key.type.should == :secret
+    key.type.should == :secret_key
   end
 
   it 'parses 1 public external key OK' do
@@ -189,7 +189,7 @@ EOF
     key.fingerprint.should == 'A6BB3E7C28480ADBC59864CF4463F8F9CA62B81E'
     key.username.should == 'pkg_key dev <dev@aptly.bswtechconsulting.com>'
     key.id.should == 'CA62B81E'
-    key.type.should == :public
+    key.type.should == :public_key
   end
 
   it 'gives an error if an unexpected key type is encountered when parsing external key stuff' do
