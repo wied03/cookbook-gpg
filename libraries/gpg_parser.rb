@@ -59,19 +59,26 @@ module BswTech
       def parse(ring_or_external, gpg_output)
         records = gpg_output.split("\n").map { |raw| parse_record ring_or_external, raw }.compact
         results = []
-        fingerprint = records.find { |r| r[:type] == :fingerprint }
-        raise "Unable to find fingerprint in records #{records}" unless fingerprint
-        first_key = records.find { |r| [:public_key, :secret_key].include?(r[:type]) }
-        raise "Unable to find public or secret key in records #{records}" unless first_key
-        # When looking at an external key, username is in the same record as the key ID
-        username = ring_or_external == :ring ?
-            records.find { |r| r[:type] == :user_id } :
-            {:id => first_key[:uid]}
-        raise "Unable to find username in records #{records}" unless username
-        results << Gpg::KeyDetails.new(fingerprint=fingerprint[:contents],
-                                       username=username[:id],
-                                       id=first_key[:id],
-                                       type=first_key[:type])
+        while records.any?
+          fingerprint = records.find { |r| r[:type] == :fingerprint }
+          raise "Unable to find fingerprint in records #{records}" unless fingerprint
+          records.delete fingerprint
+          first_key = records.find { |r| [:public_key, :secret_key].include?(r[:type]) }
+          raise "Unable to find public or secret key in records #{records}" unless first_key
+          records.delete first_key
+          # When looking at an external key, username is in the same record as the key ID
+          username = ring_or_external == :ring ?
+              records.find { |r| r[:type] == :user_id } :
+              {:id => first_key[:uid]}
+          raise "Unable to find username in records #{records}" unless username
+          if ring_or_external == :ring
+            records.delete username
+          end
+          results << Gpg::KeyDetails.new(fingerprint=fingerprint[:contents],
+                                         username=username[:id],
+                                         id=first_key[:id],
+                                         type=first_key[:type])
+        end
         results
       end
     end
