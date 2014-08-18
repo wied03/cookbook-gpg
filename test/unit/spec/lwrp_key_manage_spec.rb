@@ -154,6 +154,9 @@ describe 'gpg::lwrp:key_manage' do
     EOF
 
     # assert
+    expect(@current_type_checked).to eq(:secret_key)
+    expect(@external_type).to eq(:secret_key)
+    expect(@base64_used).to eq('thekeybitshere')
     executed_cmdline = executed_command_lines
     executed_cmdline.keys.should == ['/bin/sh -c "echo -n ~root"']
     users = @shell_outs.map { |e| e.user }.uniq
@@ -210,6 +213,9 @@ describe 'gpg::lwrp:key_manage' do
     EOF
 
     # assert
+    expect(@current_type_checked).to eq(:secret_key)
+    expect(@external_type).to eq(:secret_key)
+    expect(@base64_used).to eq('thekeybitshere')
     executed_cmdline = executed_command_lines
     executed_cmdline.keys.should == ['/bin/sh -c "echo -n ~root"',
                                      'gpg2 --import',
@@ -255,6 +261,9 @@ describe 'gpg::lwrp:key_manage' do
     EOF
 
     # assert
+    expect(@current_type_checked).to eq(:secret_key)
+    expect(@external_type).to eq(:secret_key)
+    expect(@base64_used).to eq('thekeybitshere')
     executed_cmdline = executed_command_lines
     executed_cmdline.keys.should == ['/bin/sh -c "echo -n ~someone_else"',
                                      'gpg2 --import',
@@ -316,6 +325,9 @@ describe 'gpg::lwrp:key_manage' do
     EOF
 
     # assert
+    expect(@current_type_checked).to eq(:secret_key)
+    expect(@external_type).to eq(:secret_key)
+    expect(@base64_used).to eq('thekeybitshere')
     executed_cmdline = executed_command_lines
     executed_cmdline.keys.should == ['/bin/sh -c "echo -n ~root"',
                                      'gpg2 --delete-secret-and-public-key --batch --yes 6D1CF3288469F260C2119B9F76C95D74390AA6C9',
@@ -372,6 +384,8 @@ describe 'gpg::lwrp:key_manage' do
     EOF
 
     # assert
+    expect(@external_type).to eq(:secret_key)
+    expect(@base64_used).to eq('thekeybitshere')
     expect(@chef_run).to render_file('/some/dummy/file').with_content('7B11C14106673B5346A65351F44B4C6833AE3E6C')
     expect(@chef_run).to render_file('/some/dummy/file2').with_content('pkg_key dev (pkg_key) <dev@aptly.bswtechconsulting.com>')
   end
@@ -387,20 +401,16 @@ describe 'gpg::lwrp:key_manage' do
 
   it 'allows working with private key fingerprints from the recipe based on a cookbook file' do
     # arrange
-    executed = []
+    stub_retriever(draft=BswTech::Gpg::KeyDetails.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+                                                      username='BSW Tech DB Backup db_dev (WAL-E/S3 Encryption key) <db_dev@wale.backup.bswtechconsulting.com>',
+                                                      id='the id',
+                                                      type=:secret_key))
     @stub_setup = lambda do |shell_out|
-      executed << shell_out
+      @shell_outs << shell_out
       case shell_out.command
         when '/bin/sh -c "echo -n ~root"'
           shell_out.stub!(:error!)
           shell_out.stub!(:stdout).and_return('/home/root')
-        when 'gpg2 --with-fingerprint'
-          shell_out.stub!(:error!)
-          shell_out.stub!(:stdout).and_return <<-EOF
-sec  2048R/390AA6C9 2014-08-17 BSW Tech DB Backup db_dev (WAL-E/S3 Encryption key) <db_dev@wale.backup.bswtechconsulting.com>
-              Key fingerprint = 4D1C F328 8469 F260 C211  9B9F 76C9 5D74 390A A6C9
-        ssb  2048R/175EAAB1 2014-08-17
-          EOF
         else
           shell_out.stub(:error!).and_raise "Unexpected command #{shell_out.command}"
       end
@@ -413,7 +423,7 @@ sec  2048R/390AA6C9 2014-08-17 BSW Tech DB Backup db_dev (WAL-E/S3 Encryption ke
 
     # act
     temp_lwrp_recipe <<-EOF
-       key = get_draft_key_from_cookbook 'lwrp_gen', 'dev/thefile.pub'
+       key = get_draft_key_from_cookbook :secret_key, 'lwrp_gen', 'dev/thefile.pub'
        file '/some/dummy/file' do
          content key.fingerprint
        end
@@ -424,12 +434,9 @@ sec  2048R/390AA6C9 2014-08-17 BSW Tech DB Backup db_dev (WAL-E/S3 Encryption ke
     EOF
 
     # assert
-    command = nil
-    do_shift = lambda { command = executed.shift }
-    do_shift.call
-    command.command.should == 'gpg2 --with-fingerprint'
-    command.input.should == 'thekeybitshere'
-    expect(@chef_run).to render_file('/some/dummy/file').with_content('4D1C F328 8469 F260 C211  9B9F 76C9 5D74 390A A6C9')
+    expect(@external_type).to eq(:secret_key)
+    expect(@base64_used).to eq('thekeybitshere')
+    expect(@chef_run).to render_file('/some/dummy/file').with_content('4D1CF3288469F260C2119B9F76C95D74390AA6C9')
     expect(@chef_run).to render_file('/some/dummy/file2').with_content('BSW Tech DB Backup db_dev (WAL-E/S3 Encryption key) <db_dev@wale.backup.bswtechconsulting.com>')
   end
 
