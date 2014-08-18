@@ -45,7 +45,7 @@ class Chef
         key_to_delete = current.find { |x| x.username == draft.username }
         if key_to_delete
           Chef::Log.info "Deleting existing key for #{key_to_delete.username} in order to replace it"
-          run_command "gpg2 --delete-secret-and-public-key --batch --yes #{key_to_delete.fingerprint_no_whitespace}"
+          run_command "gpg2 --delete-secret-and-public-key --batch --yes #{key_to_delete.fingerprint}"
         end
       end
 
