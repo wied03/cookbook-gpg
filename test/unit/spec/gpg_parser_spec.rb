@@ -22,7 +22,7 @@ ssb::2048:1:3409D865DF94190A:1402513817::::::::::
     key.fingerprint.should == 'FEF5267480835871C5EC3382318012D61E7D2809'
     key.username.should == 'Brady Wied <brady@bswtechconsulting.com>'
     key.id.should == '1E7D2809'
-    key.type.should == :secret
+    key.type.should == :secret_key
   end
 
   it 'parses multiple ring secret keys' do

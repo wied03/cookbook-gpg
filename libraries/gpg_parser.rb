@@ -3,15 +3,16 @@ module BswTech
     class GpgParser
       @@record_type_mapping = {'pub' => :public_key,
                                'sec' => :secret_key,
-                               'fpr' => :fingerprint}
+                               'fpr' => :fingerprint,
+                               'uid' => :user_id}
 
       def parse_output_ring(gpg_output)
-        parse pattern='^(?<keytype>\w+)\s+\S+/(?<id>\S+).*?$\s+Key fingerprint = (?<fp>.*?)$\s+uid\s+(?<user>.*?)$',
+        parse ring_or_external=:ring,
               gpg_output=gpg_output
       end
 
       def parse_output_external(gpg_output)
-        parse pattern='^(?<keytype>\w+)\s+\S+/(?<id>\S+) \S+ (?<user>.*?)$\s+Key fingerprint = (?<fp>.*?)$',
+        parse ring_or_external=:external,
               gpg_output=gpg_output
       end
 
@@ -19,6 +20,11 @@ module BswTech
 
       def get_key_type(match)
         @@key_type_mapping[match['keytype']]
+      end
+
+      # ID is commonly last 4 bytes or 8 hex characters
+      def parse_key_id(full_key_id)
+        full_key_id[-8..-1]
       end
 
       def parse_record(record_raw)
@@ -32,20 +38,26 @@ module BswTech
           when :fingerprint
             result[:contents] = fields[9]
           when :secret_key
-            result[:id] = fields[4]
+            result[:id] = parse_key_id fields[4]
+          when :user_id
+            result[:id] = fields[9]
           else
             raise "Should not get to this point"
         end
+        result
       end
 
-      def parse(pattern, gpg_output)
+      def parse(ring_or_external, gpg_output)
         records = gpg_output.split("\n").map { |raw| parse_record raw }.compact
         results = []
-        fingerprint = records.find { |r| r[:type] == :fingerprint }[:contents]
+        fingerprint = records.find { |r| r[:type] == :fingerprint }
+        raise "Unable to find fingerprint in records #{records}" unless fingerprint
         first_key = records.find { |r| [:public_key, :secret_key].include?(r[:type]) }
-        username = records.find { |r| r[:type] == :userid }[:id]
-        results << Gpg::KeyDetails.new(fingerprint=fingerprint,
-                                       username=username,
+        raise "Unable to find public or secret key in records #{records}" unless first_key
+        username = records.find { |r| r[:type] == :user_id }
+        raise "Unable to find username in records #{records}" unless username
+        results << Gpg::KeyDetails.new(fingerprint=fingerprint[:contents],
+                                       username=username[:id],
                                        id=first_key[:id],
                                        type=first_key[:type])
         results
