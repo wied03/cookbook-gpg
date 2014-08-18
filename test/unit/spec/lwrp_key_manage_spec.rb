@@ -61,7 +61,135 @@ describe 'gpg::lwrp:key_manage' do
     end
   end
 
-  it 'works properly when importing a private key that is not already there' do
+  it 'complains if the base64 input does not contain public or private key header' do
+    # arrange
+    stub_retriever(draft=nil)
+    @stub_setup = lambda do |shell_out|
+      @shell_outs << shell_out
+      case shell_out.command
+        when '/bin/sh -c "echo -n ~root"'
+          shell_out.stub!(:error!)
+          shell_out.stub!(:stdout).and_return('/home/root')
+        when 'gpg2 --import'
+          shell_out.stub!(:error!)
+        when 'gpg2 --import-ownertrust'
+          shell_out.stub!(:error!)
+        else
+          shell_out.stub(:error!).and_raise "Unexpected command #{shell_out.command}"
+      end
+    end
+
+    # act
+    action = lambda {
+      temp_lwrp_recipe <<-EOF
+          bsw_gpg_key_manage 'root' do
+            key_contents 'no header in here'
+          end
+      EOF
+    }
+
+    # assert
+    expect(action).to raise_exception RuntimeError,
+                                      "bsw_gpg_key_manage[root] (lwrp_gen::default line 1) had an error: RuntimeError: Supplied key contents did NOT start with '-----BEGIN PGP PUBLIC KEY BLOCK-----' or '-----BEGIN PGP PRIVATE KEY BLOCK-----'"
+  end
+
+  it 'complains if the base64 input contains more than 1 public key' do
+    # arrange
+    stub_retriever(draft=nil)
+    @stub_setup = lambda do |shell_out|
+      @shell_outs << shell_out
+      case shell_out.command
+        when '/bin/sh -c "echo -n ~root"'
+          shell_out.stub!(:error!)
+          shell_out.stub!(:stdout).and_return('/home/root')
+        when 'gpg2 --import'
+          shell_out.stub!(:error!)
+        when 'gpg2 --import-ownertrust'
+          shell_out.stub!(:error!)
+        else
+          shell_out.stub(:error!).and_raise "Unexpected command #{shell_out.command}"
+      end
+    end
+
+    # act
+    action = lambda {
+      temp_lwrp_recipe <<-EOF
+        bsw_gpg_key_manage 'root' do
+          key_contents "-----BEGIN PGP PUBLIC KEY BLOCK-----\nstuff\n-----END PGP PUBLIC KEY BLOCK-----\n-----BEGIN PGP PUBLIC KEY BLOCK-----\n-----END PGP PUBLIC KEY BLOCK-----"
+        end
+      EOF
+    }
+
+    # assert
+    expect(action).to raise_exception RuntimeError,
+                                      'bsw_gpg_key_manage[root] (lwrp_gen::default line 1) had an error: RuntimeError: Supplied key contents has 2 public_key values, only 1 is allowed'
+  end
+
+  it 'complains if the base64 input contains more than 1 secret key' do
+    # arrange
+    stub_retriever(draft=nil)
+    @stub_setup = lambda do |shell_out|
+      @shell_outs << shell_out
+      case shell_out.command
+        when '/bin/sh -c "echo -n ~root"'
+          shell_out.stub!(:error!)
+          shell_out.stub!(:stdout).and_return('/home/root')
+        when 'gpg2 --import'
+          shell_out.stub!(:error!)
+        when 'gpg2 --import-ownertrust'
+          shell_out.stub!(:error!)
+        else
+          shell_out.stub(:error!).and_raise "Unexpected command #{shell_out.command}"
+      end
+    end
+
+    # act
+    action = lambda {
+      temp_lwrp_recipe <<-EOF
+        bsw_gpg_key_manage 'root' do
+          key_contents "-----BEGIN PGP PRIVATE KEY BLOCK-----\nstuff\n-----END PGP PRIVATE KEY BLOCK-----\n-----BEGIN PGP PRIVATE KEY BLOCK-----\n-----END PGP PRIVATE KEY BLOCK-----"
+        end
+      EOF
+    }
+
+    # assert
+    expect(action).to raise_exception RuntimeError,
+                                      'bsw_gpg_key_manage[root] (lwrp_gen::default line 1) had an error: RuntimeError: Supplied key contents has 2 secret_key values, only 1 is allowed'
+  end
+
+  it 'complains if the base64 input contains a public and secret key' do
+    # arrange
+    stub_retriever(draft=nil)
+    @stub_setup = lambda do |shell_out|
+      @shell_outs << shell_out
+      case shell_out.command
+        when '/bin/sh -c "echo -n ~root"'
+          shell_out.stub!(:error!)
+          shell_out.stub!(:stdout).and_return('/home/root')
+        when 'gpg2 --import'
+          shell_out.stub!(:error!)
+        when 'gpg2 --import-ownertrust'
+          shell_out.stub!(:error!)
+        else
+          shell_out.stub(:error!).and_raise "Unexpected command #{shell_out.command}"
+      end
+    end
+
+    # act
+    action = lambda {
+      temp_lwrp_recipe <<-EOF
+        bsw_gpg_key_manage 'root' do
+          key_contents "-----BEGIN PGP PUBLIC KEY BLOCK-----\nstuff\n-----END PGP PUBLIC KEY BLOCK-----\n-----BEGIN PGP PRIVATE KEY BLOCK-----\n-----END PGP PRIVATE KEY BLOCK-----"
+        end
+      EOF
+    }
+
+    # assert
+    expect(action).to raise_exception RuntimeError,
+                                      'bsw_gpg_key_manage[root] (lwrp_gen::default line 1) had an error: RuntimeError: Supplied key contents has both secret and public keys, only 1 key is allowed'
+  end
+
+  it 'works properly when importing a secret key that is not already there' do
     # arrange
     stub_retriever(draft=BswTech::Gpg::KeyDetails.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
                                                       username='the username',
@@ -86,14 +214,14 @@ describe 'gpg::lwrp:key_manage' do
     # act
     temp_lwrp_recipe <<-EOF
       bsw_gpg_key_manage 'root' do
-        key_contents 'thekeybitshere'
+        key_contents '-----BEGIN PGP PRIVATE KEY BLOCK-----'
       end
     EOF
 
     # assert
     expect(@current_type_checked).to eq(:secret_key)
     expect(@external_type).to eq(:secret_key)
-    expect(@base64_used).to eq('thekeybitshere')
+    expect(@base64_used).to eq('-----BEGIN PGP PRIVATE KEY BLOCK-----')
     executed_cmdline = executed_command_lines
     executed_cmdline.keys.should == ['/bin/sh -c "echo -n ~root"',
                                      'gpg2 --import',
@@ -104,31 +232,106 @@ describe 'gpg::lwrp:key_manage' do
     # 1st call is to get home dir, so won't be there yet
     env.should == [nil, '/home/root']
     input_specified = executed_cmdline.reject { |k, v| !v }
-    input_specified.should == {'gpg2 --import' => 'thekeybitshere',
+    input_specified.should == {'gpg2 --import' => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
                                'gpg2 --import-ownertrust' => "4D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"}
     resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'root'
     expect(resource.updated_by_last_action?).to eq(true)
   end
 
   it 'works properly when importing a public key that is not already there' do
-    # arrange
+    stub_retriever(draft=BswTech::Gpg::KeyDetails.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+                                                      username='the username',
+                                                      id='the id',
+                                                      type=:public_key))
+
+    @stub_setup = lambda do |shell_out|
+      @shell_outs << shell_out
+      case shell_out.command
+        when '/bin/sh -c "echo -n ~root"'
+          shell_out.stub!(:error!)
+          shell_out.stub!(:stdout).and_return('/home/root')
+        when 'gpg2 --import'
+          shell_out.stub!(:error!)
+        when 'gpg2 --import-ownertrust'
+          shell_out.stub!(:error!)
+        else
+          shell_out.stub(:error!).and_raise "Unexpected command #{shell_out.command}"
+      end
+    end
 
     # act
+    temp_lwrp_recipe <<-EOF
+      bsw_gpg_key_manage 'root' do
+        key_contents '-----BEGIN PGP PUBLIC KEY BLOCK-----'
+      end
+    EOF
 
     # assert
+    expect(@current_type_checked).to eq(:public_key)
+    expect(@external_type).to eq(:public_key)
+    expect(@base64_used).to eq('-----BEGIN PGP PUBLIC KEY BLOCK-----')
+    executed_cmdline = executed_command_lines
+    executed_cmdline.keys.should == ['/bin/sh -c "echo -n ~root"',
+                                     'gpg2 --import',
+                                     'gpg2 --import-ownertrust']
+    users = @shell_outs.map { |e| e.user }.uniq
+    users.should == ['root']
+    env = @shell_outs.map { |e| e.environment['HOME'] }.uniq
+    # 1st call is to get home dir, so won't be there yet
+    env.should == [nil, '/home/root']
+    input_specified = executed_cmdline.reject { |k, v| !v }
+    input_specified.should == {'gpg2 --import' => '-----BEGIN PGP PUBLIC KEY BLOCK-----',
+                               'gpg2 --import-ownertrust' => "4D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"}
+    resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'root'
+    expect(resource.updated_by_last_action?).to eq(true)
+
     pending 'Write this test'
   end
 
   it 'does not do anything if the correct public key is already there' do
-    # arrange
+    key = BswTech::Gpg::KeyDetails.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+                                       username='the username',
+                                       id='the id',
+                                       type=:public_key)
+    stub_retriever(current=[key], draft=key)
+    @stub_setup = lambda do |shell_out|
+      @shell_outs << shell_out
+      case shell_out.command
+        when '/bin/sh -c "echo -n ~root"'
+          shell_out.stub!(:error!)
+          shell_out.stub!(:stdout).and_return('/home/root')
+        else
+          shell_out.stub(:error!).and_raise "Unexpected command #{shell_out.command}"
+      end
+    end
 
     # act
+    temp_lwrp_recipe <<-EOF
+      bsw_gpg_key_manage 'root' do
+        key_contents '-----BEGIN PGP PUBLIC KEY BLOCK-----'
+      end
+    EOF
 
     # assert
+    expect(@current_type_checked).to eq(:public_key)
+    expect(@external_type).to eq(:public_key)
+    expect(@base64_used).to eq('-----BEGIN PGP PUBLIC KEY BLOCK-----')
+    executed_cmdline = executed_command_lines
+    executed_cmdline.keys.should == ['/bin/sh -c "echo -n ~root"']
+    users = @shell_outs.map { |e| e.user }.uniq
+    users.should == ['root']
+    env = @shell_outs.map { |e| e.environment['HOME'] }.uniq
+    # 1st call is to get home dir, so won't be there yet
+    env.should == [nil]
+    input_specified = executed_cmdline.reject { |k, v| !v }
+    input_specified.should == {}
+    resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'root'
+    expect(resource.updated_by_last_action?).to eq(false)
+
     pending 'Write this test'
   end
 
-  it 'does not do anything if the correct private key is already there' do
+  it 'does not do anything if the correct secret key is already there' do
     # arrange
     key = BswTech::Gpg::KeyDetails.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
                                        username='the username',
@@ -149,14 +352,14 @@ describe 'gpg::lwrp:key_manage' do
     # act
     temp_lwrp_recipe <<-EOF
       bsw_gpg_key_manage 'root' do
-        key_contents 'thekeybitshere'
+        key_contents '-----BEGIN PGP PRIVATE KEY BLOCK-----'
       end
     EOF
 
     # assert
     expect(@current_type_checked).to eq(:secret_key)
     expect(@external_type).to eq(:secret_key)
-    expect(@base64_used).to eq('thekeybitshere')
+    expect(@base64_used).to eq('-----BEGIN PGP PRIVATE KEY BLOCK-----')
     executed_cmdline = executed_command_lines
     executed_cmdline.keys.should == ['/bin/sh -c "echo -n ~root"']
     users = @shell_outs.map { |e| e.user }.uniq
@@ -172,14 +375,59 @@ describe 'gpg::lwrp:key_manage' do
 
   it 'does update the key if a different public key is already there' do
     # arrange
+    current_key = BswTech::Gpg::KeyDetails.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+                                               username='the username',
+                                               id='the id',
+                                               type=:public_key)
+    new_key = BswTech::Gpg::KeyDetails.new(fingerprint='5D1CF3288469F260C2119B9F76C95D74390AA6C9',
+                                           username='the username 2',
+                                           id='the id',
+                                           type=:public_key)
+    stub_retriever(current=[current_key], draft=new_key)
+    @stub_setup = lambda do |shell_out|
+      @shell_outs << shell_out
+      case shell_out.command
+        when '/bin/sh -c "echo -n ~root"'
+          shell_out.stub!(:error!)
+          shell_out.stub!(:stdout).and_return('/home/root')
+        when 'gpg2 --import'
+          shell_out.stub!(:error!)
+        when 'gpg2 --import-ownertrust'
+          shell_out.stub!(:error!)
+        else
+          shell_out.stub(:error!).and_raise "Unexpected command #{shell_out.command}"
+      end
+    end
 
     # act
+    temp_lwrp_recipe <<-EOF
+      bsw_gpg_key_manage 'root' do
+        key_contents '-----BEGIN PGP PUBLIC KEY BLOCK-----'
+      end
+    EOF
 
     # assert
+    expect(@current_type_checked).to eq(:public_key)
+    expect(@external_type).to eq(:public_key)
+    expect(@base64_used).to eq('-----BEGIN PGP PUBLIC KEY BLOCK-----')
+    executed_cmdline = executed_command_lines
+    executed_cmdline.keys.should == ['/bin/sh -c "echo -n ~root"',
+                                     'gpg2 --import',
+                                     'gpg2 --import-ownertrust']
+    users = @shell_outs.map { |e| e.user }.uniq
+    users.should == ['root']
+    env = @shell_outs.map { |e| e.environment['HOME'] }.uniq
+    # 1st call is to get home dir, so won't be there yet
+    env.should == [nil, '/home/root']
+    input_specified = executed_cmdline.reject { |k, v| !v }
+    input_specified.should == {'gpg2 --import' => '-----BEGIN PGP PUBLIC KEY BLOCK-----',
+                               'gpg2 --import-ownertrust' => "5D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"}
+    resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'root'
+    expect(resource.updated_by_last_action?).to eq(true)
     pending 'Write this test'
   end
 
-  it 'does update the key if a different private key is already there' do
+  it 'does update the key if a different secret key is already there' do
     # arrange
     current_key = BswTech::Gpg::KeyDetails.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
                                                username='the username',
@@ -208,14 +456,14 @@ describe 'gpg::lwrp:key_manage' do
     # act
     temp_lwrp_recipe <<-EOF
       bsw_gpg_key_manage 'root' do
-        key_contents 'thekeybitshere'
+        key_contents '-----BEGIN PGP PRIVATE KEY BLOCK-----'
       end
     EOF
 
     # assert
     expect(@current_type_checked).to eq(:secret_key)
     expect(@external_type).to eq(:secret_key)
-    expect(@base64_used).to eq('thekeybitshere')
+    expect(@base64_used).to eq('-----BEGIN PGP PRIVATE KEY BLOCK-----')
     executed_cmdline = executed_command_lines
     executed_cmdline.keys.should == ['/bin/sh -c "echo -n ~root"',
                                      'gpg2 --import',
@@ -226,7 +474,7 @@ describe 'gpg::lwrp:key_manage' do
     # 1st call is to get home dir, so won't be there yet
     env.should == [nil, '/home/root']
     input_specified = executed_cmdline.reject { |k, v| !v }
-    input_specified.should == {'gpg2 --import' => 'thekeybitshere',
+    input_specified.should == {'gpg2 --import' => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
                                'gpg2 --import-ownertrust' => "5D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"}
     resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'root'
     expect(resource.updated_by_last_action?).to eq(true)
@@ -256,14 +504,14 @@ describe 'gpg::lwrp:key_manage' do
     # act
     temp_lwrp_recipe <<-EOF
       bsw_gpg_key_manage 'someone_else' do
-        key_contents 'thekeybitshere'
+        key_contents '-----BEGIN PGP PRIVATE KEY BLOCK-----'
       end
     EOF
 
     # assert
     expect(@current_type_checked).to eq(:secret_key)
     expect(@external_type).to eq(:secret_key)
-    expect(@base64_used).to eq('thekeybitshere')
+    expect(@base64_used).to eq('-----BEGIN PGP PRIVATE KEY BLOCK-----')
     executed_cmdline = executed_command_lines
     executed_cmdline.keys.should == ['/bin/sh -c "echo -n ~someone_else"',
                                      'gpg2 --import',
@@ -274,7 +522,7 @@ describe 'gpg::lwrp:key_manage' do
     # 1st call is to get home dir, so won't be there yet
     env.should == [nil, '/home/someone_else']
     input_specified = executed_cmdline.reject { |k, v| !v }
-    input_specified.should == {'gpg2 --import' => 'thekeybitshere',
+    input_specified.should == {'gpg2 --import' => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
                                'gpg2 --import-ownertrust' => "4D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"}
     resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'someone_else'
     expect(resource.updated_by_last_action?).to eq(true)
@@ -320,14 +568,14 @@ describe 'gpg::lwrp:key_manage' do
     # act
     temp_lwrp_recipe <<-EOF
       bsw_gpg_key_manage 'root' do
-        key_contents 'thekeybitshere'
+        key_contents '-----BEGIN PGP PRIVATE KEY BLOCK-----'
       end
     EOF
 
     # assert
     expect(@current_type_checked).to eq(:secret_key)
     expect(@external_type).to eq(:secret_key)
-    expect(@base64_used).to eq('thekeybitshere')
+    expect(@base64_used).to eq('-----BEGIN PGP PRIVATE KEY BLOCK-----')
     executed_cmdline = executed_command_lines
     executed_cmdline.keys.should == ['/bin/sh -c "echo -n ~root"',
                                      'gpg2 --delete-secret-and-public-key --batch --yes 6D1CF3288469F260C2119B9F76C95D74390AA6C9',
@@ -339,7 +587,7 @@ describe 'gpg::lwrp:key_manage' do
     # 1st call is to get home dir, so won't be there yet
     env.should == [nil, '/home/root']
     input_specified = executed_cmdline.reject { |k, v| !v }
-    input_specified.should == {'gpg2 --import' => 'thekeybitshere',
+    input_specified.should == {'gpg2 --import' => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
                                'gpg2 --import-ownertrust' => "4D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"}
     resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'root'
     expect(resource.updated_by_last_action?).to eq(true)
@@ -373,7 +621,7 @@ describe 'gpg::lwrp:key_manage' do
 
     # act
     temp_lwrp_recipe <<-EOF
-      key = get_draft_key_from_string :secret_key, 'thekeybitshere'
+      key = get_draft_key_from_string '-----BEGIN PGP PRIVATE KEY BLOCK-----'
       file '/some/dummy/file' do
         content key.fingerprint
       end
@@ -385,7 +633,7 @@ describe 'gpg::lwrp:key_manage' do
 
     # assert
     expect(@external_type).to eq(:secret_key)
-    expect(@base64_used).to eq('thekeybitshere')
+    expect(@base64_used).to eq('-----BEGIN PGP PRIVATE KEY BLOCK-----')
     expect(@chef_run).to render_file('/some/dummy/file').with_content('7B11C14106673B5346A65351F44B4C6833AE3E6C')
     expect(@chef_run).to render_file('/some/dummy/file2').with_content('pkg_key dev (pkg_key) <dev@aptly.bswtechconsulting.com>')
   end
@@ -418,12 +666,12 @@ describe 'gpg::lwrp:key_manage' do
     dev_environment = File.join(cookbook_path, 'files', 'default', 'dev')
     FileUtils.mkdir_p dev_environment
     File.open File.join(dev_environment, 'thefile.pub'), 'w' do |f|
-      f << 'thekeybitshere'
+      f << '-----BEGIN PGP PRIVATE KEY BLOCK-----'
     end
 
     # act
     temp_lwrp_recipe <<-EOF
-       key = get_draft_key_from_cookbook :secret_key, 'lwrp_gen', 'dev/thefile.pub'
+       key = get_draft_key_from_cookbook 'lwrp_gen', 'dev/thefile.pub'
        file '/some/dummy/file' do
          content key.fingerprint
        end
@@ -435,7 +683,7 @@ describe 'gpg::lwrp:key_manage' do
 
     # assert
     expect(@external_type).to eq(:secret_key)
-    expect(@base64_used).to eq('thekeybitshere')
+    expect(@base64_used).to eq('-----BEGIN PGP PRIVATE KEY BLOCK-----')
     expect(@chef_run).to render_file('/some/dummy/file').with_content('4D1CF3288469F260C2119B9F76C95D74390AA6C9')
     expect(@chef_run).to render_file('/some/dummy/file2').with_content('BSW Tech DB Backup db_dev (WAL-E/S3 Encryption key) <db_dev@wale.backup.bswtechconsulting.com>')
   end
@@ -460,7 +708,7 @@ describe 'gpg::lwrp:key_manage' do
           shell_out.stub(:error!).and_raise "Unexpected command #{shell_out.command}"
       end
     end
-    stub_vault_entry = {'json_key' => 'thekeybitshere'}
+    stub_vault_entry = {'json_key' => '-----BEGIN PGP PRIVATE KEY BLOCK-----'}
     ChefVault::Item.stub!(:load).with('thedatabag', 'the_item').and_return stub_vault_entry
 
     # act
@@ -473,7 +721,7 @@ describe 'gpg::lwrp:key_manage' do
     # assert
     expect(@current_type_checked).to eq(:secret_key)
     expect(@external_type).to eq(:secret_key)
-    expect(@base64_used).to eq('thekeybitshere')
+    expect(@base64_used).to eq('-----BEGIN PGP PRIVATE KEY BLOCK-----')
     executed_cmdline = executed_command_lines
     executed_cmdline.keys.should == ['/bin/sh -c "echo -n ~root"',
                                      'gpg2 --import',
@@ -484,7 +732,7 @@ describe 'gpg::lwrp:key_manage' do
     # 1st call is to get home dir, so won't be there yet
     env.should == [nil, '/home/root']
     input_specified = executed_cmdline.reject { |k, v| !v }
-    input_specified.should == {'gpg2 --import' => 'thekeybitshere',
+    input_specified.should == {'gpg2 --import' => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
                                'gpg2 --import-ownertrust' => "4D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"}
     resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'root'
     expect(resource.updated_by_last_action?).to eq(true)
