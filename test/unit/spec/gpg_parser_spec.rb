@@ -204,7 +204,6 @@ sub:-:2048:1:05D96AC415DB901E:1408259046:1471331046::: [expires: 2016-08-16]
     action = lambda { BswTech::Gpg::GpgParser.new.parse_output_external gpg_output }
 
     # assert
-    expect(action).to raise_exception 'bla is an unknown type'
-    pending 'Write this test'
+    expect(action).to raise_exception 'Unable to find public or secret key in records []'
   end
 end
