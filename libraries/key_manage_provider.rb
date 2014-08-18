@@ -24,7 +24,7 @@ class Chef
         @current_resource
       end
 
-      def get_current_secret_key_details()
+      def get_current_key_details(type)
         retriever = BswTech::Gpg::GpgRetriever.new
         executor = lambda do |command|
           contents = run_command command
@@ -32,7 +32,7 @@ class Chef
           Chef::Log.debug "Output from GPG #{gpg_output}"
           gpg_output
         end
-        retriever.get_current_installed_keys executor, :secret_key
+        retriever.get_current_installed_keys executor, type
       end
 
       def key_needs_to_be_installed(draft, current)
@@ -44,7 +44,8 @@ class Chef
         key_to_delete = current.find { |x| x.username == draft.username }
         if key_to_delete
           Chef::Log.info "Deleting existing key for #{key_to_delete.username} in order to replace it"
-          run_command "gpg2 --delete-secret-and-public-key --batch --yes #{key_to_delete.fingerprint}"
+          delete = draft.type == :public_key ? '--delete-key' : '--delete-secret-and-public-key'
+          run_command "gpg2 #{delete} --batch --yes #{key_to_delete.fingerprint}"
         end
       end
 
@@ -72,7 +73,7 @@ class Chef
       def action_replace
         key_contents = @new_resource.key_contents || load_from_vault
         draft = get_draft_key_from_string key_contents
-        current = get_current_secret_key_details
+        current = get_current_key_details draft.type
         if key_needs_to_be_installed draft, current
           converge_by "Importing key #{draft.username} into keyring" do
             remove_existing_keys draft, current
