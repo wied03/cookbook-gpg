@@ -344,20 +344,16 @@ describe 'gpg::lwrp:key_manage' do
 
   it 'allows working with private key fingerprints from the recipe based on a PEM cert' do
     # arrange
-    executed = []
+    stub_retriever(draft=BswTech::Gpg::KeyDetails.new(fingerprint='7B11C14106673B5346A65351F44B4C6833AE3E6C',
+                                                      username='pkg_key dev (pkg_key) <dev@aptly.bswtechconsulting.com>',
+                                                      id='the id',
+                                                      type=:secret_key))
     @stub_setup = lambda do |shell_out|
-      executed << shell_out
+      @shell_outs << shell_out
       case shell_out.command
         when '/bin/sh -c "echo -n ~root"'
           shell_out.stub!(:error!)
           shell_out.stub!(:stdout).and_return('/home/root')
-        when 'gpg2 --with-fingerprint'
-          shell_out.stub!(:error!)
-          shell_out.stub!(:stdout).and_return <<-EOF
-        sec  2048R/33AE3E6C 2014-08-17 pkg_key dev (pkg_key) <dev@aptly.bswtechconsulting.com>
-              Key fingerprint = 7B11 C141 0667 3B53 46A6  5351 F44B 4C68 33AE 3E6C
-        ssb  2048R/175EAAB1 2014-08-17
-          EOF
         else
           shell_out.stub(:error!).and_raise "Unexpected command #{shell_out.command}"
       end
@@ -365,7 +361,7 @@ describe 'gpg::lwrp:key_manage' do
 
     # act
     temp_lwrp_recipe <<-EOF
-      key = get_draft_key_from_string 'thekeybitshere'
+      key = get_draft_key_from_string :secret_key, 'thekeybitshere'
       file '/some/dummy/file' do
         content key.fingerprint
       end
@@ -376,12 +372,7 @@ describe 'gpg::lwrp:key_manage' do
     EOF
 
     # assert
-    command = nil
-    do_shift = lambda { command = executed.shift }
-    do_shift.call
-    command.command.should == 'gpg2 --with-fingerprint'
-    command.input.should == 'thekeybitshere'
-    expect(@chef_run).to render_file('/some/dummy/file').with_content('7B11 C141 0667 3B53 46A6  5351 F44B 4C68 33AE 3E6C')
+    expect(@chef_run).to render_file('/some/dummy/file').with_content('7B11C14106673B5346A65351F44B4C6833AE3E6C')
     expect(@chef_run).to render_file('/some/dummy/file2').with_content('pkg_key dev (pkg_key) <dev@aptly.bswtechconsulting.com>')
   end
 
