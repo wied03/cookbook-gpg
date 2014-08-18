@@ -284,8 +284,6 @@ describe 'gpg::lwrp:key_manage' do
                                'gpg2 --import-ownertrust' => "4D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"}
     resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'root'
     expect(resource.updated_by_last_action?).to eq(true)
-
-    pending 'Write this test'
   end
 
   it 'does not do anything if the correct public key is already there' do
@@ -327,8 +325,6 @@ describe 'gpg::lwrp:key_manage' do
     input_specified.should == {}
     resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'root'
     expect(resource.updated_by_last_action?).to eq(false)
-
-    pending 'Write this test'
   end
 
   it 'does not do anything if the correct secret key is already there' do
@@ -424,7 +420,6 @@ describe 'gpg::lwrp:key_manage' do
                                'gpg2 --import-ownertrust' => "5D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"}
     resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'root'
     expect(resource.updated_by_last_action?).to eq(true)
-    pending 'Write this test'
   end
 
   it 'does update the key if a different secret key is already there' do
@@ -564,8 +559,8 @@ describe 'gpg::lwrp:key_manage' do
     EOF
 
     # assert
-    expect(@current_type_checked).to eq(:secret_key)
-    expect(@external_type).to eq(:secret_key)
+    expect(@current_type_checked).to eq(:public_key)
+    expect(@external_type).to eq(:public_key)
     expect(@base64_used).to eq('-----BEGIN PGP PUBLIC KEY BLOCK-----')
     executed_cmdline = executed_command_lines
     executed_cmdline.keys.should == ['/bin/sh -c "echo -n ~root"',
