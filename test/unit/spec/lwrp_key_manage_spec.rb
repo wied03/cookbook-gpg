@@ -442,25 +442,16 @@ describe 'gpg::lwrp:key_manage' do
 
   it 'allows supplying Chef vault info for a private key directly as opposed to key contents' do
     # arrange
-    executed = []
+    stub_retriever(draft=BswTech::Gpg::KeyDetails.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+                                                      username='the username',
+                                                      id='the id',
+                                                      type=:secret_key))
     @stub_setup = lambda do |shell_out|
-      executed << shell_out
+      @shell_outs << shell_out
       case shell_out.command
         when '/bin/sh -c "echo -n ~root"'
           shell_out.stub!(:error!)
           shell_out.stub!(:stdout).and_return('/home/root')
-        when 'gpg2 --with-fingerprint'
-          shell_out.stub!(:error!)
-          shell_out.stub!(:stdout).and_return <<-EOF
-        -----------------
-        pub   2048R/390AA6C9 2014-06-10 [expires: 2016-06-09]
-              Key fingerprint = 4D1C F328 8469 F260 C211  9B9F 76C9 5D74 390A A6C9
-        uid                  BSW Tech DB Backup db_dev (WAL-E/S3 Encryption key) <db_dev@wale.backup.bswtechconsulting.com>
-        sub   2048R/1A0B6924 2014-06-10 [expires: 2016-06-09]
-          EOF
-        when 'gpg2 --list-secret-keys --fingerprint'
-          shell_out.stub!(:error!)
-          shell_out.stub!(:stdout).and_return ''
         when 'gpg2 --import'
           shell_out.stub!(:error!)
         when 'gpg2 --import-ownertrust'
@@ -480,23 +471,20 @@ describe 'gpg::lwrp:key_manage' do
     EOF
 
     # assert
-    executed_cmdline = executed.inject({}) { |total, item|
-      total[item.command] = item.input
-      total }
-
+    expect(@current_type_checked).to eq(:secret_key)
+    expect(@external_type).to eq(:secret_key)
+    expect(@base64_used).to eq('thekeybitshere')
+    executed_cmdline = executed_command_lines
     executed_cmdline.keys.should == ['/bin/sh -c "echo -n ~root"',
-                                     'gpg2 --with-fingerprint',
-                                     'gpg2 --list-secret-keys --fingerprint',
                                      'gpg2 --import',
                                      'gpg2 --import-ownertrust']
-    users = executed.map { |e| e.user }.uniq
+    users = @shell_outs.map { |e| e.user }.uniq
     users.should == ['root']
-    env = executed.map { |e| e.environment['HOME'] }.uniq
+    env = @shell_outs.map { |e| e.environment['HOME'] }.uniq
     # 1st call is to get home dir, so won't be there yet
     env.should == [nil, '/home/root']
     input_specified = executed_cmdline.reject { |k, v| !v }
-    input_specified.should == {'gpg2 --with-fingerprint' => 'thekeybitshere',
-                               'gpg2 --import' => 'thekeybitshere',
+    input_specified.should == {'gpg2 --import' => 'thekeybitshere',
                                'gpg2 --import-ownertrust' => "4D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"}
     resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'root'
     expect(resource.updated_by_last_action?).to eq(true)
