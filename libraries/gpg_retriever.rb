@@ -14,7 +14,8 @@ module BswTech
 
       # type is :secret_key or :public_key
       def get_key_info_from_base64(executor, type, base64)
-        raise 'not done'
+        raw_output = executor['gpg2 --with-fingerprint --with-colons', base64]
+        @parser.parse_output_external raw_output
       end
     end
   end
