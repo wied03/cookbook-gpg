@@ -3,24 +3,27 @@
 module BswTech
   module Gpg
     module SharedKey
-
-      def get_draft_key_from_cookbook(cookbook_name, cookbook_file)
-        parse_key(cookbook_file_contents(cookbook_file, cookbook_name))
+      def get_draft_key_from_cookbook(type, cookbook_name, cookbook_file)
+        parse_key(type, cookbook_file_contents(cookbook_file, cookbook_name))
       end
 
-      def get_draft_key_from_string(key_as_base64_string)
-        parse_key(key_as_base64_string)
+      def get_draft_key_from_string(type, key_as_base64_string)
+        parse_key(type, key_as_base64_string)
       end
 
       private
 
-      def parse_key(key_contents)
-        contents = run_command "gpg2 --with-fingerprint", :input => key_contents
-        gpg_output = contents.stdout
-        Chef::Log.debug "Output from GPG #{gpg_output}"
-        result = BswTech::Gpg::GpgParser.new.parse(:external, gpg_output)
+      def parse_key(type, key_contents)
+        retriever = GpgRetriever.new
+        executor = lambda do |command, input|
+          contents = run_command command, :input => input
+          gpg_output = contents.stdout
+          Chef::Log.debug "Output from GPG #{gpg_output}"
+          gpg_output
+        end
+        result = retriever.get_key_info_from_base64 executor, type, key_contents
         Chef::Log.debug "Parsed key details #{result}"
-        result.first
+        result
       end
 
       def cookbook_file_contents(source, cookbook_name)

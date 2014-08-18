@@ -2,6 +2,9 @@
 
 require_relative 'spec_helper'
 require 'chef-vault'
+$: << File.join(File.dirname(__FILE__), '../../../libraries')
+require 'gpg_retriever'
+require 'key_details'
 
 describe 'gpg::lwrp:key_manage' do
   include BswTech::ChefSpec::LwrpTestHelper
@@ -31,31 +34,32 @@ describe 'gpg::lwrp:key_manage' do
       @stub_setup.call(cmd) if @stub_setup
       cmd
     end
-    @open_tempfiles = []
-    @written_to_files = {}
-    Dir::Tmpname.stub!(:create) do
-      name = "temp_file_#{@open_tempfiles.length}"
-      @open_tempfiles << name
-      name
-    end
-    Tempfile.stub!(:new) do |prefix|
-      temp_file_stub = double()
-      name = "temp_file_#{@open_tempfiles.length}"
-      @open_tempfiles << name
-      temp_file_stub.stub!(:path).and_return "/path/to/#{name}"
-      temp_file_stub.stub!(:close)
-      temp_file_stub.stub!(:unlink)
-      temp_file_stub.stub!(:'<<') do |text|
-        @written_to_files[name] = text
-      end
-      temp_file_stub
-    end
-    ::File.stub!(:exist?).and_call_original
-    ::File.stub!(:exist?).with('temp_file_0').and_return(true)
+    @gpg_retriever = double()
+    BswTech::Gpg::GpgRetriever.stub(:new).and_return(@gpg_retriever)
+    @current_type_checked = nil
+    @external_type = nil
+    @base64_used = nil
   }
+
+  def stub_retriever(current, draft)
+    allow(@gpg_retriever).to receive(:get_current_installed_keys) do |executor, type|
+      @current_type_checked = type
+      current
+    end
+    allow(@gpg_retriever).to receive(:get_key_info_from_base64) do |executor, type, base64|
+      @external_type = type
+      @base64_used = base64
+      draft
+    end
+  end
 
   it 'works properly when importing a private key that is not already there' do
     # arrange
+    stub_retriever([],
+                   BswTech::Gpg::KeyDetails.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+                                                 username='the username',
+                                                 id='the id',
+                                                 type=:secret_key))
     executed = []
     @stub_setup = lambda do |shell_out|
       executed << shell_out
@@ -63,16 +67,6 @@ describe 'gpg::lwrp:key_manage' do
         when '/bin/sh -c "echo -n ~root"'
           shell_out.stub!(:error!)
           shell_out.stub!(:stdout).and_return('/home/root')
-        when 'gpg2 --with-fingerprint'
-          shell_out.stub!(:error!)
-          shell_out.stub!(:stdout).and_return <<-EOF
-        sec  2048R/390AA6C9 2014-08-17 pkg_key dev  BSW Tech DB Backup db_dev (WAL-E/S3 Encryption key) <db_dev@wale.backup.bswtechconsulting.com>
-              Key fingerprint = 4D1C F328 8469 F260 C211  9B9F 76C9 5D74 390A A6C9
-        ssb  2048R/175EAAB1 2014-08-17
-          EOF
-        when 'gpg2 --list-secret-keys --fingerprint'
-          shell_out.stub!(:error!)
-          shell_out.stub!(:stdout).and_return ''
         when 'gpg2 --import'
           shell_out.stub!(:error!)
         when 'gpg2 --import-ownertrust'
@@ -90,13 +84,14 @@ describe 'gpg::lwrp:key_manage' do
     EOF
 
     # assert
+    expect(@current_type_checked).to eq(:secret_key)
+    expect(@external_type).to eq(:secret_key)
+    expect(@base64_used).to eq('thekeybitshere')
     executed_cmdline = executed.inject({}) { |total, item|
       total[item.command] = item.input
       total }
 
     executed_cmdline.keys.should == ['/bin/sh -c "echo -n ~root"',
-                                     'gpg2 --with-fingerprint',
-                                     'gpg2 --list-secret-keys --fingerprint',
                                      'gpg2 --import',
                                      'gpg2 --import-ownertrust']
     users = executed.map { |e| e.user }.uniq
@@ -105,8 +100,7 @@ describe 'gpg::lwrp:key_manage' do
     # 1st call is to get home dir, so won't be there yet
     env.should == [nil, '/home/root']
     input_specified = executed_cmdline.reject { |k, v| !v }
-    input_specified.should == {'gpg2 --with-fingerprint' => 'thekeybitshere',
-                               'gpg2 --import' => 'thekeybitshere',
+    input_specified.should == {'gpg2 --import' => 'thekeybitshere',
                                'gpg2 --import-ownertrust' => "4D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"}
     resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'root'
     expect(resource.updated_by_last_action?).to eq(true)
@@ -467,7 +461,7 @@ sec  2048R/390AA6C9 2014-08-17 pkg_key dev  BSW Tech DB Backup db_dev (WAL-E/S3 
 sec  2048R/390AA6C9 2014-08-17 BSW Tech DB Backup db_dev (WAL-E/S3 Encryption key) <db_dev@wale.backup.bswtechconsulting.com>
               Key fingerprint = 4D1C F328 8469 F260 C211  9B9F 76C9 5D74 390A A6C9
         ssb  2048R/175EAAB1 2014-08-17
-         EOF
+          EOF
         else
           shell_out.stub(:error!).and_raise "Unexpected command #{shell_out.command}"
       end

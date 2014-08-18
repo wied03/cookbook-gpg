@@ -26,9 +26,14 @@ class Chef
       end
 
       def get_current_secret_key_details()
-        Chef::Log.info 'Retrieving currently installed secret keys'
-        contents = run_command 'gpg2 --list-secret-keys --fingerprint'
-        BswTech::Gpg::GpgParser.new.parse(:ring, contents.stdout)
+        retriever = BswTech::Gpg::GpgRetriever.new
+        executor = lambda do |command|
+          contents = run_command command
+          gpg_output = contents.stdout
+          Chef::Log.debug "Output from GPG #{gpg_output}"
+          gpg_output
+        end
+        retriever.get_current_installed_keys executor, :secret_key
       end
 
       def key_needs_to_be_installed(draft, current)
@@ -45,7 +50,7 @@ class Chef
       end
 
       def trust_key(key)
-        run_command 'gpg2 --import-ownertrust', :input => "#{key.fingerprint_no_whitespace}:6:\n"
+        run_command 'gpg2 --import-ownertrust', :input => "#{key.fingerprint}:6:\n"
       end
 
       def run_command(*args)
@@ -67,7 +72,7 @@ class Chef
 
       def action_replace
         key_contents = @new_resource.key_contents || load_from_vault
-        draft = get_draft_key_from_string key_contents
+        draft = get_draft_key_from_string :secret_key, key_contents
         current = get_current_secret_key_details
         if key_needs_to_be_installed draft, current
           converge_by "Importing key #{draft.username} into keyring" do
