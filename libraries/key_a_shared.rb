@@ -18,11 +18,11 @@ module BswTech
         executor = lambda do |command, input|
           contents = run_command command, :input => input
           gpg_output = contents.stdout
-          Chef::Log.debug "Output from GPG #{gpg_output}"
+          Chef::Log.debug "Output from GPG command #{command} is #{gpg_output}"
           gpg_output
         end
         result = retriever.get_key_info_from_base64 executor, type, key_contents
-        Chef::Log.debug "Parsed key details #{result}"
+        Chef::Log.debug "Parsed key details into #{result}"
         result
       end
 
