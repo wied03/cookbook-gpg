@@ -31,7 +31,7 @@ module BswTech
         raw.gsub '\\x3a', ':'
       end
 
-      def parse_record(record_raw)
+      def parse_record(ring_or_external, record_raw)
         fields = record_raw.split ':'
         raw_type = fields[0]
         return nil unless @@record_type_mapping.include? raw_type
@@ -50,17 +50,23 @@ module BswTech
           else
             raise "Should not get to this point, no case statement for record #{fields}"
         end
+        if ring_or_external == :external and [:secret_key, :public_key].include?(result[:type])
+          result[:uid] = parse_user_id fields[9]
+        end
         result
       end
 
       def parse(ring_or_external, gpg_output)
-        records = gpg_output.split("\n").map { |raw| parse_record raw }.compact
+        records = gpg_output.split("\n").map { |raw| parse_record ring_or_external, raw }.compact
         results = []
         fingerprint = records.find { |r| r[:type] == :fingerprint }
         raise "Unable to find fingerprint in records #{records}" unless fingerprint
         first_key = records.find { |r| [:public_key, :secret_key].include?(r[:type]) }
         raise "Unable to find public or secret key in records #{records}" unless first_key
-        username = records.find { |r| r[:type] == :user_id }
+        # When looking at an external key, username is in the same record as the key ID
+        username = ring_or_external == :ring ?
+            records.find { |r| r[:type] == :user_id } :
+            {:id => first_key[:uid]}
         raise "Unable to find username in records #{records}" unless username
         results << Gpg::KeyDetails.new(fingerprint=fingerprint[:contents],
                                        username=username[:id],
