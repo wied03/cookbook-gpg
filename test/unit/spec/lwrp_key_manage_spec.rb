@@ -39,6 +39,7 @@ describe 'gpg::lwrp:key_manage' do
     @current_type_checked = nil
     @external_type = nil
     @base64_used = nil
+    @shell_outs = []
   }
 
   def stub_retriever(current, draft)
@@ -53,16 +54,23 @@ describe 'gpg::lwrp:key_manage' do
     end
   end
 
+  def executed_command_lines
+    @shell_outs.inject({}) do |total,item|
+      total[item.command] = item.input
+      total
+    end
+  end
+
   it 'works properly when importing a private key that is not already there' do
     # arrange
     stub_retriever([],
                    BswTech::Gpg::KeyDetails.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
-                                                 username='the username',
-                                                 id='the id',
-                                                 type=:secret_key))
-    executed = []
+                                                username='the username',
+                                                id='the id',
+                                                type=:secret_key))
+
     @stub_setup = lambda do |shell_out|
-      executed << shell_out
+      @shell_outs << shell_out
       case shell_out.command
         when '/bin/sh -c "echo -n ~root"'
           shell_out.stub!(:error!)
@@ -87,16 +95,13 @@ describe 'gpg::lwrp:key_manage' do
     expect(@current_type_checked).to eq(:secret_key)
     expect(@external_type).to eq(:secret_key)
     expect(@base64_used).to eq('thekeybitshere')
-    executed_cmdline = executed.inject({}) { |total, item|
-      total[item.command] = item.input
-      total }
-
+    executed_cmdline = executed_command_lines
     executed_cmdline.keys.should == ['/bin/sh -c "echo -n ~root"',
                                      'gpg2 --import',
                                      'gpg2 --import-ownertrust']
-    users = executed.map { |e| e.user }.uniq
+    users = @shell_outs.map { |e| e.user }.uniq
     users.should == ['root']
-    env = executed.map { |e| e.environment['HOME'] }.uniq
+    env = @shell_outs.map { |e| e.environment['HOME'] }.uniq
     # 1st call is to get home dir, so won't be there yet
     env.should == [nil, '/home/root']
     input_specified = executed_cmdline.reject { |k, v| !v }
