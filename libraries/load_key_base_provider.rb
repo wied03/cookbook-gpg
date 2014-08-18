@@ -3,7 +3,7 @@ require 'tempfile'
 
 class Chef
   class Provider
-    class BswGpgKeyManage < Chef::Provider
+    class BaseGpgProvider < Chef::Provider
       include BswTech::Gpg::SharedKey
 
       def initialize(new_resource, run_context)
@@ -14,14 +14,6 @@ class Chef
 
       def whyrun_supported?
         true
-      end
-
-      def load_current_resource
-        @current_resource ||= Chef::Resource::BswGpgKeyManage.new(new_resource.name)
-        @current_resource.key_contents(new_resource.key_contents)
-        @current_resource.chef_vault_info(new_resource.chef_vault_info)
-        @current_resource.for_user(new_resource.for_user)
-        @current_resource
       end
 
       def get_current_key_details(type)
@@ -64,14 +56,8 @@ class Chef
         cmd
       end
 
-      def load_from_vault
-        opts = @new_resource.chef_vault_info
-        item = ChefVault::Item.load(opts[:data_bag], opts[:item])
-        item[opts[:json_key]]
-      end
-
       def action_replace
-        key_contents = @new_resource.key_contents || load_from_vault
+        key_contents = get_key
         draft = get_draft_key_from_string key_contents
         current = get_current_key_details draft.type
         if key_needs_to_be_installed draft, current
