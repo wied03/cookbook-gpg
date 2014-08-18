@@ -59,7 +59,7 @@ describe BswTech::Gpg::GpgRetriever do
     action = lambda { @retriever.get_key_info_from_base64 @gpg_mock_executor, :secret_key, 'foobar base64' }
 
     # assert
-    expect(action).to raise_exception "Key #{result} is a public key but you're trying to import a secret key"
+    expect(action).to raise_exception "Key #{result[0]} is a public_key but you're trying to import a secret_key"
   end
 
   it 'complains if base64/external key is secret and type specified is public' do
@@ -72,7 +72,20 @@ describe BswTech::Gpg::GpgRetriever do
     action = lambda { @retriever.get_key_info_from_base64 @gpg_mock_executor, :public_key, 'foobar base64' }
 
     # assert
-    expect(action).to raise_exception "Key #{result} is a secret key but you're trying to import a public key"
+    expect(action).to raise_exception "Key #{result[0]} is a secret_key but you're trying to import a public_key"
+  end
+
+  it 'complains if more than 1 key is returned via base64' do
+    result = [BswTech::Gpg::KeyDetails.new('fp', 'username', 'id', :secret_key),
+              BswTech::Gpg::KeyDetails.new('fp', 'username', 'id', :secret_key)]
+    allow(@parser).to receive(:parse_output_external).with('gpg output here').and_return result
+    @gpg_mock_response = 'gpg output here'
+
+    # act
+    action = lambda { @retriever.get_key_info_from_base64 @gpg_mock_executor, :public_key, 'foobar base64' }
+
+    # assert
+    expect(action).to raise_exception "Multiple keys returned from a single base64 import should not happen!  Keys returned: #{result}"
   end
 
   it 'fetches current secret keys' do
