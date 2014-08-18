@@ -27,6 +27,10 @@ module BswTech
         full_key_id[-8..-1]
       end
 
+      def parse_user_id(raw)
+        raw.gsub '\\x3a', ':'
+      end
+
       def parse_record(record_raw)
         fields = record_raw.split ':'
         raw_type = fields[0]
@@ -40,7 +44,7 @@ module BswTech
           when :secret_key
             result[:id] = parse_key_id fields[4]
           when :user_id
-            result[:id] = fields[9]
+            result[:id] = parse_user_id fields[9]
           when :public_key
             result[:id] = parse_key_id fields[4]
           else
