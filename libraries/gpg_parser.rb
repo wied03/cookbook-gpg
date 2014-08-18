@@ -28,6 +28,7 @@ module BswTech
       end
 
       def parse_user_id(raw)
+        # colons are used as delimiters
         raw.gsub '\\x3a', ':'
       end
 
