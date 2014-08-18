@@ -21,14 +21,18 @@ class Chef
         @current_resource.key_contents(new_resource.key_contents)
         @current_resource.chef_vault_info(new_resource.chef_vault_info)
         @current_resource.for_user(new_resource.for_user)
-        @current_resource.key_type(new_resource.key_type)
         @current_resource
       end
 
-      def get_current_secret_key_details()
-        Chef::Log.info 'Retrieving currently installed secret keys'
-        contents = run_command 'gpg2 --list-secret-keys --fingerprint'
-        BswTech::Gpg::GpgParser.new.parse(:ring, contents.stdout)
+      def get_current_key_details(type)
+        retriever = BswTech::Gpg::GpgRetriever.new
+        executor = lambda do |command|
+          contents = run_command command
+          gpg_output = contents.stdout
+          Chef::Log.debug "Output from GPG #{gpg_output}"
+          gpg_output
+        end
+        retriever.get_current_installed_keys executor, type
       end
 
       def key_needs_to_be_installed(draft, current)
@@ -40,12 +44,13 @@ class Chef
         key_to_delete = current.find { |x| x.username == draft.username }
         if key_to_delete
           Chef::Log.info "Deleting existing key for #{key_to_delete.username} in order to replace it"
-          run_command "gpg2 --delete-secret-and-public-key --batch --yes #{key_to_delete.fingerprint_no_whitespace}"
+          delete = draft.type == :public_key ? '--delete-key' : '--delete-secret-and-public-key'
+          run_command "gpg2 #{delete} --batch --yes #{key_to_delete.fingerprint}"
         end
       end
 
       def trust_key(key)
-        run_command 'gpg2 --import-ownertrust', :input => "#{key.fingerprint_no_whitespace}:6:\n"
+        run_command 'gpg2 --import-ownertrust', :input => "#{key.fingerprint}:6:\n"
       end
 
       def run_command(*args)
@@ -68,7 +73,7 @@ class Chef
       def action_replace
         key_contents = @new_resource.key_contents || load_from_vault
         draft = get_draft_key_from_string key_contents
-        current = get_current_secret_key_details
+        current = get_current_key_details draft.type
         if key_needs_to_be_installed draft, current
           converge_by "Importing key #{draft.username} into keyring" do
             remove_existing_keys draft, current

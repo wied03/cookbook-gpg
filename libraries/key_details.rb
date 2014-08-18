@@ -12,10 +12,6 @@ module BswTech
         @id = id
         @type = type
       end
-
-      def fingerprint_no_whitespace
-        fingerprint.gsub ' ', ''
-      end
     end
   end
 end
