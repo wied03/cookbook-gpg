@@ -34,7 +34,9 @@ module BswTech
         multiple = occurrences.values.count { |c| c >= 1 }
         fail 'Supplied key contents has both secret and public keys, only 1 key is allowed' if multiple > 1
         single = occurrences.find {|type,count| count == 1}
-        single[0]
+        type = single[0]
+        Chef::Log.info "Key type is #{type}"
+        type
       end
 
       def parse_key(key_contents)
