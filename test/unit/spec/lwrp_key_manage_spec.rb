@@ -82,15 +82,16 @@ describe 'gpg::lwrp:key_manage' do
     # act
     action = lambda {
       temp_lwrp_recipe <<-EOF
-          bsw_gpg_key_manage 'root' do
+          bsw_gpg_key_manage 'some key' do
             key_contents 'no header in here'
+            for_user 'root'
           end
       EOF
     }
 
     # assert
     expect(action).to raise_exception RuntimeError,
-                                      "bsw_gpg_key_manage[root] (lwrp_gen::default line 1) had an error: RuntimeError: Supplied key contents did NOT start with '-----BEGIN PGP PUBLIC KEY BLOCK-----' or '-----BEGIN PGP PRIVATE KEY BLOCK-----'"
+                                      "bsw_gpg_key_manage[some key] (lwrp_gen::default line 1) had an error: RuntimeError: Supplied key contents did NOT start with '-----BEGIN PGP PUBLIC KEY BLOCK-----' or '-----BEGIN PGP PRIVATE KEY BLOCK-----'"
   end
 
   it 'complains if the base64 input contains more than 1 public key' do
@@ -114,15 +115,16 @@ describe 'gpg::lwrp:key_manage' do
     # act
     action = lambda {
       temp_lwrp_recipe <<-EOF
-        bsw_gpg_key_manage 'root' do
+        bsw_gpg_key_manage 'some key' do
           key_contents "-----BEGIN PGP PUBLIC KEY BLOCK-----\nstuff\n-----END PGP PUBLIC KEY BLOCK-----\n-----BEGIN PGP PUBLIC KEY BLOCK-----\n-----END PGP PUBLIC KEY BLOCK-----"
+          for_user 'root'
         end
       EOF
     }
 
     # assert
     expect(action).to raise_exception RuntimeError,
-                                      'bsw_gpg_key_manage[root] (lwrp_gen::default line 1) had an error: RuntimeError: Supplied key contents has 2 public_key values, only 1 is allowed'
+                                      'bsw_gpg_key_manage[some key] (lwrp_gen::default line 1) had an error: RuntimeError: Supplied key contents has 2 public_key values, only 1 is allowed'
   end
 
   it 'complains if the base64 input contains more than 1 secret key' do
@@ -146,15 +148,16 @@ describe 'gpg::lwrp:key_manage' do
     # act
     action = lambda {
       temp_lwrp_recipe <<-EOF
-        bsw_gpg_key_manage 'root' do
+        bsw_gpg_key_manage 'some key' do
           key_contents "-----BEGIN PGP PRIVATE KEY BLOCK-----\nstuff\n-----END PGP PRIVATE KEY BLOCK-----\n-----BEGIN PGP PRIVATE KEY BLOCK-----\n-----END PGP PRIVATE KEY BLOCK-----"
+          for_user 'root'
         end
       EOF
     }
 
     # assert
     expect(action).to raise_exception RuntimeError,
-                                      'bsw_gpg_key_manage[root] (lwrp_gen::default line 1) had an error: RuntimeError: Supplied key contents has 2 secret_key values, only 1 is allowed'
+                                      'bsw_gpg_key_manage[some key] (lwrp_gen::default line 1) had an error: RuntimeError: Supplied key contents has 2 secret_key values, only 1 is allowed'
   end
 
   it 'complains if the base64 input contains a public and secret key' do
@@ -178,15 +181,16 @@ describe 'gpg::lwrp:key_manage' do
     # act
     action = lambda {
       temp_lwrp_recipe <<-EOF
-        bsw_gpg_key_manage 'root' do
+        bsw_gpg_key_manage 'some key' do
           key_contents "-----BEGIN PGP PUBLIC KEY BLOCK-----\nstuff\n-----END PGP PUBLIC KEY BLOCK-----\n-----BEGIN PGP PRIVATE KEY BLOCK-----\n-----END PGP PRIVATE KEY BLOCK-----"
+          for_user 'root'
         end
       EOF
     }
 
     # assert
     expect(action).to raise_exception RuntimeError,
-                                      'bsw_gpg_key_manage[root] (lwrp_gen::default line 1) had an error: RuntimeError: Supplied key contents has both secret and public keys, only 1 key is allowed'
+                                      'bsw_gpg_key_manage[some key] (lwrp_gen::default line 1) had an error: RuntimeError: Supplied key contents has both secret and public keys, only 1 key is allowed'
   end
 
   it 'works properly when importing a secret key that is not already there' do
@@ -213,8 +217,9 @@ describe 'gpg::lwrp:key_manage' do
 
     # act
     temp_lwrp_recipe <<-EOF
-      bsw_gpg_key_manage 'root' do
+      bsw_gpg_key_manage 'some key' do
         key_contents '-----BEGIN PGP PRIVATE KEY BLOCK-----'
+        for_user 'root'
       end
     EOF
 
@@ -234,7 +239,7 @@ describe 'gpg::lwrp:key_manage' do
     input_specified = executed_cmdline.reject { |k, v| !v }
     input_specified.should == {'gpg2 --import' => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
                                'gpg2 --import-ownertrust' => "4D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"}
-    resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'root'
+    resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'some key'
     expect(resource.updated_by_last_action?).to eq(true)
   end
 
@@ -261,8 +266,9 @@ describe 'gpg::lwrp:key_manage' do
 
     # act
     temp_lwrp_recipe <<-EOF
-      bsw_gpg_key_manage 'root' do
+      bsw_gpg_key_manage 'some key' do
         key_contents '-----BEGIN PGP PUBLIC KEY BLOCK-----'
+        for_user 'root'
       end
     EOF
 
@@ -282,7 +288,7 @@ describe 'gpg::lwrp:key_manage' do
     input_specified = executed_cmdline.reject { |k, v| !v }
     input_specified.should == {'gpg2 --import' => '-----BEGIN PGP PUBLIC KEY BLOCK-----',
                                'gpg2 --import-ownertrust' => "4D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"}
-    resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'root'
+    resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'some key'
     expect(resource.updated_by_last_action?).to eq(true)
   end
 
@@ -305,8 +311,9 @@ describe 'gpg::lwrp:key_manage' do
 
     # act
     temp_lwrp_recipe <<-EOF
-      bsw_gpg_key_manage 'root' do
+      bsw_gpg_key_manage 'some key' do
         key_contents '-----BEGIN PGP PUBLIC KEY BLOCK-----'
+        for_user 'root'
       end
     EOF
 
@@ -323,7 +330,7 @@ describe 'gpg::lwrp:key_manage' do
     env.should == [nil]
     input_specified = executed_cmdline.reject { |k, v| !v }
     input_specified.should == {}
-    resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'root'
+    resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'some key'
     expect(resource.updated_by_last_action?).to eq(false)
   end
 
@@ -347,8 +354,9 @@ describe 'gpg::lwrp:key_manage' do
 
     # act
     temp_lwrp_recipe <<-EOF
-      bsw_gpg_key_manage 'root' do
+      bsw_gpg_key_manage 'some key' do
         key_contents '-----BEGIN PGP PRIVATE KEY BLOCK-----'
+        for_user 'root'
       end
     EOF
 
@@ -365,7 +373,7 @@ describe 'gpg::lwrp:key_manage' do
     env.should == [nil]
     input_specified = executed_cmdline.reject { |k, v| !v }
     input_specified.should == {}
-    resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'root'
+    resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'some key'
     expect(resource.updated_by_last_action?).to eq(false)
   end
 
@@ -397,8 +405,9 @@ describe 'gpg::lwrp:key_manage' do
 
     # act
     temp_lwrp_recipe <<-EOF
-      bsw_gpg_key_manage 'root' do
+      bsw_gpg_key_manage 'some key' do
         key_contents '-----BEGIN PGP PUBLIC KEY BLOCK-----'
+        for_user 'root'
       end
     EOF
 
@@ -418,7 +427,7 @@ describe 'gpg::lwrp:key_manage' do
     input_specified = executed_cmdline.reject { |k, v| !v }
     input_specified.should == {'gpg2 --import' => '-----BEGIN PGP PUBLIC KEY BLOCK-----',
                                'gpg2 --import-ownertrust' => "5D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"}
-    resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'root'
+    resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'some key'
     expect(resource.updated_by_last_action?).to eq(true)
   end
 
@@ -450,8 +459,9 @@ describe 'gpg::lwrp:key_manage' do
 
     # act
     temp_lwrp_recipe <<-EOF
-      bsw_gpg_key_manage 'root' do
+      bsw_gpg_key_manage 'some key' do
         key_contents '-----BEGIN PGP PRIVATE KEY BLOCK-----'
+        for_user 'root'
       end
     EOF
 
@@ -471,7 +481,7 @@ describe 'gpg::lwrp:key_manage' do
     input_specified = executed_cmdline.reject { |k, v| !v }
     input_specified.should == {'gpg2 --import' => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
                                'gpg2 --import-ownertrust' => "5D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"}
-    resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'root'
+    resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'some key'
     expect(resource.updated_by_last_action?).to eq(true)
   end
 
@@ -498,8 +508,9 @@ describe 'gpg::lwrp:key_manage' do
 
     # act
     temp_lwrp_recipe <<-EOF
-      bsw_gpg_key_manage 'someone_else' do
+      bsw_gpg_key_manage 'some key' do
         key_contents '-----BEGIN PGP PRIVATE KEY BLOCK-----'
+        for_user 'someone_else'
       end
     EOF
 
@@ -519,7 +530,7 @@ describe 'gpg::lwrp:key_manage' do
     input_specified = executed_cmdline.reject { |k, v| !v }
     input_specified.should == {'gpg2 --import' => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
                                'gpg2 --import-ownertrust' => "4D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"}
-    resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'someone_else'
+    resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'some key'
     expect(resource.updated_by_last_action?).to eq(true)
   end
 
@@ -553,8 +564,9 @@ describe 'gpg::lwrp:key_manage' do
 
     # act
     temp_lwrp_recipe <<-EOF
-      bsw_gpg_key_manage 'root' do
+      bsw_gpg_key_manage 'some key' do
         key_contents '-----BEGIN PGP PUBLIC KEY BLOCK-----'
+        for_user 'root'
       end
     EOF
 
@@ -575,7 +587,7 @@ describe 'gpg::lwrp:key_manage' do
     input_specified = executed_cmdline.reject { |k, v| !v }
     input_specified.should == {'gpg2 --import' => '-----BEGIN PGP PUBLIC KEY BLOCK-----',
                                'gpg2 --import-ownertrust' => "4D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"}
-    resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'root'
+    resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'some key'
     expect(resource.updated_by_last_action?).to eq(true)
   end
 
@@ -609,8 +621,9 @@ describe 'gpg::lwrp:key_manage' do
 
     # act
     temp_lwrp_recipe <<-EOF
-      bsw_gpg_key_manage 'root' do
+      bsw_gpg_key_manage 'some key' do
         key_contents '-----BEGIN PGP PRIVATE KEY BLOCK-----'
+        for_user 'root'
       end
     EOF
 
@@ -631,7 +644,7 @@ describe 'gpg::lwrp:key_manage' do
     input_specified = executed_cmdline.reject { |k, v| !v }
     input_specified.should == {'gpg2 --import' => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
                                'gpg2 --import-ownertrust' => "4D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"}
-    resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'root'
+    resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'some key'
     expect(resource.updated_by_last_action?).to eq(true)
   end
 
@@ -814,8 +827,9 @@ describe 'gpg::lwrp:key_manage' do
 
     # act
     temp_lwrp_recipe <<-EOF
-      bsw_gpg_key_manage 'root' do
+      bsw_gpg_key_manage 'some key' do
         chef_vault_info :data_bag => 'thedatabag', :item=> 'the_item', :json_key => 'json_key'
+        for_user 'root'
       end
     EOF
 
@@ -835,7 +849,7 @@ describe 'gpg::lwrp:key_manage' do
     input_specified = executed_cmdline.reject { |k, v| !v }
     input_specified.should == {'gpg2 --import' => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
                                'gpg2 --import-ownertrust' => "4D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"}
-    resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'root'
+    resource = @chef_run.find_resource 'bsw_gpg_key_manage', 'some key'
     expect(resource.updated_by_last_action?).to eq(true)
   end
 end
