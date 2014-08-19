@@ -4,7 +4,7 @@ require 'tempfile'
 class Chef
   class Provider
     class BaseGpgProvider < Chef::Provider
-      include BswTech::Gpg::SharedKey
+      include BswTech::Gpg::RecipeOrProvider
 
       def initialize(new_resource, run_context)
         super

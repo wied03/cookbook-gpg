@@ -5,12 +5,12 @@ require 'gpg_retriever'
 require 'key_details'
 require 'key_a_shared'
 
-describe BswTech::Gpg::SharedKey do
+describe BswTech::Gpg::RecipeOrProvider do
   class DummyRunner
   end
 
   class SharedKeyModuleWrapper
-    include BswTech::Gpg::SharedKey
+    include BswTech::Gpg::RecipeOrProvider
     attr_accessor :run_context
 
     def initialize(run_context)
