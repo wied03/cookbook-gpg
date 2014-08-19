@@ -6,7 +6,7 @@ $: << File.join(File.dirname(__FILE__), '../../../libraries')
 require 'gpg_retriever'
 require 'key_details'
 
-describe 'gpg::lwrp:load_key_from_chef' do
+describe 'gpg::lwrp:load_key_from_chef_vault' do
   include BswTech::ChefSpec::LwrpTestHelper
 
   before {
@@ -22,7 +22,7 @@ describe 'gpg::lwrp:load_key_from_chef' do
   end
 
   def lwrps_under_test
-    'load_key_from_chef'
+    'load_key_from_chef_vault'
   end
 
   before {
@@ -86,7 +86,7 @@ describe 'gpg::lwrp:load_key_from_chef' do
 
     # act
     temp_lwrp_recipe <<-EOF
-      bsw_gpg_load_key_from_chef 'some key' do
+      bsw_gpg_load_key_from_chef_vault 'some key' do
         data_bag 'thedatabag'
         item 'the_item'
         json_key 'json_key'
@@ -110,7 +110,7 @@ describe 'gpg::lwrp:load_key_from_chef' do
     input_specified = executed_cmdline.reject { |k, v| !v }
     input_specified.should == {'gpg2 --import' => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
                                'gpg2 --import-ownertrust' => "4D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"}
-    resource = @chef_run.find_resource 'bsw_gpg_load_key_from_chef', 'some key'
+    resource = @chef_run.find_resource 'bsw_gpg_load_key_from_chef_vault', 'some key'
     expect(resource.updated_by_last_action?).to eq(true)
   end
 end

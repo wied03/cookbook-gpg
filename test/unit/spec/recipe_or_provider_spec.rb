@@ -3,7 +3,7 @@ require 'chef-vault'
 $: << File.join(File.dirname(__FILE__), '../../../libraries')
 require 'gpg_retriever'
 require 'key_details'
-require 'key_a_shared'
+require 'recipe_or_provider'
 
 describe BswTech::Gpg::RecipeOrProvider do
   class DummyRunner
