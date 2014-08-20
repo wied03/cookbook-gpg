@@ -24,6 +24,7 @@ module BswTech
           @external_type = nil
           @base64_used = nil
           @shell_outs = []
+          @keyring_checked = :default
         end
 
         config.after(:each) do
@@ -63,8 +64,9 @@ module BswTech
       end
 
       def stub_retriever(current=[], draft)
-        allow(@gpg_retriever).to receive(:get_current_installed_keys) do |executor, type|
+        allow(@gpg_retriever).to receive(:get_current_installed_keys) do |executor, type, keyring|
           @current_type_checked = type
+          @keyring_checked = keyring if keyring
           current
         end
         allow(@gpg_retriever).to receive(:get_key_info_from_base64) do |executor, type, base64|
