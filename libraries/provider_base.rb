@@ -33,7 +33,7 @@ class Chef
         draft_key_header = get_draft_key_from_string key_contents
         current = get_current_key_details draft_key_header.type
         if does_key_needs_to_be_installed draft_key_header, current
-          converge_by "Importing key #{draft_key_header.username} into keyring #{get_keyring}" do
+          converge_by "Importing key #{draft_key_header.username} into keyring #{get_keyring} for user #{@new_resource.for_user}" do
             remove_existing_keys draft_key_header, current
             do_key_import draft_key_header, key_contents
             run_trust_key_command draft_key_header
