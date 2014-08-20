@@ -25,14 +25,6 @@ describe 'gpg::lwrp:load_key_from_key_server' do
   end
 
   before {
-    @stub_setup = nil
-    original_new = Mixlib::ShellOut.method(:new)
-    Mixlib::ShellOut.stub(:new) do |*args|
-      command = original_new.call(*args)
-      fail '@stub_setup needs to be setup before running tests' unless @stub_setup
-      @stub_setup[command]
-      command
-    end
     @gpg_retriever = double()
     BswTech::Gpg::GpgRetriever.stub(:new).and_return(@gpg_retriever)
     @current_type_checked = nil
@@ -60,22 +52,31 @@ describe 'gpg::lwrp:load_key_from_key_server' do
     end
   end
 
+  # TODO: Share this method
   def setup_stub_commands(commands)
     @command_mocks = commands
-    @stub_setup = lambda do |shell_out|
+    stub_setup = lambda do |shell_out|
       @shell_outs << shell_out
       command_text = shell_out.command
       matched_mock = @command_mocks.find { |mock| mock[:command] == command_text }
       if matched_mock
         shell_out.stub(:error!)
-        shell_out.stub(:run_command) do |options|
-          fail "Need to test expected input here: #{shell_out.inspect}"
+        shell_out.stub(:run_command) do
+          if matched_mock[:expected_input] != shell_out.input
+            fail "Expected input #{matched_mock[:expected_input]} but got #{shell_out.input}"
+          end
         end
         output = matched_mock[:stdout] || ''
         shell_out.stub(:stdout).and_return(output)
       else
         shell_out.stub(:error!).and_raise "Unexpected command #{shell_out.command}"
       end
+    end
+    original_new = Mixlib::ShellOut.method(:new)
+    Mixlib::ShellOut.stub(:new) do |*args|
+      command = original_new.call(*args)
+      stub_setup[command]
+      command
     end
   end
 
@@ -89,7 +90,7 @@ describe 'gpg::lwrp:load_key_from_key_server' do
     it "fails if we only supply #{attr_to_include}" do
       # arrange
       # Include all of this because for_user will try and run the provider's constructor
-      setup_stub_commands([:command => '/bin/sh -c "echo -n ~value"', :stdout => 'home/root'])
+      setup_stub_commands([:command => '/bin/sh -c "echo -n ~value"', :stdout => '/home/root'])
 
       # act
       action = lambda {
@@ -114,8 +115,8 @@ describe 'gpg::lwrp:load_key_from_key_server' do
 
     setup_stub_commands([
                             {
-                                :command => '/bin/sh -c "echo -n ~value"',
-                                :stdout => 'home/root'
+                                :command => '/bin/sh -c "echo -n ~root"',
+                                :stdout => '/home/root'
                             },
                             {
                                 :command => 'gpg2 --keyserver some.key.server --recv-keys the_key_id'
