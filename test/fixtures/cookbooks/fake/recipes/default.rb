@@ -16,10 +16,16 @@ bsw_gpg_load_key_from_string 'some private key' do
   key_contents private_key_bits
 end
 
-with 'joe' do |username|
+user_with_home = lambda do |username|
   user username do
+    action :create
     supports :manage_home => true
+    home "/home/#{username}"
   end
+end
+
+with 'joe' do |username|
+  user_with_home[username]
 
   bsw_gpg_load_key_from_string 'keyring test with public key' do
     for_user username
@@ -35,11 +41,9 @@ with 'joe' do |username|
 end
 
 with 'bob' do |username|
-  user username do
-    supports :manage_home => true
-  end
+  user_with_home[username]
 
-  bsw_gpg_load_key_from_server 'from key server test' do
+  bsw_gpg_load_key_from_key_server 'from key server test' do
     for_user username
     key_server 'keyserver.ubuntu.com'
     key_id '561F9B9CAC40B2F7'

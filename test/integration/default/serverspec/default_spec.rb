@@ -16,6 +16,6 @@ end
 
 describe 'Key Contents LWRP - Bob - Key server' do
   describe command('sudo -u bob -i gpg2 --list-keys') do
-    it { should return_stdout /.*pub   4096R\/CAC40B2F7.*/ }
+    it { should return_stdout /.*pub   4096R\/AC40B2F7.*/ }
   end
 end
