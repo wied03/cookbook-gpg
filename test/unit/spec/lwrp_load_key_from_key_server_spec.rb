@@ -4,6 +4,7 @@ require_relative 'spec_helper'
 $: << File.join(File.dirname(__FILE__), '../../../libraries')
 require 'helper_gpg_retriever'
 require 'helper_key_details'
+require 'hkp'
 
 describe 'gpg::lwrp:load_key_from_key_server' do
   include BswTech::ChefSpec::LwrpTestHelper
@@ -33,6 +34,7 @@ describe 'gpg::lwrp:load_key_from_key_server' do
     @shell_outs = []
   }
 
+  # TODO: Share this method
   def stub_retriever(current=[], draft)
     allow(@gpg_retriever).to receive(:get_current_installed_keys) do |executor, type|
       @current_type_checked = type
@@ -45,6 +47,7 @@ describe 'gpg::lwrp:load_key_from_key_server' do
     end
   end
 
+  # TODO: Share this method
   def executed_command_lines
     @shell_outs.inject({}) do |total, item|
       total[item.command] = item.input
@@ -80,10 +83,20 @@ describe 'gpg::lwrp:load_key_from_key_server' do
     end
   end
 
+# TODO: Share this method
   def verify_actual_commands_match_expected
     actual = executed_command_lines
     expected = @command_mocks.keys
     actual.keys.should == expected
+  end
+
+  def stub_hkp_retrieval(key_id, expected_key_server, key_contents)
+    hkp = double()
+    Hkp.stub(:new) do |actual_key_server|
+      fail "Expected key server #{expected_key_server} but got #{actual_key_server}" unless expected_key_server == actual_key_server
+      hkp
+    end
+    allow(hkp).to receive(:fetch).and_return key_contents
   end
 
   ['key_server', 'key_id'].each do |attr_to_include|
@@ -106,12 +119,15 @@ describe 'gpg::lwrp:load_key_from_key_server' do
     end
   end
 
-  it 'fetches the key from the key server properly' do
+  it 'fetches a public key from the key server properly and installs it if not there' do
     # arrange
     stub_retriever(draft=BswTech::Gpg::KeyDetails.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
                                                       username='the username',
                                                       id='the_key_id',
-                                                      type=:secret_key))
+                                                      type=:public_key))
+    stub_hkp_retrieval(key_id='the_key_id',
+                       expected_key_server='foobar',
+                       key_contents="-----BEGIN PGP PUBLIC KEY BLOCK-----\nfoobar")
 
     setup_stub_commands([
                             {
@@ -137,11 +153,48 @@ describe 'gpg::lwrp:load_key_from_key_server' do
     EOF
 
     # assert
-    expect(@current_type_checked).to eq(:secret_key)
-    expect(@external_type).to eq(:secret_key)
-    expect(@base64_used).to eq('-----BEGIN PGP PRIVATE KEY BLOCK-----')
+    expect(@current_type_checked).to eq(:public_key)
+    expect(@external_type).to eq(:public_key)
+    expect(@base64_used).to eq("-----BEGIN PGP PUBLIC KEY BLOCK-----\nfoobar")
     verify_actual_commands_match_expected
     resource = @chef_run.find_resource 'bsw_gpg_load_key_from_key_server', 'some key'
     expect(resource.updated_by_last_action?).to eq(true)
+    pending 'finish this test'
+  end
+
+  it 'fetches a public key from the key server properly and does not install it if its already there' do
+    # arrange
+    key = BswTech::Gpg::KeyDetails.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+                                       username='the username',
+                                       id='the_key_id',
+                                       type=:public_key)
+    stub_retriever(current=[key], draft=key)
+    setup_stub_commands([
+                            {
+                                :command => '/bin/sh -c "echo -n ~root"',
+                                :stdout => '/home/root'
+                            }
+                        ])
+    stub_hkp_retrieval(key_id='the_key_id',
+                       expected_key_server='foobar',
+                       key_contents="-----BEGIN PGP PUBLIC KEY BLOCK-----\nfoobar")
+
+    # act
+    temp_lwrp_recipe <<-EOF
+        bsw_gpg_load_key_from_key_server 'some key' do
+          key_server 'some.key.server'
+          key_id 'the_key_id'
+          for_user 'root'
+        end
+    EOF
+
+    # assert
+    expect(@current_type_checked).to eq(:public_key)
+    expect(@external_type).to eq(:public_key)
+    expect(@base64_used).to eq("-----BEGIN PGP PUBLIC KEY BLOCK-----\nfoobar")
+    verify_actual_commands_match_expected
+    resource = @chef_run.find_resource 'bsw_gpg_load_key_from_key_server', 'some key'
+    expect(resource.updated_by_last_action?).to eq(false)
+    pending 'finish this test'
   end
 end
