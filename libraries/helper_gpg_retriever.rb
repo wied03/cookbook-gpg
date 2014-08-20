@@ -3,12 +3,14 @@ module BswTech
     class GpgRetriever
       def initialize
         @parser = BswTech::Gpg::GpgParser.new
+        @keyring_specifier = BswTech::Gpg::KeyringSpecifier.new
       end
 
       # type is :secret_key or :public_key
-      def get_current_installed_keys(executor, type)
+      def get_current_installed_keys(executor, type, keyring=:default)
         list_param = type == :secret_key ? '--list-secret-keys' : '--list-keys'
-        raw_output = executor["gpg2 #{list_param} --with-fingerprint --with-colons"]
+        keyring_param = keyring == :default ? ' ' : @keyring_specifier.get_custom_keyring(type, keyring)
+        raw_output = executor["gpg2#{keyring_param} #{list_param} --with-fingerprint --with-colons"]
         @parser.parse_output_ring raw_output
       end
 

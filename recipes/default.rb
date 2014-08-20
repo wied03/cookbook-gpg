@@ -5,3 +5,4 @@
 #
 # Copyright 2014, YOUR_COMPANY_NAME
 #
+package 'gnupg2'

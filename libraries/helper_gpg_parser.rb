@@ -75,7 +75,7 @@ module BswTech
           if ring_or_external == :ring
             records.delete username
           end
-          results << Gpg::KeyDetails.new(fingerprint=fingerprint[:contents],
+          results << Gpg::KeyHeader.new(fingerprint=fingerprint[:contents],
                                          username=username[:id],
                                          id=first_key[:id],
                                          type=first_key[:type])

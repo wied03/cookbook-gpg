@@ -2,7 +2,7 @@
 
 module BswTech
   module Gpg
-    module SharedKey
+    module RecipeOrProvider
       def get_draft_key_from_cookbook(cookbook_name, cookbook_file)
         parse_key(cookbook_file_contents(cookbook_file, cookbook_name))
       end
@@ -72,7 +72,7 @@ end
 class Chef
   class Recipe
     # Allow recipes to use fingerprints, etc.
-    include BswTech::Gpg::SharedKey
+    include BswTech::Gpg::RecipeOrProvider
 
     # Unlike our LWRP, we don't want to run this as a specific user, so use a simpler implementation
     def run_command(*args)

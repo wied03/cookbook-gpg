@@ -1,7 +1,7 @@
 require 'rspec'
 $: << File.join(File.dirname(__FILE__), '../../../libraries')
-require 'key_details'
-require 'gpg_parser'
+require 'helper_key_header'
+require 'helper_gpg_parser'
 
 describe BswTech::Gpg::GpgParser do
   it 'parses a 1 ring secret key' do

@@ -1,6 +1,6 @@
 module BswTech
   module Gpg
-    class KeyDetails
+    class KeyHeader
       attr_accessor :fingerprint
       attr_accessor :username
       attr_accessor :id
