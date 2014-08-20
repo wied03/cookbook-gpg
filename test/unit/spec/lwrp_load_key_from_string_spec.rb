@@ -498,11 +498,11 @@ describe 'gpg::lwrp:load_key_from_string' do
                                 :stdout => '/home/root'
                             },
                             {
-                                :command => 'gpg2 --no-default-keyring --keyring something.gpg --import',
+                                :command => 'gpg2 --no-auto-check-trustdb --no-default-keyring --keyring something.gpg --import',
                                 :expected_input => '-----BEGIN PGP PUBLIC KEY BLOCK-----'
                             },
                             {
-                                :command => 'gpg2 --no-default-keyring --keyring something.gpg --import-ownertrust',
+                                :command => 'gpg2 --no-auto-check-trustdb --no-default-keyring --keyring something.gpg --import-ownertrust',
                                 :expected_input => "4D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"
                             }
                         ])
@@ -537,11 +537,11 @@ describe 'gpg::lwrp:load_key_from_string' do
                                 :stdout => '/home/root'
                             },
                             {
-                                :command => 'gpg2 --no-default-keyring --secret-keyring something.gpg --import',
+                                :command => 'gpg2 --no-auto-check-trustdb --no-default-keyring --secret-keyring something.gpg --import',
                                 :expected_input => '-----BEGIN PGP PRIVATE KEY BLOCK-----'
                             },
                             {
-                                :command => 'gpg2 --no-default-keyring --secret-keyring something.gpg --import-ownertrust',
+                                :command => 'gpg2 --no-auto-check-trustdb --no-default-keyring --secret-keyring something.gpg --import-ownertrust',
                                 :expected_input => "4D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"
                             }
                         ])
@@ -582,14 +582,14 @@ describe 'gpg::lwrp:load_key_from_string' do
                                 :stdout => '/home/root'
                             },
                             {
-                                :command => 'gpg2 --no-default-keyring --keyring something.gpg --delete-key --batch --yes 6D1CF3288469F260C2119B9F76C95D74390AA6C9'
+                                :command => 'gpg2 --no-auto-check-trustdb --no-default-keyring --keyring something.gpg --delete-key --batch --yes 6D1CF3288469F260C2119B9F76C95D74390AA6C9'
                             },
                             {
-                                :command => 'gpg2 --no-default-keyring --keyring something.gpg --import',
+                                :command => 'gpg2 --no-auto-check-trustdb --no-default-keyring --keyring something.gpg --import',
                                 :expected_input => '-----BEGIN PGP PUBLIC KEY BLOCK-----'
                             },
                             {
-                                :command => 'gpg2 --no-default-keyring --keyring something.gpg --import-ownertrust',
+                                :command => 'gpg2 --no-auto-check-trustdb --no-default-keyring --keyring something.gpg --import-ownertrust',
                                 :expected_input => "4D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"
                             }
                         ])
@@ -629,14 +629,14 @@ describe 'gpg::lwrp:load_key_from_string' do
                                 :stdout => '/home/root'
                             },
                             {
-                                :command => 'gpg2 --no-default-keyring --secret-keyring something.gpg --delete-secret-and-public-key --batch --yes 6D1CF3288469F260C2119B9F76C95D74390AA6C9'
+                                :command => 'gpg2 --no-auto-check-trustdb --no-default-keyring --secret-keyring something.gpg --delete-secret-and-public-key --batch --yes 6D1CF3288469F260C2119B9F76C95D74390AA6C9'
                             },
                             {
-                                :command => 'gpg2 --no-default-keyring --secret-keyring something.gpg --import',
+                                :command => 'gpg2 --no-auto-check-trustdb --no-default-keyring --secret-keyring something.gpg --import',
                                 :expected_input => '-----BEGIN PGP PRIVATE KEY BLOCK-----'
                             },
                             {
-                                :command => 'gpg2 --no-default-keyring --secret-keyring something.gpg --import-ownertrust',
+                                :command => 'gpg2 --no-auto-check-trustdb --no-default-keyring --secret-keyring something.gpg --import-ownertrust',
                                 :expected_input => "4D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"
                             }
                         ])

@@ -128,7 +128,7 @@ describe BswTech::Gpg::GpgRetriever do
 
     # assert
     expect(result).to eq(result)
-    expect(@gpg_command_executed).to eq('gpg2 --no-default-keyring --secret-keyring stuff.gpg --list-secret-keys --with-fingerprint --with-colons')
+    expect(@gpg_command_executed).to eq('gpg2 --no-auto-check-trustdb --no-default-keyring --secret-keyring stuff.gpg --list-secret-keys --with-fingerprint --with-colons')
   end
 
   it 'fetches current public keys from a non default ring' do
@@ -142,6 +142,6 @@ describe BswTech::Gpg::GpgRetriever do
 
     # assert
     expect(result).to eq(result)
-    expect(@gpg_command_executed).to eq('gpg2 --no-default-keyring --keyring stuff.gpg --list-keys --with-fingerprint --with-colons')
+    expect(@gpg_command_executed).to eq('gpg2 --no-auto-check-trustdb --no-default-keyring --keyring stuff.gpg --list-keys --with-fingerprint --with-colons')
   end
 end
