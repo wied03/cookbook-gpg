@@ -81,6 +81,6 @@ describe BswTech::Hkp::KeyFetcher do
     action = lambda { fetcher.fetch_key 'blah', 'key_id' }
 
     # assert
-    expect(action).to raise_exception "Unable to contact key server 'http://blah:11371/pks/lookup?options=mr&op=get&search=0xkey_id', details: getaddrinfo: nodename nor servname provided, or not known"
+    expect(action).to raise_exception /Unable to contact key server 'http:\/\/blah:11371\/pks\/lookup\?options=mr&op=get&search=0xkey_id', details: getaddrinfo.*/
   end
 end
