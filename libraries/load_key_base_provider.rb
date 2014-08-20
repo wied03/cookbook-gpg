@@ -1,5 +1,6 @@
 require 'mixlib/shellout'
 require 'tempfile'
+require 'recipe_or_provider'
 
 class Chef
   class Provider
