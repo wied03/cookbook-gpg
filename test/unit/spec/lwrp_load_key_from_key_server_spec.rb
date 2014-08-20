@@ -9,85 +9,12 @@ require 'hkp'
 describe 'gpg::lwrp:load_key_from_key_server' do
   include BswTech::ChefSpec::LwrpTestHelper
 
-  before {
-    stub_resources
-  }
-
-  after(:each) {
-    cleanup
-  }
-
   def cookbook_under_test
     'bsw_gpg'
   end
 
   def lwrps_under_test
     'load_key_from_key_server'
-  end
-
-  before {
-    @gpg_retriever = double()
-    BswTech::Gpg::GpgRetriever.stub(:new).and_return(@gpg_retriever)
-    @current_type_checked = nil
-    @external_type = nil
-    @base64_used = nil
-    @shell_outs = []
-  }
-
-  # TODO: Share this method
-  def stub_retriever(current=[], draft)
-    allow(@gpg_retriever).to receive(:get_current_installed_keys) do |executor, type|
-      @current_type_checked = type
-      current
-    end
-    allow(@gpg_retriever).to receive(:get_key_info_from_base64) do |executor, type, base64|
-      @external_type = type
-      @base64_used = base64
-      draft
-    end
-  end
-
-  # TODO: Share this method
-  def executed_command_lines
-    @shell_outs.inject({}) do |total, item|
-      total[item.command] = item.input
-      total
-    end
-  end
-
-  # TODO: Share this method
-  def setup_stub_commands(commands)
-    @command_mocks = commands
-    stub_setup = lambda do |shell_out|
-      @shell_outs << shell_out
-      command_text = shell_out.command
-      matched_mock = @command_mocks.find { |mock| mock[:command] == command_text }
-      if matched_mock
-        shell_out.stub(:error!)
-        shell_out.stub(:run_command) do
-          if matched_mock[:expected_input] != shell_out.input
-            fail "Expected input #{matched_mock[:expected_input]} but got #{shell_out.input}"
-          end
-        end
-        output = matched_mock[:stdout] || ''
-        shell_out.stub(:stdout).and_return(output)
-      else
-        shell_out.stub(:error!).and_raise "Unexpected command #{shell_out.command}"
-      end
-    end
-    original_new = Mixlib::ShellOut.method(:new)
-    Mixlib::ShellOut.stub(:new) do |*args|
-      command = original_new.call(*args)
-      stub_setup[command]
-      command
-    end
-  end
-
-# TODO: Share this method
-  def verify_actual_commands_match_expected
-    actual = executed_command_lines
-    expected = @command_mocks.map { |cmd| cmd[:command] }
-    actual.keys.should == expected
   end
 
   def stub_hkp_retrieval(key_id, expected_key_server, key_contents)
