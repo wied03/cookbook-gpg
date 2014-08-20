@@ -43,6 +43,10 @@ class Chef
         end
       end
 
+      def do_key_import(draft_key_details, key_contents)
+
+      end
+
       def load_current_resource
         @current_resource.for_user(new_resource.for_user)
         @current_resource.keyring_file(new_resource.keyring_file)

@@ -3,7 +3,7 @@
 require_relative 'spec_helper'
 $: << File.join(File.dirname(__FILE__), '../../../libraries')
 require 'helper_gpg_retriever'
-require 'helper_key_details'
+require 'helper_key_header'
 require 'hkp'
 
 describe 'gpg::lwrp:load_key_from_key_server' do
@@ -121,7 +121,7 @@ describe 'gpg::lwrp:load_key_from_key_server' do
 
   it 'fetches a public key from the key server properly and installs it if not there' do
     # arrange
-    stub_retriever(draft=BswTech::Gpg::KeyDetails.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+    stub_retriever(draft=BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
                                                       username='the username',
                                                       id='the_key_id',
                                                       type=:public_key))
@@ -164,7 +164,7 @@ describe 'gpg::lwrp:load_key_from_key_server' do
 
   it 'fetches a public key from the key server properly and does not install it if its already there' do
     # arrange
-    key = BswTech::Gpg::KeyDetails.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+    key = BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
                                        username='the username',
                                        id='the_key_id',
                                        type=:public_key)

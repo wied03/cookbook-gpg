@@ -2,7 +2,7 @@ require_relative 'spec_helper'
 require 'chef-vault'
 $: << File.join(File.dirname(__FILE__), '../../../libraries')
 require 'helper_gpg_retriever'
-require 'helper_key_details'
+require 'helper_key_header'
 require 'helper_recipe_or_provider'
 
 describe BswTech::Gpg::RecipeOrProvider do
@@ -78,7 +78,7 @@ describe BswTech::Gpg::RecipeOrProvider do
 
   it 'allows working with public key fingerprints from the recipe based on a PEM cert' do
     # arrange
-    stub_retriever(draft=BswTech::Gpg::KeyDetails.new(fingerprint='7B11C14106673B5346A65351F44B4C6833AE3E6C',
+    stub_retriever(draft=BswTech::Gpg::KeyHeader.new(fingerprint='7B11C14106673B5346A65351F44B4C6833AE3E6C',
                                                       username='pkg_key dev (pkg_key) <dev@aptly.bswtechconsulting.com>',
                                                       id='the id',
                                                       type=:public_key))
@@ -96,7 +96,7 @@ describe BswTech::Gpg::RecipeOrProvider do
 
   it 'allows working with private key fingerprints from the recipe based on a PEM cert' do
     # arrange
-    stub_retriever(draft=BswTech::Gpg::KeyDetails.new(fingerprint='7B11C14106673B5346A65351F44B4C6833AE3E6C',
+    stub_retriever(draft=BswTech::Gpg::KeyHeader.new(fingerprint='7B11C14106673B5346A65351F44B4C6833AE3E6C',
                                                       username='pkg_key dev (pkg_key) <dev@aptly.bswtechconsulting.com>',
                                                       id='the id',
                                                       type=:secret_key))
@@ -114,7 +114,7 @@ describe BswTech::Gpg::RecipeOrProvider do
 
   it 'allows working with public key fingerprints from the recipe based on a cookbook file' do
     # arrange
-    stub_retriever(draft=BswTech::Gpg::KeyDetails.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+    stub_retriever(draft=BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
                                                       username='BSW Tech DB Backup db_dev (WAL-E/S3 Encryption key) <db_dev@wale.backup.bswtechconsulting.com>',
                                                       id='the id',
                                                       type=:public_key))
@@ -137,7 +137,7 @@ describe BswTech::Gpg::RecipeOrProvider do
 
   it 'allows working with private key fingerprints from the recipe based on a cookbook file' do
     # arrange
-    stub_retriever(draft=BswTech::Gpg::KeyDetails.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+    stub_retriever(draft=BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
                                                       username='BSW Tech DB Backup db_dev (WAL-E/S3 Encryption key) <db_dev@wale.backup.bswtechconsulting.com>',
                                                       id='the id',
                                                       type=:secret_key))

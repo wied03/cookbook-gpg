@@ -4,7 +4,7 @@ require_relative 'spec_helper'
 require 'chef-vault'
 $: << File.join(File.dirname(__FILE__), '../../../libraries')
 require 'helper_gpg_retriever'
-require 'helper_key_details'
+require 'helper_key_header'
 
 describe 'gpg::lwrp:load_key_from_chef_vault' do
   include BswTech::ChefSpec::LwrpTestHelper
@@ -91,7 +91,7 @@ describe 'gpg::lwrp:load_key_from_chef_vault' do
 
   it 'allows supplying Chef vault info for a private key directly as opposed to key contents' do
     # arrange
-    stub_retriever(draft=BswTech::Gpg::KeyDetails.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+    stub_retriever(draft=BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
                                                       username='the username',
                                                       id='the id',
                                                       type=:secret_key))

@@ -4,7 +4,7 @@ require_relative 'spec_helper'
 require 'chef-vault'
 $: << File.join(File.dirname(__FILE__), '../../../libraries')
 require 'helper_gpg_retriever'
-require 'helper_key_details'
+require 'helper_key_header'
 
 describe 'gpg::lwrp:load_key_from_string' do
   include BswTech::ChefSpec::LwrpTestHelper
@@ -225,7 +225,7 @@ describe 'gpg::lwrp:load_key_from_string' do
 
   it 'works properly when importing a secret key that is not already there' do
     # arrange
-    stub_retriever(draft=BswTech::Gpg::KeyDetails.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+    stub_retriever(draft=BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
                                                       username='the username',
                                                       id='the id',
                                                       type=:secret_key))
@@ -275,7 +275,7 @@ describe 'gpg::lwrp:load_key_from_string' do
   end
 
   it 'works properly when importing a public key that is not already there' do
-    stub_retriever(draft=BswTech::Gpg::KeyDetails.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+    stub_retriever(draft=BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
                                                       username='the username',
                                                       id='the id',
                                                       type=:public_key))
@@ -324,7 +324,7 @@ describe 'gpg::lwrp:load_key_from_string' do
   end
 
   it 'does not do anything if the correct public key is already there' do
-    key = BswTech::Gpg::KeyDetails.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+    key = BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
                                        username='the username',
                                        id='the id',
                                        type=:public_key)
@@ -367,7 +367,7 @@ describe 'gpg::lwrp:load_key_from_string' do
 
   it 'does not do anything if the correct secret key is already there' do
     # arrange
-    key = BswTech::Gpg::KeyDetails.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+    key = BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
                                        username='the username',
                                        id='the id',
                                        type=:secret_key)
@@ -410,11 +410,11 @@ describe 'gpg::lwrp:load_key_from_string' do
 
   it 'does update the key if a different public key is already there' do
     # arrange
-    current_key = BswTech::Gpg::KeyDetails.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+    current_key = BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
                                                username='the username',
                                                id='the id',
                                                type=:public_key)
-    new_key = BswTech::Gpg::KeyDetails.new(fingerprint='5D1CF3288469F260C2119B9F76C95D74390AA6C9',
+    new_key = BswTech::Gpg::KeyHeader.new(fingerprint='5D1CF3288469F260C2119B9F76C95D74390AA6C9',
                                            username='the username 2',
                                            id='the id',
                                            type=:public_key)
@@ -464,11 +464,11 @@ describe 'gpg::lwrp:load_key_from_string' do
 
   it 'does update the key if a different secret key is already there' do
     # arrange
-    current_key = BswTech::Gpg::KeyDetails.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+    current_key = BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
                                                username='the username',
                                                id='the id',
                                                type=:secret_key)
-    new_key = BswTech::Gpg::KeyDetails.new(fingerprint='5D1CF3288469F260C2119B9F76C95D74390AA6C9',
+    new_key = BswTech::Gpg::KeyHeader.new(fingerprint='5D1CF3288469F260C2119B9F76C95D74390AA6C9',
                                            username='the username 2',
                                            id='the id',
                                            type=:secret_key)
@@ -518,7 +518,7 @@ describe 'gpg::lwrp:load_key_from_string' do
 
 
   it 'installs they key properly when run as a different user' do
-    stub_retriever(draft=BswTech::Gpg::KeyDetails.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+    stub_retriever(draft=BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
                                                       username='the username',
                                                       id='the id',
                                                       type=:secret_key))
@@ -567,12 +567,12 @@ describe 'gpg::lwrp:load_key_from_string' do
 
   it 'overwrites the existing public key for the user if the fingerprint has changed' do
     # arrange
-    current = BswTech::Gpg::KeyDetails.new(fingerprint='6D1CF3288469F260C2119B9F76C95D74390AA6C9',
+    current = BswTech::Gpg::KeyHeader.new(fingerprint='6D1CF3288469F260C2119B9F76C95D74390AA6C9',
                                            username='the username',
                                            id='the id',
                                            type=:public_key)
     stub_retriever(current=[current],
-                   draft=BswTech::Gpg::KeyDetails.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+                   draft=BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
                                                       username='the username',
                                                       id='the id',
                                                       type=:public_key))
@@ -624,12 +624,12 @@ describe 'gpg::lwrp:load_key_from_string' do
 
   it 'overwrites the existing private key for the user if the fingerprint has changed' do
     # arrange
-    current = BswTech::Gpg::KeyDetails.new(fingerprint='6D1CF3288469F260C2119B9F76C95D74390AA6C9',
+    current = BswTech::Gpg::KeyHeader.new(fingerprint='6D1CF3288469F260C2119B9F76C95D74390AA6C9',
                                            username='the username',
                                            id='the id',
                                            type=:secret_key)
     stub_retriever(current=[current],
-                   draft=BswTech::Gpg::KeyDetails.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+                   draft=BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
                                                       username='the username',
                                                       id='the id',
                                                       type=:secret_key))
@@ -681,7 +681,7 @@ describe 'gpg::lwrp:load_key_from_string' do
 
   it 'allows specifying a custom keyring file with a public key' do
     # arrange
-    stub_retriever(draft=BswTech::Gpg::KeyDetails.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+    stub_retriever(draft=BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
                                                       username='the username',
                                                       id='the id',
                                                       type=:public_key))
@@ -732,7 +732,7 @@ describe 'gpg::lwrp:load_key_from_string' do
   end
 
   it 'allows specifying a custom keyring file with a secret key' do
-    stub_retriever(draft=BswTech::Gpg::KeyDetails.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+    stub_retriever(draft=BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
                                                       username='the username',
                                                       id='the id',
                                                       type=:secret_key))
@@ -784,12 +784,12 @@ describe 'gpg::lwrp:load_key_from_string' do
 
   it 'removes a public key from only the custom keyring when a keyring is specified and removal is required' do
     # assert
-    current = BswTech::Gpg::KeyDetails.new(fingerprint='6D1CF3288469F260C2119B9F76C95D74390AA6C9',
+    current = BswTech::Gpg::KeyHeader.new(fingerprint='6D1CF3288469F260C2119B9F76C95D74390AA6C9',
                                            username='the username',
                                            id='the id',
                                            type=:public_key)
     stub_retriever(current=[current],
-                   draft=BswTech::Gpg::KeyDetails.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+                   draft=BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
                                                       username='the username',
                                                       id='the id',
                                                       type=:public_key))
@@ -842,12 +842,12 @@ describe 'gpg::lwrp:load_key_from_string' do
 
   it 'removes a secret key from only the custom keyring when a keyring is specified and removal is required' do
     # arrange
-    current = BswTech::Gpg::KeyDetails.new(fingerprint='6D1CF3288469F260C2119B9F76C95D74390AA6C9',
+    current = BswTech::Gpg::KeyHeader.new(fingerprint='6D1CF3288469F260C2119B9F76C95D74390AA6C9',
                                            username='the username',
                                            id='the id',
                                            type=:secret_key)
     stub_retriever(current=[current],
-                   draft=BswTech::Gpg::KeyDetails.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+                   draft=BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
                                                       username='the username',
                                                       id='the id',
                                                       type=:secret_key))

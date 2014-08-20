@@ -1,6 +1,6 @@
 require 'rspec'
 $: << File.join(File.dirname(__FILE__), '../../../libraries')
-require 'helper_key_details'
+require 'helper_key_header'
 require 'helper_gpg_parser'
 require 'helper_gpg_retriever'
 require 'helper_gpg_keyring_specifier'
@@ -22,7 +22,7 @@ describe BswTech::Gpg::GpgRetriever do
 
   it 'fetches base 64/external keys that are secret' do
     # arrange
-    result = [BswTech::Gpg::KeyDetails.new('fp', 'username', 'id', :secret_key)]
+    result = [BswTech::Gpg::KeyHeader.new('fp', 'username', 'id', :secret_key)]
     allow(@parser).to receive(:parse_output_external).with('gpg output here').and_return result
     @gpg_mock_response = 'gpg output here'
 
@@ -37,7 +37,7 @@ describe BswTech::Gpg::GpgRetriever do
 
   it 'fetches base 64/external keys that are public' do
     # arrange
-    result = [BswTech::Gpg::KeyDetails.new('fp', 'username', 'id', :public_key)]
+    result = [BswTech::Gpg::KeyHeader.new('fp', 'username', 'id', :public_key)]
     allow(@parser).to receive(:parse_output_external).with('gpg output here').and_return result
     @gpg_mock_response = 'gpg output here'
 
@@ -52,7 +52,7 @@ describe BswTech::Gpg::GpgRetriever do
 
   it 'complains if base64/external key is public and type specified is secret' do
     # arrange
-    result = [BswTech::Gpg::KeyDetails.new('fp', 'username', 'id', :public_key)]
+    result = [BswTech::Gpg::KeyHeader.new('fp', 'username', 'id', :public_key)]
     allow(@parser).to receive(:parse_output_external).with('gpg output here').and_return result
     @gpg_mock_response = 'gpg output here'
 
@@ -65,7 +65,7 @@ describe BswTech::Gpg::GpgRetriever do
 
   it 'complains if base64/external key is secret and type specified is public' do
     # arrange
-    result = [BswTech::Gpg::KeyDetails.new('fp', 'username', 'id', :secret_key)]
+    result = [BswTech::Gpg::KeyHeader.new('fp', 'username', 'id', :secret_key)]
     allow(@parser).to receive(:parse_output_external).with('gpg output here').and_return result
     @gpg_mock_response = 'gpg output here'
 
@@ -77,8 +77,8 @@ describe BswTech::Gpg::GpgRetriever do
   end
 
   it 'complains if more than 1 key is returned via base64' do
-    result = [BswTech::Gpg::KeyDetails.new('fp', 'username', 'id', :secret_key),
-              BswTech::Gpg::KeyDetails.new('fp', 'username', 'id', :secret_key)]
+    result = [BswTech::Gpg::KeyHeader.new('fp', 'username', 'id', :secret_key),
+              BswTech::Gpg::KeyHeader.new('fp', 'username', 'id', :secret_key)]
     allow(@parser).to receive(:parse_output_external).with('gpg output here').and_return result
     @gpg_mock_response = 'gpg output here'
 
@@ -91,7 +91,7 @@ describe BswTech::Gpg::GpgRetriever do
 
   it 'fetches current secret keys' do
     # arrange
-    result = [BswTech::Gpg::KeyDetails.new('fp', 'username', 'id', :secret_key)]
+    result = [BswTech::Gpg::KeyHeader.new('fp', 'username', 'id', :secret_key)]
     allow(@parser).to receive(:parse_output_ring).with('gpg output here').and_return result
     @gpg_mock_response = 'gpg output here'
 
@@ -105,7 +105,7 @@ describe BswTech::Gpg::GpgRetriever do
 
   it 'fetches current public keys' do
     # arrange
-    result = [BswTech::Gpg::KeyDetails.new('fp', 'username', 'id', :public_key)]
+    result = [BswTech::Gpg::KeyHeader.new('fp', 'username', 'id', :public_key)]
     allow(@parser).to receive(:parse_output_ring).with('gpg output here').and_return result
     @gpg_mock_response = 'gpg output here'
 
@@ -119,7 +119,7 @@ describe BswTech::Gpg::GpgRetriever do
 
   it 'fetches current secret keys from a non default ring' do
     # arrange
-    result = [BswTech::Gpg::KeyDetails.new('fp', 'username', 'id', :secret_key)]
+    result = [BswTech::Gpg::KeyHeader.new('fp', 'username', 'id', :secret_key)]
     allow(@parser).to receive(:parse_output_ring).with('gpg output here').and_return result
     @gpg_mock_response = 'gpg output here'
 
@@ -133,7 +133,7 @@ describe BswTech::Gpg::GpgRetriever do
 
   it 'fetches current public keys from a non default ring' do
     # arrange
-    result = [BswTech::Gpg::KeyDetails.new('fp', 'username', 'id', :public_key)]
+    result = [BswTech::Gpg::KeyHeader.new('fp', 'username', 'id', :public_key)]
     allow(@parser).to receive(:parse_output_ring).with('gpg output here').and_return result
     @gpg_mock_response = 'gpg output here'
 
