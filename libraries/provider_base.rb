@@ -30,21 +30,21 @@ class Chef
 
       def action_replace
         key_contents = get_key
-        draft = get_draft_key_from_string key_contents
-        current = get_current_key_details draft.type
-        if does_key_needs_to_be_installed draft, current
-          converge_by "Importing key #{draft.username} into keyring #{get_keyring}" do
-            remove_existing_keys draft, current
-            gpg_cmd = get_gpg_cmd(draft.type)
-            run_command "#{gpg_cmd} --import",
-                        :input => key_contents
-            run_trust_key_command draft
+        draft_key_header = get_draft_key_from_string key_contents
+        current = get_current_key_details draft_key_header.type
+        if does_key_needs_to_be_installed draft_key_header, current
+          converge_by "Importing key #{draft_key_header.username} into keyring #{get_keyring}" do
+            remove_existing_keys draft_key_header, current
+            do_key_import draft_key_header, key_contents
+            run_trust_key_command draft_key_header
           end
         end
       end
 
-      def do_key_import(draft_key_details, key_contents)
-
+      def do_key_import(draft_key_header, key_contents)
+        gpg_cmd = get_gpg_cmd(draft_key_header.type)
+        run_command "#{gpg_cmd} --import",
+                    :input => key_contents
       end
 
       def load_current_resource
