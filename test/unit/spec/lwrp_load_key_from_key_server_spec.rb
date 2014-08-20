@@ -126,7 +126,7 @@ describe 'gpg::lwrp:load_key_from_key_server' do
                                                       id='the_key_id',
                                                       type=:public_key))
     stub_hkp_retrieval(key_id='the_key_id',
-                       expected_key_server='foobar',
+                       expected_key_server='some.key.server',
                        key_contents="-----BEGIN PGP PUBLIC KEY BLOCK-----\nfoobar")
 
     setup_stub_commands([
@@ -176,7 +176,7 @@ describe 'gpg::lwrp:load_key_from_key_server' do
                             }
                         ])
     stub_hkp_retrieval(key_id='the_key_id',
-                       expected_key_server='foobar',
+                       expected_key_server='some.key.server',
                        key_contents="-----BEGIN PGP PUBLIC KEY BLOCK-----\nfoobar")
 
     # act

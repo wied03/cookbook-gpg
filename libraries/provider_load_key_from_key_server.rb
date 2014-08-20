@@ -13,7 +13,8 @@ class Chef
       end
 
       def get_key
-        raise 'not implemented yet'
+        hkp = Hkp.new keyserver=@new_resource.key_server
+        hkp.fetch id=@new_resource.key_id
       end
     end
   end
