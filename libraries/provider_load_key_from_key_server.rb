@@ -13,8 +13,8 @@ class Chef
       end
 
       def get_key
-        hkp = Hkp.new keyserver=@new_resource.key_server
-        hkp.fetch id=@new_resource.key_id
+        fetcher = BswTech::Hkp::KeyFetcher.new
+        fetcher.fetch_key @new_resource.key_server, @new_resource.key_id
       end
     end
   end

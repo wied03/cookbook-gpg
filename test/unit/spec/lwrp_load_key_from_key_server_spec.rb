@@ -4,7 +4,6 @@ require_relative 'spec_helper'
 $: << File.join(File.dirname(__FILE__), '../../../libraries')
 require 'helper_gpg_retriever'
 require 'helper_key_header'
-require 'hkp'
 
 describe 'gpg::lwrp:load_key_from_key_server' do
   include BswTech::ChefSpec::LwrpTestHelper
@@ -18,12 +17,9 @@ describe 'gpg::lwrp:load_key_from_key_server' do
   end
 
   def stub_hkp_retrieval(key_id, expected_key_server, key_contents)
-    hkp = double()
-    Hkp.stub(:new) do |actual_key_server|
-      fail "Expected key server #{expected_key_server} but got #{actual_key_server}" unless expected_key_server == actual_key_server
-      hkp
-    end
-    allow(hkp).to receive(:fetch).with(key_id).and_return key_contents
+    key_fetcher = double()
+    BswTech::Hkp::KeyFetcher.stub(:new).and_return key_fetcher
+    allow(key_fetcher).to receive(:fetch_key).with(expected_key_server, key_id).and_return key_contents
   end
 
   ['key_server', 'key_id'].each do |attr_to_include|
