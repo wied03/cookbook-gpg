@@ -1,8 +1,8 @@
 require 'rspec'
 $: << File.join(File.dirname(__FILE__), '../../../libraries')
-require 'key_details'
-require 'gpg_parser'
-require 'gpg_retriever'
+require 'helper_key_details'
+require 'helper_gpg_parser'
+require 'helper_gpg_retriever'
 
 describe BswTech::Gpg::GpgRetriever do
   before(:each) do

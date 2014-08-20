@@ -1,9 +1,9 @@
 require_relative 'spec_helper'
 require 'chef-vault'
 $: << File.join(File.dirname(__FILE__), '../../../libraries')
-require 'gpg_retriever'
-require 'key_details'
-require 'recipe_or_provider'
+require 'helper_gpg_retriever'
+require 'helper_key_details'
+require 'helper_recipe_or_provider'
 
 describe BswTech::Gpg::RecipeOrProvider do
   class DummyRunner

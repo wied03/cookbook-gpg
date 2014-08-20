@@ -3,8 +3,8 @@
 require_relative 'spec_helper'
 require 'chef-vault'
 $: << File.join(File.dirname(__FILE__), '../../../libraries')
-require 'gpg_retriever'
-require 'key_details'
+require 'helper_gpg_retriever'
+require 'helper_key_details'
 
 describe 'gpg::lwrp:load_key_from_chef_vault' do
   include BswTech::ChefSpec::LwrpTestHelper

@@ -11,6 +11,15 @@ namespace :style do
   FoodCritic::Rake::LintTask.new(:chef)
 end
 
+require 'kitchen'
+desc 'Run Test Kitchen integration tests'
+task :integration do
+  Kitchen.logger = Kitchen.default_file_logger
+  Kitchen::Config.new.instances.each do |instance|
+    instance.test(:always)
+  end
+end
+
 desc 'Run all style checks'
 task style: ['style:chef', 'style:ruby']
 
