@@ -86,7 +86,7 @@ describe 'gpg::lwrp:load_key_from_key_server' do
 # TODO: Share this method
   def verify_actual_commands_match_expected
     actual = executed_command_lines
-    expected = @command_mocks.keys
+    expected = @command_mocks.map { |cmd| cmd[:command] }
     actual.keys.should == expected
   end
 
@@ -96,7 +96,7 @@ describe 'gpg::lwrp:load_key_from_key_server' do
       fail "Expected key server #{expected_key_server} but got #{actual_key_server}" unless expected_key_server == actual_key_server
       hkp
     end
-    allow(hkp).to receive(:fetch).and_return key_contents
+    allow(hkp).to receive(:fetch).with(key_id).and_return key_contents
   end
 
   ['key_server', 'key_id'].each do |attr_to_include|
@@ -122,9 +122,9 @@ describe 'gpg::lwrp:load_key_from_key_server' do
   it 'fetches a public key from the key server properly and installs it if not there' do
     # arrange
     stub_retriever(draft=BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
-                                                      username='the username',
-                                                      id='the_key_id',
-                                                      type=:public_key))
+                                                     username='the username',
+                                                     id='the_key_id',
+                                                     type=:public_key))
     stub_hkp_retrieval(key_id='the_key_id',
                        expected_key_server='some.key.server',
                        key_contents="-----BEGIN PGP PUBLIC KEY BLOCK-----\nfoobar")
@@ -135,7 +135,8 @@ describe 'gpg::lwrp:load_key_from_key_server' do
                                 :stdout => '/home/root'
                             },
                             {
-                                :command => 'gpg2 --keyserver some.key.server --recv-keys the_key_id'
+                                :command => 'gpg2 --import',
+                                :expected_input => "-----BEGIN PGP PUBLIC KEY BLOCK-----\nfoobar"
                             },
                             {
                                 :command => 'gpg2 --import-ownertrust',
@@ -159,15 +160,14 @@ describe 'gpg::lwrp:load_key_from_key_server' do
     verify_actual_commands_match_expected
     resource = @chef_run.find_resource 'bsw_gpg_load_key_from_key_server', 'some key'
     expect(resource.updated_by_last_action?).to eq(true)
-    pending 'finish this test'
   end
 
   it 'fetches a public key from the key server properly and does not install it if its already there' do
     # arrange
     key = BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
-                                       username='the username',
-                                       id='the_key_id',
-                                       type=:public_key)
+                                      username='the username',
+                                      id='the_key_id',
+                                      type=:public_key)
     stub_retriever(current=[key], draft=key)
     setup_stub_commands([
                             {
@@ -195,6 +195,5 @@ describe 'gpg::lwrp:load_key_from_key_server' do
     verify_actual_commands_match_expected
     resource = @chef_run.find_resource 'bsw_gpg_load_key_from_key_server', 'some key'
     expect(resource.updated_by_last_action?).to eq(false)
-    pending 'finish this test'
   end
 end
