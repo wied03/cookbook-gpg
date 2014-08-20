@@ -10,8 +10,7 @@ class Chef
         @current_resource.data_bag(new_resource.data_bag)
         @current_resource.item(new_resource.item)
         @current_resource.json_key(new_resource.json_key)
-        @current_resource.for_user(new_resource.for_user)
-        @current_resource
+        super
       end
 
       def get_key

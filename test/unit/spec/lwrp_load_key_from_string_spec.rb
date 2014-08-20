@@ -40,11 +40,13 @@ describe 'gpg::lwrp:load_key_from_string' do
     @external_type = nil
     @base64_used = nil
     @shell_outs = []
+    @keyring_checked = :default
   }
 
   def stub_retriever(current=[], draft)
-    allow(@gpg_retriever).to receive(:get_current_installed_keys) do |executor, type|
+    allow(@gpg_retriever).to receive(:get_current_installed_keys) do |executor, type, keyring|
       @current_type_checked = type
+      @keyring_checked = keyring if keyring
       current
     end
     allow(@gpg_retriever).to receive(:get_key_info_from_base64) do |executor, type, base64|
@@ -254,6 +256,7 @@ describe 'gpg::lwrp:load_key_from_string' do
     # assert
     expect(@current_type_checked).to eq(:secret_key)
     expect(@external_type).to eq(:secret_key)
+    expect(@keyring_checked).to eq(:default)
     expect(@base64_used).to eq('-----BEGIN PGP PRIVATE KEY BLOCK-----')
     executed_cmdline = executed_command_lines
     executed_cmdline.keys.should == ['/bin/sh -c "echo -n ~root"',
@@ -672,6 +675,225 @@ describe 'gpg::lwrp:load_key_from_string' do
     input_specified = executed_cmdline.reject { |k, v| !v }
     input_specified.should == {'gpg2 --import' => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
                                'gpg2 --import-ownertrust' => "4D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"}
+    resource = @chef_run.find_resource 'bsw_gpg_load_key_from_string', 'some key'
+    expect(resource.updated_by_last_action?).to eq(true)
+  end
+
+  it 'allows specifying a custom keyring file with a public key' do
+    # arrange
+    stub_retriever(draft=BswTech::Gpg::KeyDetails.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+                                                      username='the username',
+                                                      id='the id',
+                                                      type=:public_key))
+
+    @stub_setup = lambda do |shell_out|
+      @shell_outs << shell_out
+      case shell_out.command
+        when '/bin/sh -c "echo -n ~root"'
+          shell_out.stub!(:error!)
+          shell_out.stub!(:stdout).and_return('/home/root')
+        when 'gpg2 --no-default-keyring --keyring something.gpg --import'
+          shell_out.stub!(:error!)
+        when 'gpg2 --no-default-keyring --keyring something.gpg --import-ownertrust'
+          shell_out.stub!(:error!)
+        else
+          shell_out.stub(:error!).and_raise "Unexpected command #{shell_out.command}"
+      end
+    end
+
+    # act
+    temp_lwrp_recipe <<-EOF
+        bsw_gpg_load_key_from_string 'some key' do
+          key_contents '-----BEGIN PGP PUBLIC KEY BLOCK-----'
+          for_user 'root'
+          keyring_file 'something.gpg'
+        end
+    EOF
+
+    # assert
+    expect(@current_type_checked).to eq(:public_key)
+    expect(@external_type).to eq(:public_key)
+    expect(@keyring_checked).to eq('something.gpg')
+    expect(@base64_used).to eq('-----BEGIN PGP PUBLIC KEY BLOCK-----')
+    executed_cmdline = executed_command_lines
+    executed_cmdline.keys.should == ['/bin/sh -c "echo -n ~root"',
+                                     'gpg2 --no-default-keyring --keyring something.gpg --import',
+                                     'gpg2 --no-default-keyring --keyring something.gpg --import-ownertrust']
+    users = @shell_outs.map { |e| e.user }.uniq
+    users.should == ['root']
+    env = @shell_outs.map { |e| e.environment['HOME'] }.uniq
+    # 1st call is to get home dir, so won't be there yet
+    env.should == [nil, '/home/root']
+    input_specified = executed_cmdline.reject { |k, v| !v }
+    input_specified.should == {'gpg2 --no-default-keyring --keyring something.gpg --import' => '-----BEGIN PGP PUBLIC KEY BLOCK-----',
+                               'gpg2 --no-default-keyring --keyring something.gpg --import-ownertrust' => "4D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"}
+    resource = @chef_run.find_resource 'bsw_gpg_load_key_from_string', 'some key'
+    expect(resource.updated_by_last_action?).to eq(true)
+  end
+
+  it 'allows specifying a custom keyring file with a secret key' do
+    stub_retriever(draft=BswTech::Gpg::KeyDetails.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+                                                      username='the username',
+                                                      id='the id',
+                                                      type=:secret_key))
+
+    @stub_setup = lambda do |shell_out|
+      @shell_outs << shell_out
+      case shell_out.command
+        when '/bin/sh -c "echo -n ~root"'
+          shell_out.stub!(:error!)
+          shell_out.stub!(:stdout).and_return('/home/root')
+        when 'gpg2 --no-default-keyring --secret-keyring something.gpg --import'
+          shell_out.stub!(:error!)
+        when 'gpg2 --no-default-keyring --secret-keyring something.gpg --import-ownertrust'
+          shell_out.stub!(:error!)
+        else
+          shell_out.stub(:error!).and_raise "Unexpected command #{shell_out.command}"
+      end
+    end
+
+    # act
+    temp_lwrp_recipe <<-EOF
+        bsw_gpg_load_key_from_string 'some key' do
+          key_contents '-----BEGIN PGP PRIVATE KEY BLOCK-----'
+          for_user 'root'
+          keyring_file 'something.gpg'
+        end
+    EOF
+
+    # assert
+    expect(@current_type_checked).to eq(:secret_key)
+    expect(@external_type).to eq(:secret_key)
+    expect(@keyring_checked).to eq('something.gpg')
+    expect(@base64_used).to eq('-----BEGIN PGP PRIVATE KEY BLOCK-----')
+    executed_cmdline = executed_command_lines
+    executed_cmdline.keys.should == ['/bin/sh -c "echo -n ~root"',
+                                     'gpg2 --no-default-keyring --secret-keyring something.gpg --import',
+                                     'gpg2 --no-default-keyring --secret-keyring something.gpg --import-ownertrust']
+    users = @shell_outs.map { |e| e.user }.uniq
+    users.should == ['root']
+    env = @shell_outs.map { |e| e.environment['HOME'] }.uniq
+    # 1st call is to get home dir, so won't be there yet
+    env.should == [nil, '/home/root']
+    input_specified = executed_cmdline.reject { |k, v| !v }
+    input_specified.should == {'gpg2 --no-default-keyring --secret-keyring something.gpg --import' => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
+                               'gpg2 --no-default-keyring --secret-keyring something.gpg --import-ownertrust' => "4D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"}
+    resource = @chef_run.find_resource 'bsw_gpg_load_key_from_string', 'some key'
+    expect(resource.updated_by_last_action?).to eq(true)
+  end
+
+  it 'removes a public key from only the custom keyring when a keyring is specified and removal is required' do
+    # assert
+    current = BswTech::Gpg::KeyDetails.new(fingerprint='6D1CF3288469F260C2119B9F76C95D74390AA6C9',
+                                           username='the username',
+                                           id='the id',
+                                           type=:public_key)
+    stub_retriever(current=[current],
+                   draft=BswTech::Gpg::KeyDetails.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+                                                      username='the username',
+                                                      id='the id',
+                                                      type=:public_key))
+    @stub_setup = lambda do |shell_out|
+      @shell_outs << shell_out
+      case shell_out.command
+        when '/bin/sh -c "echo -n ~root"'
+          shell_out.stub!(:error!)
+          shell_out.stub!(:stdout).and_return('/home/root')
+        when 'gpg2 --no-default-keyring --keyring something.gpg --delete-key --batch --yes 6D1CF3288469F260C2119B9F76C95D74390AA6C9'
+          shell_out.stub!(:error!)
+        when 'gpg2 --no-default-keyring --keyring something.gpg --import'
+          shell_out.stub!(:error!)
+        when 'gpg2 --no-default-keyring --keyring something.gpg --import-ownertrust'
+          shell_out.stub!(:error!)
+        else
+          shell_out.stub(:error!).and_raise "Unexpected command #{shell_out.command}"
+      end
+    end
+
+    # act
+    temp_lwrp_recipe <<-EOF
+      bsw_gpg_load_key_from_string 'some key' do
+        key_contents '-----BEGIN PGP PUBLIC KEY BLOCK-----'
+        for_user 'root'
+        keyring_file 'something.gpg'
+      end
+    EOF
+
+    # assert
+    expect(@current_type_checked).to eq(:public_key)
+    expect(@external_type).to eq(:public_key)
+    expect(@base64_used).to eq('-----BEGIN PGP PUBLIC KEY BLOCK-----')
+    executed_cmdline = executed_command_lines
+    executed_cmdline.keys.should == ['/bin/sh -c "echo -n ~root"',
+                                     'gpg2 --no-default-keyring --keyring something.gpg --delete-key --batch --yes 6D1CF3288469F260C2119B9F76C95D74390AA6C9',
+                                     'gpg2 --no-default-keyring --keyring something.gpg --import',
+                                     'gpg2 --no-default-keyring --keyring something.gpg --import-ownertrust']
+    users = @shell_outs.map { |e| e.user }.uniq
+    users.should == ['root']
+    env = @shell_outs.map { |e| e.environment['HOME'] }.uniq
+    # 1st call is to get home dir, so won't be there yet
+    env.should == [nil, '/home/root']
+    input_specified = executed_cmdline.reject { |k, v| !v }
+    input_specified.should == {'gpg2 --no-default-keyring --keyring something.gpg --import' => '-----BEGIN PGP PUBLIC KEY BLOCK-----',
+                               'gpg2 --no-default-keyring --keyring something.gpg --import-ownertrust' => "4D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"}
+    resource = @chef_run.find_resource 'bsw_gpg_load_key_from_string', 'some key'
+    expect(resource.updated_by_last_action?).to eq(true)
+  end
+
+  it 'removes a secret key from only the custom keyring when a keyring is specified and removal is required' do
+    # arrange
+    current = BswTech::Gpg::KeyDetails.new(fingerprint='6D1CF3288469F260C2119B9F76C95D74390AA6C9',
+                                           username='the username',
+                                           id='the id',
+                                           type=:secret_key)
+    stub_retriever(current=[current],
+                   draft=BswTech::Gpg::KeyDetails.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+                                                      username='the username',
+                                                      id='the id',
+                                                      type=:secret_key))
+    @stub_setup = lambda do |shell_out|
+      @shell_outs << shell_out
+      case shell_out.command
+        when '/bin/sh -c "echo -n ~root"'
+          shell_out.stub!(:error!)
+          shell_out.stub!(:stdout).and_return('/home/root')
+        when 'gpg2 --no-default-keyring --secret-keyring something.gpg --delete-secret-and-public-key --batch --yes 6D1CF3288469F260C2119B9F76C95D74390AA6C9'
+          shell_out.stub!(:error!)
+        when 'gpg2 --no-default-keyring --secret-keyring something.gpg --import'
+          shell_out.stub!(:error!)
+        when 'gpg2 --no-default-keyring --secret-keyring something.gpg --import-ownertrust'
+          shell_out.stub!(:error!)
+        else
+          shell_out.stub(:error!).and_raise "Unexpected command #{shell_out.command}"
+      end
+    end
+
+    # act
+    temp_lwrp_recipe <<-EOF
+      bsw_gpg_load_key_from_string 'some key' do
+        key_contents '-----BEGIN PGP PRIVATE KEY BLOCK-----'
+        for_user 'root'
+        keyring_file 'something.gpg'
+      end
+    EOF
+
+    # assert
+    expect(@current_type_checked).to eq(:secret_key)
+    expect(@external_type).to eq(:secret_key)
+    expect(@base64_used).to eq('-----BEGIN PGP PRIVATE KEY BLOCK-----')
+    executed_cmdline = executed_command_lines
+    executed_cmdline.keys.should == ['/bin/sh -c "echo -n ~root"',
+                                     'gpg2 --no-default-keyring --secret-keyring something.gpg --delete-secret-and-public-key --batch --yes 6D1CF3288469F260C2119B9F76C95D74390AA6C9',
+                                     'gpg2 --no-default-keyring --secret-keyring something.gpg --import',
+                                     'gpg2 --no-default-keyring --secret-keyring something.gpg --import-ownertrust']
+    users = @shell_outs.map { |e| e.user }.uniq
+    users.should == ['root']
+    env = @shell_outs.map { |e| e.environment['HOME'] }.uniq
+    # 1st call is to get home dir, so won't be there yet
+    env.should == [nil, '/home/root']
+    input_specified = executed_cmdline.reject { |k, v| !v }
+    input_specified.should == {'gpg2 --no-default-keyring --secret-keyring something.gpg --import' => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
+                               'gpg2 --no-default-keyring --secret-keyring something.gpg --import-ownertrust' => "4D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"}
     resource = @chef_run.find_resource 'bsw_gpg_load_key_from_string', 'some key'
     expect(resource.updated_by_last_action?).to eq(true)
   end

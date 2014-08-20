@@ -3,10 +3,17 @@ include_recipe 'bsw_gpg::default'
 chef_gem 'with'
 require 'with'
 
-key_bits = cookbook_file_contents 'leo.pub', 'fake'
+public_key_bits = cookbook_file_contents 'leo.pem', 'fake'
+private_key_bits = cookbook_file_contents 'joe_secret.pem', 'fake'
+
 bsw_gpg_load_key_from_string 'some key' do
   for_user 'root'
-  key_contents key_bits
+  key_contents public_key_bits
+end
+
+bsw_gpg_load_key_from_string 'some private key' do
+  for_user 'root'
+  key_contents private_key_bits
 end
 
 with 'joe' do |username|
@@ -14,10 +21,16 @@ with 'joe' do |username|
     supports :manage_home => true
   end
 
-  bsw_gpg_load_key_from_string 'keyring test' do
+  bsw_gpg_load_key_from_string 'keyring test with public key' do
     for_user username
-    key_contents key_bits
+    key_contents public_key_bits
     keyring_file 'stuff.gpg'
+  end
+
+  bsw_gpg_load_key_from_string 'keyring test with secret key' do
+    for_user username
+    key_contents private_key_bits
+    keyring_file 'stuff_secret.gpg'
   end
 end
 

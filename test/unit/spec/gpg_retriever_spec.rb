@@ -3,6 +3,7 @@ $: << File.join(File.dirname(__FILE__), '../../../libraries')
 require 'helper_key_details'
 require 'helper_gpg_parser'
 require 'helper_gpg_retriever'
+require 'helper_gpg_keyring_specifier'
 
 describe BswTech::Gpg::GpgRetriever do
   before(:each) do
@@ -99,7 +100,7 @@ describe BswTech::Gpg::GpgRetriever do
 
     # assert
     expect(result).to eq(result)
-    expect(@gpg_command_executed).to eq('gpg2 --list-secret-keys --with-fingerprint --with-colons')
+    expect(@gpg_command_executed).to eq('gpg2  --list-secret-keys --with-fingerprint --with-colons')
   end
 
   it 'fetches current public keys' do
@@ -113,6 +114,34 @@ describe BswTech::Gpg::GpgRetriever do
 
     # assert
     expect(result).to eq(result)
-    expect(@gpg_command_executed).to eq('gpg2 --list-keys --with-fingerprint --with-colons')
+    expect(@gpg_command_executed).to eq('gpg2  --list-keys --with-fingerprint --with-colons')
+  end
+
+  it 'fetches current secret keys from a non default ring' do
+    # arrange
+    result = [BswTech::Gpg::KeyDetails.new('fp', 'username', 'id', :secret_key)]
+    allow(@parser).to receive(:parse_output_ring).with('gpg output here').and_return result
+    @gpg_mock_response = 'gpg output here'
+
+    # act
+    result = @retriever.get_current_installed_keys @gpg_mock_executor, :secret_key, 'stuff.gpg'
+
+    # assert
+    expect(result).to eq(result)
+    expect(@gpg_command_executed).to eq('gpg2 --no-default-keyring --secret-keyring stuff.gpg --list-secret-keys --with-fingerprint --with-colons')
+  end
+
+  it 'fetches current public keys from a non default ring' do
+    # arrange
+    result = [BswTech::Gpg::KeyDetails.new('fp', 'username', 'id', :public_key)]
+    allow(@parser).to receive(:parse_output_ring).with('gpg output here').and_return result
+    @gpg_mock_response = 'gpg output here'
+
+    # act
+    result = @retriever.get_current_installed_keys @gpg_mock_executor, :public_key, 'stuff.gpg'
+
+    # assert
+    expect(result).to eq(result)
+    expect(@gpg_command_executed).to eq('gpg2 --no-default-keyring --keyring stuff.gpg --list-keys --with-fingerprint --with-colons')
   end
 end

@@ -2,6 +2,8 @@ class Chef
   class Resource
     class LoadKeyBaseResource < Chef::Resource::LWRPBase
       attribute :for_user, :kind_of => String, :required => true
+      attribute :keyring_file, :kind_of => String
+
       actions :replace
 
       def initialize(name, run_context=nil)
