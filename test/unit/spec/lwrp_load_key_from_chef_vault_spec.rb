@@ -61,6 +61,34 @@ describe 'gpg::lwrp:load_key_from_chef_vault' do
     end
   end
 
+  ['data_bag', 'item', 'json_key', 'for_user'].each do |attr_to_include|
+    it "fails if we only supply #{attr_to_include}" do
+      # arrange
+      # Include all of this because for_user will try and run the provider's constructor
+      @stub_setup = lambda do |shell_out|
+        case shell_out.command
+          when '/bin/sh -c "echo -n ~value"'
+            shell_out.stub!(:error!)
+            shell_out.stub!(:stdout).and_return('/home/root')
+          else
+            shell_out.stub(:error!).and_raise "Unexpected command #{shell_out.command}"
+        end
+      end
+
+      # act
+      action = lambda {
+        temp_lwrp_recipe <<-EOF
+              bsw_gpg_load_key_from_chef_vault 'some key' do
+                #{attr_to_include} 'value'
+              end
+        EOF
+      }
+
+      # assert
+      expect(action).to raise_exception Chef::Exceptions::ValidationFailed
+    end
+  end
+
   it 'allows supplying Chef vault info for a private key directly as opposed to key contents' do
     # arrange
     stub_retriever(draft=BswTech::Gpg::KeyDetails.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',

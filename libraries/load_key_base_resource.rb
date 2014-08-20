@@ -1,14 +1,13 @@
 class Chef
   class Resource
-    class LoadKeyBaseResource < Chef::Resource
-      def initialize(name, run_context=nil)
-        super
-        @action = :replace
-        @allowed_actions = [:replace]
-      end
+    class LoadKeyBaseResource < Chef::Resource::LWRPBase
+      attribute :for_user, :kind_of => String, :required => true
+      actions :replace
 
-      def for_user(arg=nil)
-        set_or_return(:for_user, arg, :kind_of => String, :required => true)
+      def initialize(name, run_context=nil)
+        self.class.resource_name = self.class.snake_case_basename self.class.name
+        self.class.default_action :replace
+        super
       end
     end
   end
