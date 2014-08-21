@@ -5,7 +5,7 @@ module BswTech
     def run(command,
             as_user=:default,
             input=nil)
-      home_dir = home_dir_for_user as_user unless as_user == :default
+      home_dir = as_user == :default ? nil : home_dir_for_user(as_user)
       run_command_with_home_dir as_user,
                                 command,
                                 input,
@@ -15,9 +15,8 @@ module BswTech
     private
 
     def home_dir_for_user(username)
-      result = run_command_with_home_dir as_user=username,
-                                         command="/bin/sh -c \"echo -n ~#{username}\""
-      result
+      run_command_with_home_dir as_user=username,
+                                command="/bin/sh -c \"echo -n ~#{username}\""
     end
 
     def run_command_with_home_dir(as_user,

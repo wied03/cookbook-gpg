@@ -2,9 +2,9 @@
 
 require_relative 'spec_helper'
 require 'chef-vault'
-$: << File.join(File.dirname(__FILE__), '../../../libraries')
-require 'helper_gpg_interface'
-require 'helper_key_header'
+$: << File.join(File.dirname(__FILE__), '../../..')
+require 'libraries/helper_gpg_interface'
+require 'libraries/helper_key_header'
 
 describe 'gpg::lwrp:load_key_from_string' do
   include BswTech::ChefSpec::LwrpTestHelper
@@ -57,6 +57,7 @@ describe 'gpg::lwrp:load_key_from_string' do
                                            :type => :secret_key
                                        }])
     expect(@base64_used).to eq('-----BEGIN PGP PRIVATE KEY BLOCK-----')
+    # noinspection RubyResolve
     expect(@keys_deleted).to be_empty
     expect(@keys_imported).to eq [{
                                       :base64 => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
