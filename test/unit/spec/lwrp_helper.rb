@@ -15,22 +15,16 @@ module BswTech
         'lwrp_gen'
       end
 
-      def executor
-
-      end
-
       RSpec.configure do |config|
         config.before(:each) do
           stub_resources
           @gpg_interface = double()
           BswTech::Gpg::GpgInterface.stub(:new).and_return(@gpg_interface)
-          @current_type_checked = nil
-          @external_type = nil
           @base64_used = nil
-          @shell_outs = []
-          @usernames_used = []
-          @keyring_checked = :default
+          @current_key_checks = []
           @keytrusts_imported = []
+          @keys_imported = []
+          @keys_deleted = []
         end
 
         config.after(:each) do
@@ -71,40 +65,40 @@ module BswTech
 
       def stub_gpg_interface(current=[], draft)
         allow(@gpg_interface).to receive(:get_current_installed_keys) do |username, type, keyring|
-          @current_type_checked = type
-          @keyring_checked = keyring if keyring
-          @usernames_used << username
+          @current_key_checks << {
+              :type => type,
+              :username => username,
+              :keyring => keyring
+          }
           current
         end
-        allow(@gpg_interface).to receive(:get_key_info_from_base64) do |type, base64|
-          @external_type = type
+        allow(@gpg_interface).to receive(:get_key_header) do |base64|
           @base64_used = base64
           draft
         end
-        allow(@gpg_interface).to receive(:import_trust) do |username, key, keyring|
-          @usernames_used << username
+        allow(@gpg_interface).to receive(:import_trust) do |username, base64, keyring|
           @keytrusts_imported << {
-              :key => key,
-              :keyring => keyring
+              :base64 => base64,
+              :keyring => keyring,
+              :username => username
           }
           draft
         end
-
-
-
-        # def delete_keys(username, key_to_delete, keyring=:default)
-        #   type = key_to_delete.type
-        #   delete_param = type == :public_key ? '--delete-key' : '--delete-secret-and-public-key'
-        #   gpg_command = get_keyring_param(type, keyring)
-        #   @command_runner.run as_user=username,
-        #                       command="#{gpg_command} #{delete_param} --batch --yes #{key_to_delete.fingerprint}"
-        # end
-        #
-        # def import_keys(username, key, key_contents, keyring=:default)
-        #   gpg_cmd = get_gpg_cmd(key.type, keyring)
-        #   @command_runner.run as_user=username,
-        #                       command="#{gpg_cmd} --import", input=key_contents
-        # end
+        allow(@gpg_interface).to receive(:import_keys) do |username, base64, keyring|
+          @keys_imported << {
+              :base64 => base64,
+              :keyring => keyring,
+              :username => username
+          }
+          draft
+        end
+        allow(@gpg_interface).to receive(:delete_keys) do |username, key_header_to_delete, keyring|
+          @keys_deleted << {
+              :username => username,
+              :keyring => keyring,
+              :key_header => key_header_to_delete
+          }
+        end
       end
 
       def executed_command_lines
@@ -112,39 +106,6 @@ module BswTech
           total[item.command] = item.input
           total
         end
-      end
-
-      def setup_stub_commands(commands)
-        @command_mocks = commands
-        stub_setup = lambda do |shell_out|
-          @shell_outs << shell_out
-          command_text = shell_out.command
-          matched_mock = @command_mocks.find { |mock| mock[:command] == command_text }
-          if matched_mock
-            shell_out.stub(:error!)
-            shell_out.stub(:run_command) do
-              if matched_mock[:expected_input] != shell_out.input
-                fail "Expected input #{matched_mock[:expected_input]} but got #{shell_out.input}"
-              end
-            end
-            output = matched_mock[:stdout] || ''
-            shell_out.stub(:stdout).and_return(output)
-          else
-            shell_out.stub(:error!).and_raise "Unexpected command #{shell_out.command}"
-          end
-        end
-        original_new = Mixlib::ShellOut.method(:new)
-        Mixlib::ShellOut.stub(:new) do |*args|
-          command = original_new.call(*args)
-          stub_setup[command]
-          command
-        end
-      end
-
-      def verify_actual_commands_match_expected
-        actual = executed_command_lines
-        expected = @command_mocks.map { |cmd| cmd[:command] }
-        actual.keys.should == expected
       end
     end
   end
