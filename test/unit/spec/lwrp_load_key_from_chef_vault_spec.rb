@@ -64,12 +64,12 @@ describe 'gpg::lwrp:load_key_from_chef_vault' do
     expect(@keys_imported).to eq [{
                                       :base64 => "-----BEGIN PGP PRIVATE KEY BLOCK-----",
                                       :keyring => :default,
-                                      :username => "root"
+                                      :username => 'root'
                                   }]
     expect(@keytrusts_imported).to eq [{
                                            :base64 => "-----BEGIN PGP PRIVATE KEY BLOCK-----",
                                            :keyring => :default,
-                                           :username => "root"
+                                           :username => 'root'
                                        }]
     resource = @chef_run.find_resource 'bsw_gpg_load_key_from_chef_vault', 'some key'
     expect(resource.updated_by_last_action?).to eq(true)
