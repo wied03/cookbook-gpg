@@ -23,7 +23,7 @@ class Chef
           converge_by "Importing key #{draft_key_header.username} into keyring #{keyring_file} for user #{@new_resource.for_user}" do
             remove_existing_keys draft_key_header, current
             import_keys key_contents
-            import_trust key_contents
+            import_trust key_contents if @new_resource.import_owner_trust
           end
         end
       end

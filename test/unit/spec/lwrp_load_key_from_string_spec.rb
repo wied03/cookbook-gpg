@@ -583,4 +583,39 @@ describe 'gpg::lwrp:load_key_from_string' do
     expect(resource.suppress_trust_db_check).to eq true
     expect(@trustdb_ignore).to eq true
   end
+
+  it 'will not trust the newly imported key if we tell it so' do
+    # arrange
+    stub_gpg_interface(draft=BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+                                                         username='the username',
+                                                         id='the id',
+                                                         type=:secret_key))
+
+    # act
+    temp_lwrp_recipe <<-EOF
+          bsw_gpg_load_key_from_string 'some key' do
+            key_contents '-----BEGIN PGP PRIVATE KEY BLOCK-----'
+            for_user 'root'
+            import_owner_trust false
+          end
+    EOF
+
+    # assert
+    expect(@current_key_checks).to eq([{
+                                           :username => 'root',
+                                           :keyring => :default,
+                                           :type => :secret_key
+                                       }])
+    expect(@base64_used).to eq('-----BEGIN PGP PRIVATE KEY BLOCK-----')
+    # noinspection RubyResolve
+    expect(@keys_deleted).to be_empty
+    expect(@keys_imported).to eq [{
+                                      :base64 => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
+                                      :keyring => :default,
+                                      :username => 'root'
+                                  }]
+    expect(@keytrusts_imported).to eq []
+    resource = @chef_run.find_resource 'bsw_gpg_load_key_from_string', 'some key'
+    expect(resource.updated_by_last_action?).to eq(true)
+  end
 end

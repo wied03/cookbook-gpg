@@ -70,6 +70,32 @@ bsw_gpg_load_key_from_key_server 'some key' do
 end
 ```
 
+#### Ignore the trust-db rebuild
+
+You can use this on any of the resources.  Effectively adds --no-auto-check-trustdb to all gpg keyring commands
+
+```ruby
+bsw_gpg_load_key_from_key_server 'some key' do
+  key_server 'keyserver.ubuntu.com'
+  key_id '561F9B9CAC40B2F7'
+  for_user 'root'
+  suppress_trust_db_check true
+end
+```
+
+#### Suppress trusting newly imported keys
+
+By default, after importing the key, these LWRPs runs the equivalent of echo "<keyFingerprint>:6:\n" | gpg2 --import-ownertrust.  If you wish to prevent that, you can do this on any of the resources
+
+```ruby
+bsw_gpg_load_key_from_key_server 'some key' do
+  key_server 'keyserver.ubuntu.com'
+  key_id '561F9B9CAC40B2F7'
+  for_user 'root'
+  import_owner_trust false
+end
+```
+
 Contributing
 ------------
 
