@@ -1,4 +1,3 @@
-require 'mixlib/shellout'
 require 'tempfile'
 
 class Chef
@@ -8,43 +7,25 @@ class Chef
 
       def initialize(new_resource, run_context)
         super
-        # The way shellout works, the home directory is not set for the user and gpg needs that, easiest way is to use the shell
-        @home_dir = run_command("/bin/sh -c \"echo -n ~#{@new_resource.for_user}\"").stdout
         @keyring_specifier = BswTech::Gpg::KeyringSpecifier.new
+        @gpg_interface = BswTech::Gpg::GpgInterface.new
       end
 
       def whyrun_supported?
         true
       end
 
-      def run_command(*args)
-        args << {} unless args.last.is_a? Hash
-        options = args.last
-        options[:user] = @new_resource.for_user
-        options[:env] = {'HOME' => @home_dir} if @home_dir
-        cmd = Mixlib::ShellOut.new(*args)
-        cmd.run_command
-        cmd.error!
-        cmd
-      end
-
       def action_replace
         key_contents = get_key
-        draft_key_header = get_draft_key_from_string key_contents
+        draft_key_header = @gpg_interface.get_key_header key_contents
         current = get_current_key_details draft_key_header.type
         if does_key_needs_to_be_installed draft_key_header, current
-          converge_by "Importing key #{draft_key_header.username} into keyring #{get_keyring} for user #{@new_resource.for_user}" do
+          converge_by "Importing key #{draft_key_header.username} into keyring #{keyring_file} for user #{@new_resource.for_user}" do
             remove_existing_keys draft_key_header, current
-            do_key_import draft_key_header, key_contents
-            run_trust_key_command draft_key_header
+            import_keys key_contents
+            import_trust key_contents
           end
         end
-      end
-
-      def do_key_import(draft_key_header, key_contents)
-        gpg_cmd = get_gpg_cmd(draft_key_header.type)
-        run_command "#{gpg_cmd} --import",
-                    :input => key_contents
       end
 
       def load_current_resource
@@ -55,19 +36,25 @@ class Chef
 
       private
 
-      def get_current_key_details(type)
-        retriever = BswTech::Gpg::GpgRetriever.new
-        executor = lambda do |command|
-          contents = run_command command
-          gpg_output = contents.stdout
-          Chef::Log.debug "Output from GPG #{gpg_output}"
-          gpg_output
-        end
-        keyring = get_keyring
-        retriever.get_current_installed_keys executor, type, keyring
+      def import_trust(key_contents)
+        @gpg_interface.import_trust @new_resource.for_user,
+                                    key_contents,
+                                    keyring_file
       end
 
-      def get_keyring
+      def import_keys(key_contents)
+        @gpg_interface.import_keys @new_resource.for_user,
+                                   key_contents,
+                                   keyring_file
+      end
+
+      def get_current_key_details(type)
+        @gpg_interface.get_current_installed_keys username=@new_resource.for_user,
+                                                  type=type,
+                                                  keyring=keyring_file
+      end
+
+      def keyring_file
         @new_resource.keyring_file || :default
       end
 
@@ -76,29 +63,14 @@ class Chef
         current.all? { |x| x.fingerprint != draft.fingerprint }
       end
 
-      def remove_existing_keys(draft, current)
-        key_to_delete = current.find { |x| x.username == draft.username }
+      def remove_existing_keys(draft_header, current_header)
+        key_to_delete = current_header.find { |x| x.username == draft_header.username }
         if key_to_delete
-          Chef::Log.info "Deleting existing key for #{key_to_delete.username} from keyring #{get_keyring} in order to replace it"
-          delete = draft.type == :public_key ? '--delete-key' : '--delete-secret-and-public-key'
-          gpg_command = get_gpg_cmd draft.type
-          run_command "#{gpg_command} #{delete} --batch --yes #{key_to_delete.fingerprint}"
+          Chef::Log.info "Deleting existing key for #{key_to_delete.username} from keyring #{keyring_file} in order to replace it"
+          @gpg_interface.delete_keys username=@new_resource.for_user,
+                                     key_header_to_delete=draft_header,
+                                     keyring=keyring_file
         end
-      end
-
-      def run_trust_key_command(key)
-        gpg_command = get_gpg_cmd key.type
-        run_command "#{gpg_command} --import-ownertrust", :input => "#{key.fingerprint}:6:\n"
-      end
-
-      def get_gpg_cmd(type)
-        keyring_specifier = get_keyring_specifier type
-        "gpg2#{keyring_specifier}".strip
-      end
-
-      def get_keyring_specifier(type)
-        keyring = get_keyring
-        keyring == :default ? ' ' : @keyring_specifier.get_custom_keyring(type, keyring)
       end
     end
   end

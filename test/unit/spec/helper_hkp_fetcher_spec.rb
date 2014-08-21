@@ -1,17 +1,14 @@
 require 'rspec'
-$: << File.join(File.dirname(__FILE__), '../../../libraries')
+$: << File.join(File.dirname(__FILE__), '../../..')
 require 'uri'
-require 'helper_hkp_fetcher'
-require 'helper_gpg_retriever'
-require 'helper_key_header'
-require 'helper_gpg_parser'
-require 'helper_gpg_keyring_specifier'
-require 'chef/util/selinux'
-require 'chef/mixin/shell_out'
+require 'libraries/helper_hkp_fetcher'
+require 'libraries/helper_gpg_interface'
+require 'libraries/helper_command_runner'
+require 'libraries/helper_key_header'
+require 'libraries/helper_gpg_parser'
+require 'libraries/helper_gpg_keyring_specifier'
 
 describe BswTech::Hkp::KeyFetcher do
-  include Chef::Mixin::ShellOut
-
   before(:each) do
     @test_key_id = '561F9B9CAC40B2F7'
     @expected_key = BswTech::Gpg::KeyHeader.new(fingerprint='16378A33A6EF16762922526E561F9B9CAC40B2F7',
@@ -26,14 +23,8 @@ describe BswTech::Hkp::KeyFetcher do
     unless system 'which gpg2'
       pending 'Need gpg2 on your machine to test this'
     end
-    retriever = BswTech::Gpg::GpgRetriever.new
-    executor = lambda do |command, input|
-      cmd = Mixlib::ShellOut.new(command, :input => input)
-      cmd.run_command
-      cmd.error!
-      cmd.stdout
-    end
-    actual = retriever.get_key_info_from_base64(executor, :public_key, actual)
+    interface = BswTech::Gpg::GpgInterface.new
+    actual = interface.get_key_header actual
     expect(actual.fingerprint).to eq(@expected_key.fingerprint)
     expect(actual.username).to eq(@expected_key.username)
     expect(actual.id).to eq(@expected_key.id)

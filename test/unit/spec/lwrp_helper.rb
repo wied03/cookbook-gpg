@@ -15,16 +15,22 @@ module BswTech
         'lwrp_gen'
       end
 
+      def executor
+
+      end
+
       RSpec.configure do |config|
         config.before(:each) do
           stub_resources
-          @gpg_retriever = double()
-          BswTech::Gpg::GpgRetriever.stub(:new).and_return(@gpg_retriever)
+          @gpg_interface = double()
+          BswTech::Gpg::GpgInterface.stub(:new).and_return(@gpg_interface)
           @current_type_checked = nil
           @external_type = nil
           @base64_used = nil
           @shell_outs = []
+          @usernames_used = []
           @keyring_checked = :default
+          @keytrusts_imported = []
         end
 
         config.after(:each) do
@@ -63,17 +69,42 @@ module BswTech
         FileUtils.rm_rf generated_cookbook_path
       end
 
-      def stub_retriever(current=[], draft)
-        allow(@gpg_retriever).to receive(:get_current_installed_keys) do |executor, type, keyring|
+      def stub_gpg_interface(current=[], draft)
+        allow(@gpg_interface).to receive(:get_current_installed_keys) do |username, type, keyring|
           @current_type_checked = type
           @keyring_checked = keyring if keyring
+          @usernames_used << username
           current
         end
-        allow(@gpg_retriever).to receive(:get_key_info_from_base64) do |executor, type, base64|
+        allow(@gpg_interface).to receive(:get_key_info_from_base64) do |type, base64|
           @external_type = type
           @base64_used = base64
           draft
         end
+        allow(@gpg_interface).to receive(:import_trust) do |username, key, keyring|
+          @usernames_used << username
+          @keytrusts_imported << {
+              :key => key,
+              :keyring => keyring
+          }
+          draft
+        end
+
+
+
+        # def delete_keys(username, key_to_delete, keyring=:default)
+        #   type = key_to_delete.type
+        #   delete_param = type == :public_key ? '--delete-key' : '--delete-secret-and-public-key'
+        #   gpg_command = get_keyring_param(type, keyring)
+        #   @command_runner.run as_user=username,
+        #                       command="#{gpg_command} #{delete_param} --batch --yes #{key_to_delete.fingerprint}"
+        # end
+        #
+        # def import_keys(username, key, key_contents, keyring=:default)
+        #   gpg_cmd = get_gpg_cmd(key.type, keyring)
+        #   @command_runner.run as_user=username,
+        #                       command="#{gpg_cmd} --import", input=key_contents
+        # end
       end
 
       def executed_command_lines

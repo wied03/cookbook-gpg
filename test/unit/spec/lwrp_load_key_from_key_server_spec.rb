@@ -2,7 +2,7 @@
 
 require_relative 'spec_helper'
 $: << File.join(File.dirname(__FILE__), '../../../libraries')
-require 'helper_gpg_retriever'
+require 'helper_gpg_interface'
 require 'helper_key_header'
 
 describe 'gpg::lwrp:load_key_from_key_server' do
@@ -44,7 +44,7 @@ describe 'gpg::lwrp:load_key_from_key_server' do
 
   it 'fetches a public key from the key server properly and installs it if not there' do
     # arrange
-    stub_retriever(draft=BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+    stub_gpg_interface(draft=BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
                                                      username='the username',
                                                      id='the_key_id',
                                                      type=:public_key))
@@ -58,11 +58,11 @@ describe 'gpg::lwrp:load_key_from_key_server' do
                                 :stdout => '/home/root'
                             },
                             {
-                                :command => 'gpg2 --import',
+                                :command => 'gpg2 --no-auto-check-trustdb --import',
                                 :expected_input => "-----BEGIN PGP PUBLIC KEY BLOCK-----\nfoobar"
                             },
                             {
-                                :command => 'gpg2 --import-ownertrust',
+                                :command => 'gpg2 --no-auto-check-trustdb --import-ownertrust',
                                 :expected_input => "4D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"
                             }
                         ])
@@ -91,7 +91,7 @@ describe 'gpg::lwrp:load_key_from_key_server' do
                                       username='the username',
                                       id='the_key_id',
                                       type=:public_key)
-    stub_retriever(current=[key], draft=key)
+    stub_gpg_interface(current=[key], draft=key)
     setup_stub_commands([
                             {
                                 :command => '/bin/sh -c "echo -n ~root"',
