@@ -3,14 +3,14 @@
 require_relative 'spec_helper'
 
 describe 'Key contents LWRP - Root' do
-  describe command('sudo -i gpg2 --list-sigs') do
+  describe command('sudo -i gpg2 --list-keys') do
     it {
       should return_stdout /.*pub   4096R\/B22D2CD5.*/
     }
+  end
 
-    it 'should have trusted the key' do
-      should return_stdout /.*sig 3.*/
-    end
+  describe command('sudo -i gpg2 --export-ownertrust') do
+    it { should return_stdout /.*B22D2CD5:6:$/ }
   end
 
   describe command('sudo -i gpg2 --list-secret-keys') do
@@ -19,40 +19,39 @@ describe 'Key contents LWRP - Root' do
 end
 
 describe 'Key Contents LWRP - Joe - Public Key - Non-default Keyring' do
-  describe command('sudo -u joe -i gpg2 --list-sigs --no-default-keyring --keyring stuff.gpg') do
+  describe command('sudo -u joe -i gpg2 --list-keys --no-default-keyring --keyring stuff.gpg') do
     it { should return_stdout /.*pub   4096R\/B22D2CD5.*/ }
-    it 'should NOT have trusted the key because we are using non-default keyring' do
-      should_not return_stdout /.sig 3.*/
-      should return_stdout /.*sig 1.*/
-    end
+  end
+
+  # non default keyring, owner trusts are 1 per user
+  describe command('sudo -u joe -i gpg2 --export-ownertrust') do
+    it { should_not return_stdout /.*B22D2CD5:6:$/ }
   end
 end
 
 describe 'Key Contents LWRP - Joe - Secret Key - Non-default Keyring' do
-  describe command('sudo -u joe -i gpg2 --list-sigs --no-default-keyring --secret-keyring stuff_secret.gpg') do
+  describe command('sudo -u joe -i gpg2 --list-secret-keys --no-default-keyring --secret-keyring stuff_secret.gpg') do
     it { should return_stdout /.*sec   2048R\/C26E1EFE.*/ }
-    it 'should NOT have trusted the key because non-default keyring' do
-      should_not return_stdout /.sig 3.*/
-      should return_stdout /.*sig 1.*/
-    end
   end
 end
 
 describe 'Key Contents LWRP - Bob - Key server' do
-  describe command('sudo -u bob -i gpg2 --list-sigs') do
+  describe command('sudo -u bob -i gpg2 --list-keys') do
     it { should return_stdout /.*pub   4096R\/AC40B2F7.*/ }
+  end
 
-    it 'should have trusted the key' do
-      should return_stdout /.*sig 3.*/
-    end
+  describe command('sudo -u bob -i gpg2 --export-ownertrust') do
+    it { should return_stdout /.*AC40B2F7:6:$/ }
   end
 end
 
 describe 'Key Contents LWRP - Seymour - Secret Key - Non-default Keyring' do
-  describe command('sudo -u seymour -i gpg2 --list-sigs --no-default-keyring --secret-keyring stuff_secret.gpg') do
+  describe command('sudo -u seymour -i gpg2 --list-secret-keys --no-default-keyring --secret-keyring stuff_secret.gpg') do
     it { should return_stdout /.*sec   2048R\/C26E1EFE.*/ }
-    it 'should have trusted the key because we forced a trust' do
-      should return_stdout /.sig 3.*/
-    end
+  end
+
+  # we forced a trust here
+  describe command('sudo -u seymour -i gpg2 --export-ownertrust') do
+    it { should return_stdout /.*C26E1EFE:6:$/ }
   end
 end
