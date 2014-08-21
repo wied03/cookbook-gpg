@@ -23,7 +23,12 @@ class Chef
           converge_by "Importing key #{draft_key_header.username} into keyring #{keyring_file} for user #{@new_resource.for_user}" do
             remove_existing_keys draft_key_header, current
             import_keys key_contents
-            import_trust key_contents if @new_resource.import_owner_trust
+            if should_import_trust
+              Chef::Log.info "Importing trust for key #{draft_key_header.username}"
+              import_trust key_contents
+            else
+              Chef::Log.info "Skipping trust import for key #{draft_key_header.username}"
+            end
           end
         end
       end
@@ -35,6 +40,21 @@ class Chef
       end
 
       private
+
+      def should_import_trust
+        resource_says = @new_resource.force_import_owner_trust
+        if resource_says != nil
+          Chef::Log.debug "Using resource 'import trust' setting of #{resource_says}"
+          return resource_says
+        end
+        if keyring_file == :default
+          Chef::Log.debug 'Will import trust since default keyring is in use'
+          true
+        else
+          Chef::Log.debug 'Will NOT import trust since custom keyring is in use'
+          false
+        end
+      end
 
       def import_trust(key_contents)
         @gpg_interface.import_trust @new_resource.for_user,

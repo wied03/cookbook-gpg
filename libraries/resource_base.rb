@@ -4,7 +4,7 @@ class Chef
       attribute :for_user, :kind_of => String, :required => true
       attribute :keyring_file, :kind_of => String
       attribute :suppress_trust_db_check, :kind_of => [TrueClass, FalseClass], :default => false
-      attribute :import_owner_trust, :kind_of => [TrueClass, FalseClass], :default => true
+      attribute :force_import_owner_trust, :kind_of => [TrueClass, FalseClass], :default => nil
 
       actions :replace
 

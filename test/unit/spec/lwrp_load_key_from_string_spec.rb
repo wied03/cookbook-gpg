@@ -404,16 +404,14 @@ describe 'gpg::lwrp:load_key_from_string' do
                                       :keyring => 'something.gpg',
                                       :username => 'root'
                                   }]
-    expect(@keytrusts_imported).to eq [{
-                                           :base64 => '-----BEGIN PGP PUBLIC KEY BLOCK-----',
-                                           :keyring => 'something.gpg',
-                                           :username => 'root'
-                                       }]
+    # Trustdb doesn't like trusting keys in non default keyrings
+    expect(@keytrusts_imported).to eq []
     resource = @chef_run.find_resource 'bsw_gpg_load_key_from_string', 'some key'
     expect(resource.updated_by_last_action?).to eq(true)
   end
 
   it 'allows specifying a custom keyring file with a secret key' do
+    # arrange
     stub_gpg_interface(draft=BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
                                                          username='the username',
                                                          id='the id',
@@ -440,11 +438,8 @@ describe 'gpg::lwrp:load_key_from_string' do
                                       :keyring => 'something.gpg',
                                       :username => 'root'
                                   }]
-    expect(@keytrusts_imported).to eq [{
-                                           :base64 => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
-                                           :keyring => 'something.gpg',
-                                           :username => 'root'
-                                       }]
+    # Trustdb doesn't like trusting keys in non default keyrings
+    expect(@keytrusts_imported).to eq []
     resource = @chef_run.find_resource 'bsw_gpg_load_key_from_string', 'some key'
     expect(resource.updated_by_last_action?).to eq(true)
   end
@@ -486,11 +481,8 @@ describe 'gpg::lwrp:load_key_from_string' do
                                       :keyring => 'something.gpg',
                                       :username => 'root'
                                   }]
-    expect(@keytrusts_imported).to eq [{
-                                           :base64 => '-----BEGIN PGP PUBLIC KEY BLOCK-----',
-                                           :keyring => 'something.gpg',
-                                           :username => 'root'
-                                       }]
+    # Trustdb doesn't like trusting keys in non default keyrings
+    expect(@keytrusts_imported).to eq []
     resource = @chef_run.find_resource 'bsw_gpg_load_key_from_string', 'some key'
     expect(resource.updated_by_last_action?).to eq(true)
   end
@@ -532,11 +524,8 @@ describe 'gpg::lwrp:load_key_from_string' do
                                       :keyring => 'something.gpg',
                                       :username => 'root'
                                   }]
-    expect(@keytrusts_imported).to eq [{
-                                           :base64 => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
-                                           :keyring => 'something.gpg',
-                                           :username => 'root'
-                                       }]
+    # Trustdb doesn't like trusting keys in non default keyrings
+    expect(@keytrusts_imported).to eq []
     resource = @chef_run.find_resource 'bsw_gpg_load_key_from_string', 'some key'
     expect(resource.updated_by_last_action?).to eq(true)
   end
@@ -596,7 +585,7 @@ describe 'gpg::lwrp:load_key_from_string' do
           bsw_gpg_load_key_from_string 'some key' do
             key_contents '-----BEGIN PGP PRIVATE KEY BLOCK-----'
             for_user 'root'
-            import_owner_trust false
+            force_import_owner_trust false
           end
     EOF
 
@@ -615,6 +604,44 @@ describe 'gpg::lwrp:load_key_from_string' do
                                       :username => 'root'
                                   }]
     expect(@keytrusts_imported).to eq []
+    resource = @chef_run.find_resource 'bsw_gpg_load_key_from_string', 'some key'
+    expect(resource.updated_by_last_action?).to eq(true)
+  end
+
+  it 'will trust newly imported keys into non-default keyrings if forced' do
+    # arrange
+    stub_gpg_interface(draft=BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+                                                         username='the username',
+                                                         id='the id',
+                                                         type=:secret_key))
+    # act
+    temp_lwrp_recipe <<-EOF
+            bsw_gpg_load_key_from_string 'some key' do
+              key_contents '-----BEGIN PGP PRIVATE KEY BLOCK-----'
+              for_user 'root'
+              keyring_file 'something.gpg'
+              force_import_owner_trust true
+            end
+    EOF
+
+    # assert
+    expect(@current_key_checks).to eq([{
+                                           :username => 'root',
+                                           :keyring => 'something.gpg',
+                                           :type => :secret_key
+                                       }])
+    expect(@base64_used).to eq('-----BEGIN PGP PRIVATE KEY BLOCK-----')
+    expect(@keys_deleted).to be_empty
+    expect(@keys_imported).to eq [{
+                                      :base64 => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
+                                      :keyring => 'something.gpg',
+                                      :username => 'root'
+                                  }]
+    expect(@keytrusts_imported).to eq [{
+                                           :base64 => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
+                                           :keyring => 'something.gpg',
+                                           :username => 'root'
+                                       }]
     resource = @chef_run.find_resource 'bsw_gpg_load_key_from_string', 'some key'
     expect(resource.updated_by_last_action?).to eq(true)
   end

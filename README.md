@@ -83,17 +83,26 @@ bsw_gpg_load_key_from_key_server 'some key' do
 end
 ```
 
-#### Suppress trusting newly imported keys
+#### Force trusting (or not) of newly imported keys
 
-By default, after importing the key, these LWRPs runs the equivalent of echo "<keyFingerprint>:6:\n" | gpg2 --import-ownertrust.  If you wish to prevent that, you can do this on any of the resources
+By default, after importing the key, these LWRPs runs the equivalent of echo "<keyFingerprint>:6:\n" | gpg2 --import-ownertrust unless a non-default keyring is being used.  If you wish to force the trust to be imported (or not imported) regardless of default or non default, keyring, you can do something like this.
 
 ```ruby
 bsw_gpg_load_key_from_key_server 'some key' do
   key_server 'keyserver.ubuntu.com'
   key_id '561F9B9CAC40B2F7'
   for_user 'root'
-  import_owner_trust false
+  keyring_file 'stuff_secret.gpg'
+  force_import_owner_trust true # Will cause an import that otherwise would not have occurred
 end
+
+bsw_gpg_load_key_from_key_server 'some key' do
+  key_server 'keyserver.ubuntu.com'
+  key_id '561F9B9CAC40B2F7'
+  for_user 'root'
+  force_import_owner_trust false # Will prevent an import that otherwise would have occurred
+end
+
 ```
 
 Contributing
