@@ -1,9 +1,9 @@
 # Encoding: utf-8
 
 require_relative 'spec_helper'
-$: << File.join(File.dirname(__FILE__), '../../../libraries')
-require 'helper_gpg_interface'
-require 'helper_key_header'
+$: << File.join(File.dirname(__FILE__), '../../..')
+require 'libraries/helper_gpg_interface'
+require 'libraries/helper_key_header'
 
 describe 'gpg::lwrp:load_key_from_key_server' do
   include BswTech::ChefSpec::LwrpTestHelper
@@ -17,12 +17,12 @@ describe 'gpg::lwrp:load_key_from_key_server' do
   end
 
   def stub_hkp_retrieval(key_id, expected_key_server, key_contents)
-    key_fetcher = double()
+    key_fetcher = double
     BswTech::Hkp::KeyFetcher.stub(:new).and_return key_fetcher
     allow(key_fetcher).to receive(:fetch_key).with(expected_key_server, key_id).and_return key_contents
   end
 
-  ['key_server', 'key_id'].each do |attr_to_include|
+  %w(key_server key_id).each do |attr_to_include|
     it "fails if we only supply #{attr_to_include}" do
       # arrange
 
@@ -65,6 +65,7 @@ describe 'gpg::lwrp:load_key_from_key_server' do
                                            :keyring => :default,
                                            :type => :public_key
                                        }])
+    # noinspection RubyResolve
     expect(@keys_deleted).to be_empty
     expect(@keys_imported).to eq [{
                                       :base64 => "-----BEGIN PGP PUBLIC KEY BLOCK-----\nfoobar",

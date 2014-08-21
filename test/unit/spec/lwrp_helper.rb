@@ -18,7 +18,7 @@ module BswTech
       RSpec.configure do |config|
         config.before(:each) do
           stub_resources
-          @gpg_interface = double()
+          @gpg_interface = double
           BswTech::Gpg::GpgInterface.stub(:new).and_return(@gpg_interface)
           @base64_used = nil
           @current_key_checks = []
@@ -36,6 +36,7 @@ module BswTech
         runner_options = {}
         create_temp_cookbook(contents)
         RSpec.configure do |config|
+          # noinspection RubyResolve
           config.cookbook_path = [*config.cookbook_path] << generated_cookbook_path
         end
         lwrps_full = [*lwrps_under_test].map do |lwrp|

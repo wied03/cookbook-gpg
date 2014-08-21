@@ -1,20 +1,20 @@
 require 'rspec'
-$: << File.join(File.dirname(__FILE__), '../../../libraries')
-require 'helper_key_header'
-require 'helper_gpg_parser'
-require 'helper_gpg_interface'
-require 'helper_gpg_keyring_specifier'
-require 'helper_command_runner'
+$: << File.join(File.dirname(__FILE__), '../../..')
+require 'libraries/helper_key_header'
+require 'libraries/helper_gpg_parser'
+require 'libraries/helper_gpg_interface'
+require 'libraries/helper_gpg_keyring_specifier'
+require 'libraries/helper_command_runner'
 
 describe BswTech::Gpg::GpgInterface do
   before(:each) do
-    @parser = double()
+    @parser = double
     BswTech::Gpg::GpgParser.stub(:new).and_return @parser
     @gpg_command_executed = nil
     @gpg_mock_response = nil
     @gpg_input_supplied = nil
     @user_supplied = nil
-    mock_command_runner = double()
+    mock_command_runner = double
     allow(BswTech::CommandRunner).to receive(:new).and_return(mock_command_runner)
     allow(mock_command_runner).to receive(:run) do |command, as_user, input|
       @user_supplied = as_user

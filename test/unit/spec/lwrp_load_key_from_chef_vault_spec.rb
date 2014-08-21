@@ -2,9 +2,9 @@
 
 require_relative 'spec_helper'
 require 'chef-vault'
-$: << File.join(File.dirname(__FILE__), '../../../libraries')
-require 'helper_gpg_interface'
-require 'helper_key_header'
+$: << File.join(File.dirname(__FILE__), '../../..')
+require 'libraries/helper_gpg_interface'
+require 'libraries/helper_key_header'
 
 describe 'gpg::lwrp:load_key_from_chef_vault' do
   include BswTech::ChefSpec::LwrpTestHelper
@@ -17,7 +17,7 @@ describe 'gpg::lwrp:load_key_from_chef_vault' do
     'load_key_from_chef_vault'
   end
 
-  ['data_bag', 'item', 'json_key', 'for_user'].each do |attr_to_include|
+  %w(data_bag item json_key for_user).each do |attr_to_include|
     it "fails if we only supply #{attr_to_include}" do
       # arrange
       # act
@@ -60,14 +60,15 @@ describe 'gpg::lwrp:load_key_from_chef_vault' do
                                            :type => :secret_key
                                        }])
     expect(@base64_used).to eq('-----BEGIN PGP PRIVATE KEY BLOCK-----')
+    # noinspection RubyResolve
     expect(@keys_deleted).to be_empty
     expect(@keys_imported).to eq [{
-                                      :base64 => "-----BEGIN PGP PRIVATE KEY BLOCK-----",
+                                      :base64 => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
                                       :keyring => :default,
                                       :username => 'root'
                                   }]
     expect(@keytrusts_imported).to eq [{
-                                           :base64 => "-----BEGIN PGP PRIVATE KEY BLOCK-----",
+                                           :base64 => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
                                            :keyring => :default,
                                            :username => 'root'
                                        }]
