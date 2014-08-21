@@ -38,23 +38,9 @@ describe 'gpg::lwrp:load_key_from_string' do
   it 'works properly when importing a secret key that is not already there' do
     # arrange
     stub_gpg_interface(draft=BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
-                                                     username='the username',
-                                                     id='the id',
-                                                     type=:secret_key))
-    setup_stub_commands([
-                            {
-                                :command => '/bin/sh -c "echo -n ~root"',
-                                :stdout => '/home/root'
-                            },
-                            {
-                                :command => 'gpg2 --no-auto-check-trustdb --import',
-                                :expected_input => '-----BEGIN PGP PRIVATE KEY BLOCK-----'
-                            },
-                            {
-                                :command => 'gpg2 --no-auto-check-trustdb --import-ownertrust',
-                                :expected_input => "4D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"
-                            }
-                        ])
+                                                         username='the username',
+                                                         id='the id',
+                                                         type=:secret_key))
 
     # act
     temp_lwrp_recipe <<-EOF
@@ -65,35 +51,32 @@ describe 'gpg::lwrp:load_key_from_string' do
     EOF
 
     # assert
-    expect(@current_type_checked).to eq(:secret_key)
-    expect(@external_type).to eq(:secret_key)
-    expect(@keyring_checked).to eq(:default)
+    expect(@current_key_checks).to eq([{
+                                           :username => 'root',
+                                           :keyring => :default,
+                                           :type => :secret_key
+                                       }])
     expect(@base64_used).to eq('-----BEGIN PGP PRIVATE KEY BLOCK-----')
-    verify_actual_commands_match_expected
+    expect(@keys_deleted).to be_empty
+    expect(@keys_imported).to eq [{
+                                      :base64 => "-----BEGIN PGP PRIVATE KEY BLOCK-----",
+                                      :keyring => :default,
+                                      :username => 'root'
+                                  }]
+    expect(@keytrusts_imported).to eq [{
+                                           :base64 => "-----BEGIN PGP PRIVATE KEY BLOCK-----",
+                                           :keyring => :default,
+                                           :username => 'root'
+                                       }]
     resource = @chef_run.find_resource 'bsw_gpg_load_key_from_string', 'some key'
     expect(resource.updated_by_last_action?).to eq(true)
   end
 
   it 'works properly when importing a public key that is not already there' do
     stub_gpg_interface(draft=BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
-                                                     username='the username',
-                                                     id='the id',
-                                                     type=:public_key))
-
-    setup_stub_commands([
-                            {
-                                :command => '/bin/sh -c "echo -n ~root"',
-                                :stdout => '/home/root'
-                            },
-                            {
-                                :command => 'gpg2 --no-auto-check-trustdb --import',
-                                :expected_input => '-----BEGIN PGP PUBLIC KEY BLOCK-----'
-                            },
-                            {
-                                :command => 'gpg2 --no-auto-check-trustdb --import-ownertrust',
-                                :expected_input => "4D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"
-                            }
-                        ])
+                                                         username='the username',
+                                                         id='the id',
+                                                         type=:public_key))
 
     # act
     temp_lwrp_recipe <<-EOF
@@ -104,10 +87,23 @@ describe 'gpg::lwrp:load_key_from_string' do
     EOF
 
     # assert
-    expect(@current_type_checked).to eq(:public_key)
-    expect(@external_type).to eq(:public_key)
+    expect(@current_key_checks).to eq([{
+                                           :username => 'root',
+                                           :keyring => :default,
+                                           :type => :public_key
+                                       }])
     expect(@base64_used).to eq('-----BEGIN PGP PUBLIC KEY BLOCK-----')
-    verify_actual_commands_match_expected
+    expect(@keys_deleted).to be_empty
+    expect(@keys_imported).to eq [{
+                                      :base64 => "-----BEGIN PGP PUBLIC KEY BLOCK-----",
+                                      :keyring => :default,
+                                      :username => 'root'
+                                  }]
+    expect(@keytrusts_imported).to eq [{
+                                           :base64 => "-----BEGIN PGP PUBLIC KEY BLOCK-----",
+                                           :keyring => :default,
+                                           :username => 'root'
+                                       }]
     resource = @chef_run.find_resource 'bsw_gpg_load_key_from_string', 'some key'
     expect(resource.updated_by_last_action?).to eq(true)
   end
@@ -118,12 +114,6 @@ describe 'gpg::lwrp:load_key_from_string' do
                                       id='the id',
                                       type=:public_key)
     stub_gpg_interface(current=[key], draft=key)
-    setup_stub_commands([
-                            {
-                                :command => '/bin/sh -c "echo -n ~root"',
-                                :stdout => '/home/root'
-                            }
-                        ])
 
     # act
     temp_lwrp_recipe <<-EOF
@@ -134,10 +124,15 @@ describe 'gpg::lwrp:load_key_from_string' do
     EOF
 
     # assert
-    expect(@current_type_checked).to eq(:public_key)
-    expect(@external_type).to eq(:public_key)
+    expect(@current_key_checks).to eq([{
+                                           :username => 'root',
+                                           :keyring => :default,
+                                           :type => :public_key
+                                       }])
     expect(@base64_used).to eq('-----BEGIN PGP PUBLIC KEY BLOCK-----')
-    verify_actual_commands_match_expected
+    expect(@keys_deleted).to be_empty
+    expect(@keys_imported).to be_empty
+    expect(@keytrusts_imported).to be_empty
     resource = @chef_run.find_resource 'bsw_gpg_load_key_from_string', 'some key'
     expect(resource.updated_by_last_action?).to eq(false)
   end
@@ -149,12 +144,6 @@ describe 'gpg::lwrp:load_key_from_string' do
                                       id='the id',
                                       type=:secret_key)
     stub_gpg_interface(current=[key], draft=key)
-    setup_stub_commands([
-                            {
-                                :command => '/bin/sh -c "echo -n ~root"',
-                                :stdout => '/home/root'
-                            }
-                        ])
 
     # act
     temp_lwrp_recipe <<-EOF
@@ -165,10 +154,15 @@ describe 'gpg::lwrp:load_key_from_string' do
     EOF
 
     # assert
-    expect(@current_type_checked).to eq(:secret_key)
-    expect(@external_type).to eq(:secret_key)
+    expect(@current_key_checks).to eq([{
+                                           :username => 'root',
+                                           :keyring => :default,
+                                           :type => :secret_key
+                                       }])
     expect(@base64_used).to eq('-----BEGIN PGP PRIVATE KEY BLOCK-----')
-    verify_actual_commands_match_expected
+    expect(@keys_deleted).to be_empty
+    expect(@keys_imported).to be_empty
+    expect(@keytrusts_imported).to be_empty
     resource = @chef_run.find_resource 'bsw_gpg_load_key_from_string', 'some key'
     expect(resource.updated_by_last_action?).to eq(false)
   end
@@ -184,20 +178,6 @@ describe 'gpg::lwrp:load_key_from_string' do
                                           id='the id',
                                           type=:public_key)
     stub_gpg_interface(current=[current_key], draft=new_key)
-    setup_stub_commands([
-                            {
-                                :command => '/bin/sh -c "echo -n ~root"',
-                                :stdout => '/home/root'
-                            },
-                            {
-                                :command => 'gpg2 --no-auto-check-trustdb --import',
-                                :expected_input => '-----BEGIN PGP PUBLIC KEY BLOCK-----'
-                            },
-                            {
-                                :command => 'gpg2 --no-auto-check-trustdb --import-ownertrust',
-                                :expected_input => "5D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"
-                            }
-                        ])
 
     # act
     temp_lwrp_recipe <<-EOF
@@ -208,10 +188,23 @@ describe 'gpg::lwrp:load_key_from_string' do
     EOF
 
     # assert
-    expect(@current_type_checked).to eq(:public_key)
-    expect(@external_type).to eq(:public_key)
+    expect(@current_key_checks).to eq([{
+                                           :username => 'root',
+                                           :keyring => :default,
+                                           :type => :public_key
+                                       }])
     expect(@base64_used).to eq('-----BEGIN PGP PUBLIC KEY BLOCK-----')
-    verify_actual_commands_match_expected
+    expect(@keys_deleted).to be_empty
+    expect(@keys_imported).to eq [{
+                                      :base64 => "-----BEGIN PGP PUBLIC KEY BLOCK-----",
+                                      :keyring => :default,
+                                      :username => 'root'
+                                  }]
+    expect(@keytrusts_imported).to eq [{
+                                           :base64 => "-----BEGIN PGP PUBLIC KEY BLOCK-----",
+                                           :keyring => :default,
+                                           :username => 'root'
+                                       }]
     resource = @chef_run.find_resource 'bsw_gpg_load_key_from_string', 'some key'
     expect(resource.updated_by_last_action?).to eq(true)
   end
@@ -227,20 +220,6 @@ describe 'gpg::lwrp:load_key_from_string' do
                                           id='the id',
                                           type=:secret_key)
     stub_gpg_interface(current=[current_key], draft=new_key)
-    setup_stub_commands([
-                            {
-                                :command => '/bin/sh -c "echo -n ~root"',
-                                :stdout => '/home/root'
-                            },
-                            {
-                                :command => 'gpg2 --no-auto-check-trustdb --import',
-                                :expected_input => '-----BEGIN PGP PRIVATE KEY BLOCK-----'
-                            },
-                            {
-                                :command => 'gpg2 --no-auto-check-trustdb --import-ownertrust',
-                                :expected_input => "5D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"
-                            }
-                        ])
 
     # act
     temp_lwrp_recipe <<-EOF
@@ -251,35 +230,33 @@ describe 'gpg::lwrp:load_key_from_string' do
     EOF
 
     # assert
-    expect(@current_type_checked).to eq(:secret_key)
-    expect(@external_type).to eq(:secret_key)
+    expect(@current_key_checks).to eq([{
+                                           :username => 'root',
+                                           :keyring => :default,
+                                           :type => :secret_key
+                                       }])
     expect(@base64_used).to eq('-----BEGIN PGP PRIVATE KEY BLOCK-----')
-    verify_actual_commands_match_expected
+    expect(@keys_deleted).to be_empty
+    expect(@keys_imported).to eq [{
+                                      :base64 => "-----BEGIN PGP PRIVATE KEY BLOCK-----",
+                                      :keyring => :default,
+                                      :username => 'root'
+                                  }]
+    expect(@keytrusts_imported).to eq [{
+                                           :base64 => "-----BEGIN PGP PRIVATE KEY BLOCK-----",
+                                           :keyring => :default,
+                                           :username => 'root'
+                                       }]
     resource = @chef_run.find_resource 'bsw_gpg_load_key_from_string', 'some key'
     expect(resource.updated_by_last_action?).to eq(true)
   end
 
-
   it 'runs the commands as the proper user' do
     # arrange
     stub_gpg_interface(draft=BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
-                                                     username='the username',
-                                                     id='the id',
-                                                     type=:secret_key))
-    setup_stub_commands([
-                            {
-                                :command => '/bin/sh -c "echo -n ~someone_else"',
-                                :stdout => '/home/someone_else'
-                            },
-                            {
-                                :command => 'gpg2 --no-auto-check-trustdb --import',
-                                :expected_input => '-----BEGIN PGP PRIVATE KEY BLOCK-----'
-                            },
-                            {
-                                :command => 'gpg2 --no-auto-check-trustdb --import-ownertrust',
-                                :expected_input => "4D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"
-                            }
-                        ])
+                                                         username='the username',
+                                                         id='the id',
+                                                         type=:secret_key))
     # act
     temp_lwrp_recipe <<-EOF
       bsw_gpg_load_key_from_string 'some key' do
@@ -289,11 +266,23 @@ describe 'gpg::lwrp:load_key_from_string' do
     EOF
 
     # assert
-    users = @shell_outs.map { |e| e.user }.uniq
-    users.should == ['someone_else']
-    env = @shell_outs.map { |e| e.environment['HOME'] }.uniq
-    # 1st call is to get home dir, so won't be there yet
-    env.should == [nil, '/home/someone_else']
+    expect(@current_key_checks).to eq([{
+                                           :username => 'someone_else',
+                                           :keyring => :default,
+                                           :type => :secret_key
+                                       }])
+    expect(@base64_used).to eq('-----BEGIN PGP PRIVATE KEY BLOCK-----')
+    expect(@keys_deleted).to be_empty
+    expect(@keys_imported).to eq [{
+                                      :base64 => "-----BEGIN PGP PRIVATE KEY BLOCK-----",
+                                      :keyring => :default,
+                                      :username => 'someone_else'
+                                  }]
+    expect(@keytrusts_imported).to eq [{
+                                           :base64 => "-----BEGIN PGP PRIVATE KEY BLOCK-----",
+                                           :keyring => :default,
+                                           :username => 'someone_else'
+                                       }]
   end
 
   it 'overwrites the existing public key for the user if the fingerprint has changed' do
@@ -303,28 +292,10 @@ describe 'gpg::lwrp:load_key_from_string' do
                                           id='the id',
                                           type=:public_key)
     stub_gpg_interface(current=[current],
-                   draft=BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
-                                                     username='the username',
-                                                     id='the id',
-                                                     type=:public_key))
-    setup_stub_commands([
-                            {
-                                :command => '/bin/sh -c "echo -n ~root"',
-                                :stdout => '/home/root'
-                            },
-                            {
-                                :command => 'gpg2 --no-auto-check-trustdb --delete-key --batch --yes 6D1CF3288469F260C2119B9F76C95D74390AA6C9'
-                            },
-                            {
-                                :command => 'gpg2 --no-auto-check-trustdb --import',
-                                :expected_input => '-----BEGIN PGP PUBLIC KEY BLOCK-----'
-                            },
-                            {
-                                :command => 'gpg2 --no-auto-check-trustdb --import-ownertrust',
-                                :expected_input => "4D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"
-                            }
-                        ])
-
+                       draft=BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+                                                         username='the username',
+                                                         id='the id',
+                                                         type=:public_key))
     # act
     temp_lwrp_recipe <<-EOF
       bsw_gpg_load_key_from_string 'some key' do
@@ -334,10 +305,27 @@ describe 'gpg::lwrp:load_key_from_string' do
     EOF
 
     # assert
-    expect(@current_type_checked).to eq(:public_key)
-    expect(@external_type).to eq(:public_key)
+    expect(@current_key_checks).to eq([{
+                                           :username => 'root',
+                                           :keyring => :default,
+                                           :type => :public_key
+                                       }])
     expect(@base64_used).to eq('-----BEGIN PGP PUBLIC KEY BLOCK-----')
-    verify_actual_commands_match_expected
+    expect(@keys_deleted).to eq [{
+                                     :username => 'root',
+                                     :keyring => :default,
+                                     :key_header => current
+                                 }]
+    expect(@keys_imported).to eq [{
+                                      :base64 => "-----BEGIN PGP PUBLIC KEY BLOCK-----",
+                                      :keyring => :default,
+                                      :username => 'root'
+                                  }]
+    expect(@keytrusts_imported).to eq [{
+                                           :base64 => "-----BEGIN PGP PUBLIC KEY BLOCK-----",
+                                           :keyring => :default,
+                                           :username => 'root'
+                                       }]
     resource = @chef_run.find_resource 'bsw_gpg_load_key_from_string', 'some key'
     expect(resource.updated_by_last_action?).to eq(true)
   end
@@ -349,28 +337,10 @@ describe 'gpg::lwrp:load_key_from_string' do
                                           id='the id',
                                           type=:secret_key)
     stub_gpg_interface(current=[current],
-                   draft=BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
-                                                     username='the username',
-                                                     id='the id',
-                                                     type=:secret_key))
-    setup_stub_commands([
-                            {
-                                :command => '/bin/sh -c "echo -n ~root"',
-                                :stdout => '/home/root'
-                            },
-                            {
-                                :command => 'gpg2 --no-auto-check-trustdb --delete-secret-and-public-key --batch --yes 6D1CF3288469F260C2119B9F76C95D74390AA6C9'
-                            },
-                            {
-                                :command => 'gpg2 --no-auto-check-trustdb --import',
-                                :expected_input => '-----BEGIN PGP PRIVATE KEY BLOCK-----'
-                            },
-                            {
-                                :command => 'gpg2 --no-auto-check-trustdb --import-ownertrust',
-                                :expected_input => "4D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"
-                            }
-                        ])
-
+                       draft=BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+                                                         username='the username',
+                                                         id='the id',
+                                                         type=:secret_key))
     # act
     temp_lwrp_recipe <<-EOF
       bsw_gpg_load_key_from_string 'some key' do
@@ -380,10 +350,27 @@ describe 'gpg::lwrp:load_key_from_string' do
     EOF
 
     # assert
-    expect(@current_type_checked).to eq(:secret_key)
-    expect(@external_type).to eq(:secret_key)
+    expect(@current_key_checks).to eq([{
+                                           :username => 'root',
+                                           :keyring => :default,
+                                           :type => :secret_key
+                                       }])
     expect(@base64_used).to eq('-----BEGIN PGP PRIVATE KEY BLOCK-----')
-    verify_actual_commands_match_expected
+    expect(@keys_deleted).to eq [{
+                                     :username => 'root',
+                                     :keyring => :default,
+                                     :key_header => current
+                                 }]
+    expect(@keys_imported).to eq [{
+                                      :base64 => "-----BEGIN PGP PRIVATE KEY BLOCK-----",
+                                      :keyring => :default,
+                                      :username => 'root'
+                                  }]
+    expect(@keytrusts_imported).to eq [{
+                                           :base64 => "-----BEGIN PGP PRIVATE KEY BLOCK-----",
+                                           :keyring => :default,
+                                           :username => 'root'
+                                       }]
     resource = @chef_run.find_resource 'bsw_gpg_load_key_from_string', 'some key'
     expect(resource.updated_by_last_action?).to eq(true)
   end
@@ -391,24 +378,9 @@ describe 'gpg::lwrp:load_key_from_string' do
   it 'allows specifying a custom keyring file with a public key' do
     # arrange
     stub_gpg_interface(draft=BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
-                                                     username='the username',
-                                                     id='the id',
-                                                     type=:public_key))
-    setup_stub_commands([
-                            {
-                                :command => '/bin/sh -c "echo -n ~root"',
-                                :stdout => '/home/root'
-                            },
-                            {
-                                :command => 'gpg2 --no-auto-check-trustdb --no-default-keyring --keyring something.gpg --import',
-                                :expected_input => '-----BEGIN PGP PUBLIC KEY BLOCK-----'
-                            },
-                            {
-                                :command => 'gpg2 --no-auto-check-trustdb --no-default-keyring --keyring something.gpg --import-ownertrust',
-                                :expected_input => "4D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"
-                            }
-                        ])
-
+                                                         username='the username',
+                                                         id='the id',
+                                                         type=:public_key))
     # act
     temp_lwrp_recipe <<-EOF
         bsw_gpg_load_key_from_string 'some key' do
@@ -419,35 +391,32 @@ describe 'gpg::lwrp:load_key_from_string' do
     EOF
 
     # assert
-    expect(@current_type_checked).to eq(:public_key)
-    expect(@external_type).to eq(:public_key)
-    expect(@keyring_checked).to eq('something.gpg')
+    expect(@current_key_checks).to eq([{
+                                           :username => 'root',
+                                           :keyring => 'something.gpg',
+                                           :type => :public_key
+                                       }])
     expect(@base64_used).to eq('-----BEGIN PGP PUBLIC KEY BLOCK-----')
-    verify_actual_commands_match_expected
+    expect(@keys_deleted).to be_empty
+    expect(@keys_imported).to eq [{
+                                      :base64 => "-----BEGIN PGP PUBLIC KEY BLOCK-----",
+                                      :keyring => 'something.gpg',
+                                      :username => 'root'
+                                  }]
+    expect(@keytrusts_imported).to eq [{
+                                           :base64 => "-----BEGIN PGP PUBLIC KEY BLOCK-----",
+                                           :keyring => 'something.gpg',
+                                           :username => 'root'
+                                       }]
     resource = @chef_run.find_resource 'bsw_gpg_load_key_from_string', 'some key'
     expect(resource.updated_by_last_action?).to eq(true)
   end
 
   it 'allows specifying a custom keyring file with a secret key' do
     stub_gpg_interface(draft=BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
-                                                     username='the username',
-                                                     id='the id',
-                                                     type=:secret_key))
-    setup_stub_commands([
-                            {
-                                :command => '/bin/sh -c "echo -n ~root"',
-                                :stdout => '/home/root'
-                            },
-                            {
-                                :command => 'gpg2 --no-auto-check-trustdb --no-default-keyring --secret-keyring something.gpg --import',
-                                :expected_input => '-----BEGIN PGP PRIVATE KEY BLOCK-----'
-                            },
-                            {
-                                :command => 'gpg2 --no-auto-check-trustdb --no-default-keyring --secret-keyring something.gpg --import-ownertrust',
-                                :expected_input => "4D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"
-                            }
-                        ])
-
+                                                         username='the username',
+                                                         id='the id',
+                                                         type=:secret_key))
     # act
     temp_lwrp_recipe <<-EOF
         bsw_gpg_load_key_from_string 'some key' do
@@ -458,11 +427,23 @@ describe 'gpg::lwrp:load_key_from_string' do
     EOF
 
     # assert
-    expect(@current_type_checked).to eq(:secret_key)
-    expect(@external_type).to eq(:secret_key)
-    expect(@keyring_checked).to eq('something.gpg')
+    expect(@current_key_checks).to eq([{
+                                           :username => 'root',
+                                           :keyring => 'something.gpg',
+                                           :type => :secret_key
+                                       }])
     expect(@base64_used).to eq('-----BEGIN PGP PRIVATE KEY BLOCK-----')
-    verify_actual_commands_match_expected
+    expect(@keys_deleted).to be_empty
+    expect(@keys_imported).to eq [{
+                                      :base64 => "-----BEGIN PGP PRIVATE KEY BLOCK-----",
+                                      :keyring => 'something.gpg',
+                                      :username => 'root'
+                                  }]
+    expect(@keytrusts_imported).to eq [{
+                                           :base64 => "-----BEGIN PGP PRIVATE KEY BLOCK-----",
+                                           :keyring => 'something.gpg',
+                                           :username => 'root'
+                                       }]
     resource = @chef_run.find_resource 'bsw_gpg_load_key_from_string', 'some key'
     expect(resource.updated_by_last_action?).to eq(true)
   end
@@ -474,28 +455,10 @@ describe 'gpg::lwrp:load_key_from_string' do
                                           id='the id',
                                           type=:public_key)
     stub_gpg_interface(current=[current],
-                   draft=BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
-                                                     username='the username',
-                                                     id='the id',
-                                                     type=:public_key))
-    setup_stub_commands([
-                            {
-                                :command => '/bin/sh -c "echo -n ~root"',
-                                :stdout => '/home/root'
-                            },
-                            {
-                                :command => 'gpg2 --no-auto-check-trustdb --no-default-keyring --keyring something.gpg --delete-key --batch --yes 6D1CF3288469F260C2119B9F76C95D74390AA6C9'
-                            },
-                            {
-                                :command => 'gpg2 --no-auto-check-trustdb --no-default-keyring --keyring something.gpg --import',
-                                :expected_input => '-----BEGIN PGP PUBLIC KEY BLOCK-----'
-                            },
-                            {
-                                :command => 'gpg2 --no-auto-check-trustdb --no-default-keyring --keyring something.gpg --import-ownertrust',
-                                :expected_input => "4D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"
-                            }
-                        ])
-
+                       draft=BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+                                                         username='the username',
+                                                         id='the id',
+                                                         type=:public_key))
     # act
     temp_lwrp_recipe <<-EOF
       bsw_gpg_load_key_from_string 'some key' do
@@ -506,10 +469,27 @@ describe 'gpg::lwrp:load_key_from_string' do
     EOF
 
     # assert
-    expect(@current_type_checked).to eq(:public_key)
-    expect(@external_type).to eq(:public_key)
+    expect(@current_key_checks).to eq([{
+                                           :username => 'root',
+                                           :keyring => 'something.gpg',
+                                           :type => :public_key
+                                       }])
     expect(@base64_used).to eq('-----BEGIN PGP PUBLIC KEY BLOCK-----')
-    verify_actual_commands_match_expected
+    expect(@keys_deleted).to eq [{
+                                     :username => 'root',
+                                     :keyring => 'something.gpg',
+                                     :key_header => current
+                                 }]
+    expect(@keys_imported).to eq [{
+                                      :base64 => "-----BEGIN PGP PUBLIC KEY BLOCK-----",
+                                      :keyring => 'something.gpg',
+                                      :username => 'root'
+                                  }]
+    expect(@keytrusts_imported).to eq [{
+                                           :base64 => "-----BEGIN PGP PUBLIC KEY BLOCK-----",
+                                           :keyring => 'something.gpg',
+                                           :username => 'root'
+                                       }]
     resource = @chef_run.find_resource 'bsw_gpg_load_key_from_string', 'some key'
     expect(resource.updated_by_last_action?).to eq(true)
   end
@@ -521,28 +501,10 @@ describe 'gpg::lwrp:load_key_from_string' do
                                           id='the id',
                                           type=:secret_key)
     stub_gpg_interface(current=[current],
-                   draft=BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
-                                                     username='the username',
-                                                     id='the id',
-                                                     type=:secret_key))
-    setup_stub_commands([
-                            {
-                                :command => '/bin/sh -c "echo -n ~root"',
-                                :stdout => '/home/root'
-                            },
-                            {
-                                :command => 'gpg2 --no-auto-check-trustdb --no-default-keyring --secret-keyring something.gpg --delete-secret-and-public-key --batch --yes 6D1CF3288469F260C2119B9F76C95D74390AA6C9'
-                            },
-                            {
-                                :command => 'gpg2 --no-auto-check-trustdb --no-default-keyring --secret-keyring something.gpg --import',
-                                :expected_input => '-----BEGIN PGP PRIVATE KEY BLOCK-----'
-                            },
-                            {
-                                :command => 'gpg2 --no-auto-check-trustdb --no-default-keyring --secret-keyring something.gpg --import-ownertrust',
-                                :expected_input => "4D1CF3288469F260C2119B9F76C95D74390AA6C9:6:\n"
-                            }
-                        ])
-
+                       draft=BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+                                                         username='the username',
+                                                         id='the id',
+                                                         type=:secret_key))
     # act
     temp_lwrp_recipe <<-EOF
       bsw_gpg_load_key_from_string 'some key' do
@@ -553,10 +515,27 @@ describe 'gpg::lwrp:load_key_from_string' do
     EOF
 
     # assert
-    expect(@current_type_checked).to eq(:secret_key)
-    expect(@external_type).to eq(:secret_key)
+    expect(@current_key_checks).to eq([{
+                                           :username => 'root',
+                                           :keyring => 'something.gpg',
+                                           :type => :secret_key
+                                       }])
     expect(@base64_used).to eq('-----BEGIN PGP PRIVATE KEY BLOCK-----')
-    verify_actual_commands_match_expected
+    expect(@keys_deleted).to eq [{
+                                     :username => 'root',
+                                     :keyring => 'something.gpg',
+                                     :key_header => current
+                                 }]
+    expect(@keys_imported).to eq [{
+                                      :base64 => "-----BEGIN PGP PRIVATE KEY BLOCK-----",
+                                      :keyring => 'something.gpg',
+                                      :username => 'root'
+                                  }]
+    expect(@keytrusts_imported).to eq [{
+                                           :base64 => "-----BEGIN PGP PRIVATE KEY BLOCK-----",
+                                           :keyring => 'something.gpg',
+                                           :username => 'root'
+                                       }]
     resource = @chef_run.find_resource 'bsw_gpg_load_key_from_string', 'some key'
     expect(resource.updated_by_last_action?).to eq(true)
   end

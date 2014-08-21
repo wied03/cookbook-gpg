@@ -68,7 +68,7 @@ class Chef
         if key_to_delete
           Chef::Log.info "Deleting existing key for #{key_to_delete.username} from keyring #{keyring_file} in order to replace it"
           @gpg_interface.delete_keys username=@new_resource.for_user,
-                                     key_header_to_delete=draft_header,
+                                     key_header_to_delete=current_header,
                                      keyring=keyring_file
         end
       end
