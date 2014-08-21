@@ -41,9 +41,22 @@ describe BswTech::Gpg::GpgInterface do
     expect(@gpg_input_supplied).to eq @dummy_secret_key_base64
   end
 
+  it 'complains if the base64 input does not contain public or private key header' do
+    # arrange
+
+    # act
+    action = lambda {
+      @gpg_interface.get_key_header 'foobar'
+    }
+
+    # assert
+    expect(action).to raise_exception RuntimeError,
+                                      "Supplied key contents did NOT start with '-----BEGIN PGP PUBLIC KEY BLOCK-----' or '-----BEGIN PGP PRIVATE KEY BLOCK-----'"
+  end
+
   it 'complains if more than 1 key is returned via base64' do
     key_headers = [BswTech::Gpg::KeyHeader.new('fp', 'username', 'id', :secret_key),
-                   BswTech::Gpg::KeyHeader.new('fp', 'username', 'id', :secret_key)]
+                   BswTech::Gpg::KeyHeader.new('fp', 'username', 'id', :public_key)]
     allow(@parser).to receive(:parse_output_external).with('gpg output here').and_return key_headers
     @gpg_mock_response = 'gpg output here'
 

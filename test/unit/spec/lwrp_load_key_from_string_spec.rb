@@ -20,8 +20,6 @@ describe 'gpg::lwrp:load_key_from_string' do
   ['key_contents', 'for_user'].each do |attr_to_include|
     it "fails if we only supply #{attr_to_include}" do
       # arrange
-      # Include all of this because for_user will try and run the provider's constructor
-      setup_stub_commands([:command => '/bin/sh -c "echo -n ~value"', :stdout => '/home/root'])
 
       # act
       action = lambda {
@@ -35,102 +33,6 @@ describe 'gpg::lwrp:load_key_from_string' do
       # assert
       expect(action).to raise_exception Chef::Exceptions::ValidationFailed
     end
-  end
-
-  it 'complains if the base64 input does not contain public or private key header' do
-    # arrange
-    stub_gpg_interface(draft=nil)
-    setup_stub_commands([
-                            {
-                                :command => '/bin/sh -c "echo -n ~root"',
-                                :stdout => '/home/root'
-                            }
-                        ])
-    # act
-    action = lambda {
-      temp_lwrp_recipe <<-EOF
-          bsw_gpg_load_key_from_string 'some key' do
-            key_contents 'no header in here'
-            for_user 'root'
-          end
-      EOF
-    }
-
-    # assert
-    expect(action).to raise_exception RuntimeError,
-                                      "bsw_gpg_load_key_from_string[some key] (lwrp_gen::default line 1) had an error: RuntimeError: Supplied key contents did NOT start with '-----BEGIN PGP PUBLIC KEY BLOCK-----' or '-----BEGIN PGP PRIVATE KEY BLOCK-----'"
-  end
-
-  it 'complains if the base64 input contains more than 1 public key' do
-    # arrange
-    stub_gpg_interface(draft=nil)
-    setup_stub_commands([
-                            {
-                                :command => '/bin/sh -c "echo -n ~root"',
-                                :stdout => '/home/root'
-                            }
-                        ])
-    # act
-    action = lambda {
-      temp_lwrp_recipe <<-EOF
-        bsw_gpg_load_key_from_string 'some key' do
-          key_contents "-----BEGIN PGP PUBLIC KEY BLOCK-----\nstuff\n-----END PGP PUBLIC KEY BLOCK-----\n-----BEGIN PGP PUBLIC KEY BLOCK-----\n-----END PGP PUBLIC KEY BLOCK-----"
-          for_user 'root'
-        end
-      EOF
-    }
-
-    # assert
-    expect(action).to raise_exception RuntimeError,
-                                      'bsw_gpg_load_key_from_string[some key] (lwrp_gen::default line 1) had an error: RuntimeError: Supplied key contents has 2 public_key values, only 1 is allowed'
-  end
-
-  it 'complains if the base64 input contains more than 1 secret key' do
-    # arrange
-    stub_gpg_interface(draft=nil)
-    setup_stub_commands([
-                            {
-                                :command => '/bin/sh -c "echo -n ~root"',
-                                :stdout => '/home/root'
-                            }
-                        ])
-    # act
-    action = lambda {
-      temp_lwrp_recipe <<-EOF
-        bsw_gpg_load_key_from_string 'some key' do
-          key_contents "-----BEGIN PGP PRIVATE KEY BLOCK-----\nstuff\n-----END PGP PRIVATE KEY BLOCK-----\n-----BEGIN PGP PRIVATE KEY BLOCK-----\n-----END PGP PRIVATE KEY BLOCK-----"
-          for_user 'root'
-        end
-      EOF
-    }
-
-    # assert
-    expect(action).to raise_exception RuntimeError,
-                                      'bsw_gpg_load_key_from_string[some key] (lwrp_gen::default line 1) had an error: RuntimeError: Supplied key contents has 2 secret_key values, only 1 is allowed'
-  end
-
-  it 'complains if the base64 input contains a public and secret key' do
-    # arrange
-    stub_gpg_interface(draft=nil)
-    setup_stub_commands([
-                            {
-                                :command => '/bin/sh -c "echo -n ~root"',
-                                :stdout => '/home/root'
-                            }
-                        ])
-    # act
-    action = lambda {
-      temp_lwrp_recipe <<-EOF
-        bsw_gpg_load_key_from_string 'some key' do
-          key_contents "-----BEGIN PGP PUBLIC KEY BLOCK-----\nstuff\n-----END PGP PUBLIC KEY BLOCK-----\n-----BEGIN PGP PRIVATE KEY BLOCK-----\n-----END PGP PRIVATE KEY BLOCK-----"
-          for_user 'root'
-        end
-      EOF
-    }
-
-    # assert
-    expect(action).to raise_exception RuntimeError,
-                                      'bsw_gpg_load_key_from_string[some key] (lwrp_gen::default line 1) had an error: RuntimeError: Supplied key contents has both secret and public keys, only 1 key is allowed'
   end
 
   it 'works properly when importing a secret key that is not already there' do

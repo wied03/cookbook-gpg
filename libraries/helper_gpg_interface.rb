@@ -18,6 +18,7 @@ module BswTech
       end
 
       def get_key_header(base64)
+        validate_base64 base64
         raw_output = @command_runner.run command='gpg2 --with-fingerprint --with-colons', as_user=:default, input=base64
         result = @parser.parse_output_external raw_output
         raise "Multiple keys returned from a single base64 import should not happen!  Keys returned: #{result}" if result.length > 1
@@ -60,12 +61,12 @@ module BswTech
         keyring == :default ? ' ' : @keyring_specifier.get_custom_keyring(type, keyring)
       end
 
-      def get_key_type(key_contents)
+      def validate_base64(base64)
         valid = {:public_key => '-----BEGIN PGP PUBLIC KEY BLOCK-----',
                  :secret_key => '-----BEGIN PGP PRIVATE KEY BLOCK-----'}
         occurrences = valid.flat_map do |key_type, pattern|
           regex = Regexp.new pattern, Regexp::MULTILINE
-          count = key_contents.scan(regex).length
+          count = base64.scan(regex).length
           {
               key_type => count
           }
@@ -80,9 +81,6 @@ module BswTech
         dupe[:secret_key]
         multiple = occurrences.values.count { |c| c >= 1 }
         fail 'Supplied key contents has both secret and public keys, only 1 key is allowed' if multiple > 1
-        single = occurrences.find { |type, count| count == 1 }
-        type = single[0]
-        type
       end
     end
   end
