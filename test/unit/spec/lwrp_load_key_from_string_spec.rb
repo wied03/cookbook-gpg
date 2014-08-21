@@ -17,7 +17,7 @@ describe 'gpg::lwrp:load_key_from_string' do
     'load_key_from_string'
   end
 
-  ['key_contents', 'for_user'].each do |attr_to_include|
+  %w(key_contents for_user).each do |attr_to_include|
     it "fails if we only supply #{attr_to_include}" do
       # arrange
 
@@ -59,12 +59,12 @@ describe 'gpg::lwrp:load_key_from_string' do
     expect(@base64_used).to eq('-----BEGIN PGP PRIVATE KEY BLOCK-----')
     expect(@keys_deleted).to be_empty
     expect(@keys_imported).to eq [{
-                                      :base64 => "-----BEGIN PGP PRIVATE KEY BLOCK-----",
+                                      :base64 => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
                                       :keyring => :default,
                                       :username => 'root'
                                   }]
     expect(@keytrusts_imported).to eq [{
-                                           :base64 => "-----BEGIN PGP PRIVATE KEY BLOCK-----",
+                                           :base64 => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
                                            :keyring => :default,
                                            :username => 'root'
                                        }]
@@ -95,12 +95,12 @@ describe 'gpg::lwrp:load_key_from_string' do
     expect(@base64_used).to eq('-----BEGIN PGP PUBLIC KEY BLOCK-----')
     expect(@keys_deleted).to be_empty
     expect(@keys_imported).to eq [{
-                                      :base64 => "-----BEGIN PGP PUBLIC KEY BLOCK-----",
+                                      :base64 => '-----BEGIN PGP PUBLIC KEY BLOCK-----',
                                       :keyring => :default,
                                       :username => 'root'
                                   }]
     expect(@keytrusts_imported).to eq [{
-                                           :base64 => "-----BEGIN PGP PUBLIC KEY BLOCK-----",
+                                           :base64 => '-----BEGIN PGP PUBLIC KEY BLOCK-----',
                                            :keyring => :default,
                                            :username => 'root'
                                        }]
@@ -196,12 +196,12 @@ describe 'gpg::lwrp:load_key_from_string' do
     expect(@base64_used).to eq('-----BEGIN PGP PUBLIC KEY BLOCK-----')
     expect(@keys_deleted).to be_empty
     expect(@keys_imported).to eq [{
-                                      :base64 => "-----BEGIN PGP PUBLIC KEY BLOCK-----",
+                                      :base64 => '-----BEGIN PGP PUBLIC KEY BLOCK-----',
                                       :keyring => :default,
                                       :username => 'root'
                                   }]
     expect(@keytrusts_imported).to eq [{
-                                           :base64 => "-----BEGIN PGP PUBLIC KEY BLOCK-----",
+                                           :base64 => '-----BEGIN PGP PUBLIC KEY BLOCK-----',
                                            :keyring => :default,
                                            :username => 'root'
                                        }]
@@ -238,12 +238,12 @@ describe 'gpg::lwrp:load_key_from_string' do
     expect(@base64_used).to eq('-----BEGIN PGP PRIVATE KEY BLOCK-----')
     expect(@keys_deleted).to be_empty
     expect(@keys_imported).to eq [{
-                                      :base64 => "-----BEGIN PGP PRIVATE KEY BLOCK-----",
+                                      :base64 => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
                                       :keyring => :default,
                                       :username => 'root'
                                   }]
     expect(@keytrusts_imported).to eq [{
-                                           :base64 => "-----BEGIN PGP PRIVATE KEY BLOCK-----",
+                                           :base64 => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
                                            :keyring => :default,
                                            :username => 'root'
                                        }]
@@ -274,12 +274,12 @@ describe 'gpg::lwrp:load_key_from_string' do
     expect(@base64_used).to eq('-----BEGIN PGP PRIVATE KEY BLOCK-----')
     expect(@keys_deleted).to be_empty
     expect(@keys_imported).to eq [{
-                                      :base64 => "-----BEGIN PGP PRIVATE KEY BLOCK-----",
+                                      :base64 => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
                                       :keyring => :default,
                                       :username => 'someone_else'
                                   }]
     expect(@keytrusts_imported).to eq [{
-                                           :base64 => "-----BEGIN PGP PRIVATE KEY BLOCK-----",
+                                           :base64 => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
                                            :keyring => :default,
                                            :username => 'someone_else'
                                        }]
@@ -317,12 +317,12 @@ describe 'gpg::lwrp:load_key_from_string' do
                                      :key_header => current
                                  }]
     expect(@keys_imported).to eq [{
-                                      :base64 => "-----BEGIN PGP PUBLIC KEY BLOCK-----",
+                                      :base64 => '-----BEGIN PGP PUBLIC KEY BLOCK-----',
                                       :keyring => :default,
                                       :username => 'root'
                                   }]
     expect(@keytrusts_imported).to eq [{
-                                           :base64 => "-----BEGIN PGP PUBLIC KEY BLOCK-----",
+                                           :base64 => '-----BEGIN PGP PUBLIC KEY BLOCK-----',
                                            :keyring => :default,
                                            :username => 'root'
                                        }]
@@ -362,12 +362,12 @@ describe 'gpg::lwrp:load_key_from_string' do
                                      :key_header => current
                                  }]
     expect(@keys_imported).to eq [{
-                                      :base64 => "-----BEGIN PGP PRIVATE KEY BLOCK-----",
+                                      :base64 => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
                                       :keyring => :default,
                                       :username => 'root'
                                   }]
     expect(@keytrusts_imported).to eq [{
-                                           :base64 => "-----BEGIN PGP PRIVATE KEY BLOCK-----",
+                                           :base64 => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
                                            :keyring => :default,
                                            :username => 'root'
                                        }]
@@ -399,12 +399,12 @@ describe 'gpg::lwrp:load_key_from_string' do
     expect(@base64_used).to eq('-----BEGIN PGP PUBLIC KEY BLOCK-----')
     expect(@keys_deleted).to be_empty
     expect(@keys_imported).to eq [{
-                                      :base64 => "-----BEGIN PGP PUBLIC KEY BLOCK-----",
+                                      :base64 => '-----BEGIN PGP PUBLIC KEY BLOCK-----',
                                       :keyring => 'something.gpg',
                                       :username => 'root'
                                   }]
     expect(@keytrusts_imported).to eq [{
-                                           :base64 => "-----BEGIN PGP PUBLIC KEY BLOCK-----",
+                                           :base64 => '-----BEGIN PGP PUBLIC KEY BLOCK-----',
                                            :keyring => 'something.gpg',
                                            :username => 'root'
                                        }]
@@ -435,12 +435,12 @@ describe 'gpg::lwrp:load_key_from_string' do
     expect(@base64_used).to eq('-----BEGIN PGP PRIVATE KEY BLOCK-----')
     expect(@keys_deleted).to be_empty
     expect(@keys_imported).to eq [{
-                                      :base64 => "-----BEGIN PGP PRIVATE KEY BLOCK-----",
+                                      :base64 => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
                                       :keyring => 'something.gpg',
                                       :username => 'root'
                                   }]
     expect(@keytrusts_imported).to eq [{
-                                           :base64 => "-----BEGIN PGP PRIVATE KEY BLOCK-----",
+                                           :base64 => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
                                            :keyring => 'something.gpg',
                                            :username => 'root'
                                        }]
@@ -481,12 +481,12 @@ describe 'gpg::lwrp:load_key_from_string' do
                                      :key_header => current
                                  }]
     expect(@keys_imported).to eq [{
-                                      :base64 => "-----BEGIN PGP PUBLIC KEY BLOCK-----",
+                                      :base64 => '-----BEGIN PGP PUBLIC KEY BLOCK-----',
                                       :keyring => 'something.gpg',
                                       :username => 'root'
                                   }]
     expect(@keytrusts_imported).to eq [{
-                                           :base64 => "-----BEGIN PGP PUBLIC KEY BLOCK-----",
+                                           :base64 => '-----BEGIN PGP PUBLIC KEY BLOCK-----',
                                            :keyring => 'something.gpg',
                                            :username => 'root'
                                        }]
@@ -527,12 +527,12 @@ describe 'gpg::lwrp:load_key_from_string' do
                                      :key_header => current
                                  }]
     expect(@keys_imported).to eq [{
-                                      :base64 => "-----BEGIN PGP PRIVATE KEY BLOCK-----",
+                                      :base64 => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
                                       :keyring => 'something.gpg',
                                       :username => 'root'
                                   }]
     expect(@keytrusts_imported).to eq [{
-                                           :base64 => "-----BEGIN PGP PRIVATE KEY BLOCK-----",
+                                           :base64 => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
                                            :keyring => 'something.gpg',
                                            :username => 'root'
                                        }]
