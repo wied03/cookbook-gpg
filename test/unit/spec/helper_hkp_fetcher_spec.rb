@@ -23,7 +23,7 @@ describe BswTech::Hkp::KeyFetcher do
     unless system 'which gpg2'
       pending 'Need gpg2 on your machine to test this'
     end
-    interface = BswTech::Gpg::GpgInterface.new
+    interface = BswTech::Gpg::GpgInterface.new false
     actual = interface.get_key_header actual
     expect(actual.fingerprint).to eq(@expected_key.fingerprint)
     expect(actual.username).to eq(@expected_key.username)

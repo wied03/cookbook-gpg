@@ -8,7 +8,7 @@ class Chef
       def initialize(new_resource, run_context)
         super
         @keyring_specifier = BswTech::Gpg::KeyringSpecifier.new
-        @gpg_interface = BswTech::Gpg::GpgInterface.new
+        @gpg_interface = BswTech::Gpg::GpgInterface.new new_resource.suppress_trust_db_check
       end
 
       def whyrun_supported?

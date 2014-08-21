@@ -22,7 +22,7 @@ describe BswTech::Gpg::GpgInterface do
       @gpg_input_supplied = input
       @gpg_mock_response
     end
-    @gpg_interface = BswTech::Gpg::GpgInterface.new
+    @gpg_interface = BswTech::Gpg::GpgInterface.new suppress_trustdb_check=false
     @dummy_secret_key_base64 = '-----BEGIN PGP PRIVATE KEY BLOCK-----'
   end
 
@@ -67,6 +67,21 @@ describe BswTech::Gpg::GpgInterface do
     expect(action).to raise_exception "Multiple keys returned from a single base64 import should not happen!  Keys returned: #{key_headers}"
   end
 
+  it 'can check current keys while suppressing the trust db check' do
+    # arrange
+    @gpg_interface = BswTech::Gpg::GpgInterface.new suppress_trustdb_check=true
+    key_headers = [BswTech::Gpg::KeyHeader.new('fp', 'username', 'id', :secret_key)]
+    allow(@parser).to receive(:parse_output_ring).with('gpg output here').and_return key_headers
+    @gpg_mock_response = 'gpg output here'
+
+    # act
+    result = @gpg_interface.get_current_installed_keys 'some_user', :secret_key
+
+    # assert
+    expect(result).to eq(key_headers)
+    expect(@gpg_command_executed).to eq('gpg2 --no-auto-check-trustdb --list-secret-keys --with-fingerprint --with-colons')
+  end
+
   it 'fetches current secret keys' do
     # arrange
     key_headers = [BswTech::Gpg::KeyHeader.new('fp', 'username', 'id', :secret_key)]
@@ -78,7 +93,7 @@ describe BswTech::Gpg::GpgInterface do
 
     # assert
     expect(result).to eq(key_headers)
-    expect(@gpg_command_executed).to eq('gpg2 --no-auto-check-trustdb --list-secret-keys --with-fingerprint --with-colons')
+    expect(@gpg_command_executed).to eq('gpg2 --list-secret-keys --with-fingerprint --with-colons')
   end
 
   it 'fetches current public keys' do
@@ -92,7 +107,7 @@ describe BswTech::Gpg::GpgInterface do
 
     # assert
     expect(result).to eq(key_headers)
-    expect(@gpg_command_executed).to eq('gpg2 --no-auto-check-trustdb --list-keys --with-fingerprint --with-colons')
+    expect(@gpg_command_executed).to eq('gpg2 --list-keys --with-fingerprint --with-colons')
   end
 
   it 'fetches current secret keys from a non default ring' do
@@ -106,7 +121,7 @@ describe BswTech::Gpg::GpgInterface do
 
     # assert
     expect(result).to eq(key_headers)
-    expect(@gpg_command_executed).to eq('gpg2 --no-auto-check-trustdb --no-default-keyring --secret-keyring stuff.gpg --list-secret-keys --with-fingerprint --with-colons')
+    expect(@gpg_command_executed).to eq('gpg2 --no-default-keyring --secret-keyring stuff.gpg --list-secret-keys --with-fingerprint --with-colons')
   end
 
   it 'fetches current public keys from a non default ring' do
@@ -120,11 +135,26 @@ describe BswTech::Gpg::GpgInterface do
 
     # assert
     expect(result).to eq(key_headers)
-    expect(@gpg_command_executed).to eq('gpg2 --no-auto-check-trustdb --no-default-keyring --keyring stuff.gpg --list-keys --with-fingerprint --with-colons')
+    expect(@gpg_command_executed).to eq('gpg2 --no-default-keyring --keyring stuff.gpg --list-keys --with-fingerprint --with-colons')
   end
 
   it 'imports keys properly into a default keyring' do
     # arrange
+    key_header = BswTech::Gpg::KeyHeader.new('fp', 'username', 'id', :secret_key)
+    allow(@parser).to receive(:parse_output_external).with('gpg output here').and_return [key_header]
+    @gpg_mock_response = 'gpg output here'
+
+    # act
+    @gpg_interface.import_keys 'some_user', @dummy_secret_key_base64
+
+    # assert
+    expect(@gpg_command_executed).to eq 'gpg2 --import'
+    expect(@gpg_input_supplied).to eq @dummy_secret_key_base64
+  end
+
+  it 'imports keys while suppressing the trustdb check' do
+    # arrange
+    @gpg_interface = BswTech::Gpg::GpgInterface.new suppress_trustdb_check=true
     key_header = BswTech::Gpg::KeyHeader.new('fp', 'username', 'id', :secret_key)
     allow(@parser).to receive(:parse_output_external).with('gpg output here').and_return [key_header]
     @gpg_mock_response = 'gpg output here'
@@ -149,7 +179,7 @@ describe BswTech::Gpg::GpgInterface do
                                keyring='stuff.gpg'
 
     # assert
-    expect(@gpg_command_executed).to eq 'gpg2 --no-auto-check-trustdb --no-default-keyring --secret-keyring stuff.gpg --import'
+    expect(@gpg_command_executed).to eq 'gpg2 --no-default-keyring --secret-keyring stuff.gpg --import'
     expect(@gpg_input_supplied).to eq @dummy_secret_key_base64
   end
 
@@ -163,12 +193,29 @@ describe BswTech::Gpg::GpgInterface do
     @gpg_interface.import_trust 'some_user', @dummy_secret_key_base64
 
     # assert
-    expect(@gpg_command_executed).to eq 'gpg2 --no-auto-check-trustdb --import-ownertrust'
+    expect(@gpg_command_executed).to eq 'gpg2 --import-ownertrust'
     expect(@gpg_input_supplied).to eq "fp:6:\n"
   end
 
   it 'imports trust properly with a non-default keyring' do
     # arrange
+    key_header = BswTech::Gpg::KeyHeader.new('fp', 'username', 'id', :secret_key)
+    allow(@parser).to receive(:parse_output_external).with('gpg output here').and_return [key_header]
+    @gpg_mock_response = 'gpg output here'
+
+    # act
+    @gpg_interface.import_trust username='some_user',
+                                base64=@dummy_secret_key_base64,
+                                keyring='stuff.gpg'
+
+    # assert
+    expect(@gpg_command_executed).to eq 'gpg2 --no-default-keyring --secret-keyring stuff.gpg --import-ownertrust'
+    expect(@gpg_input_supplied).to eq "fp:6:\n"
+  end
+
+  it 'imports trust while suppressing the trustdb check' do
+    # arrange
+    @gpg_interface = BswTech::Gpg::GpgInterface.new suppress_trustdb_check=true
     key_header = BswTech::Gpg::KeyHeader.new('fp', 'username', 'id', :secret_key)
     allow(@parser).to receive(:parse_output_external).with('gpg output here').and_return [key_header]
     @gpg_mock_response = 'gpg output here'
@@ -192,6 +239,19 @@ describe BswTech::Gpg::GpgInterface do
                                key_header_to_delete=key_header
 
     # assert
+    expect(@gpg_command_executed).to eq 'gpg2 --delete-secret-and-public-key --batch --yes fp'
+  end
+
+  it 'deletes while suppressing the trustdb check' do
+    # arrange
+    @gpg_interface = BswTech::Gpg::GpgInterface.new suppress_trustdb_check=true
+    key_header = BswTech::Gpg::KeyHeader.new('fp', 'username', 'id', :secret_key)
+
+    # act
+    @gpg_interface.delete_keys username='some_user',
+                               key_header_to_delete=key_header
+
+    # assert
     expect(@gpg_command_executed).to eq 'gpg2 --no-auto-check-trustdb --delete-secret-and-public-key --batch --yes fp'
   end
 
@@ -205,6 +265,6 @@ describe BswTech::Gpg::GpgInterface do
                                keyring='stuff.gpg'
 
     # assert
-    expect(@gpg_command_executed).to eq 'gpg2 --no-auto-check-trustdb --no-default-keyring --secret-keyring stuff.gpg --delete-secret-and-public-key --batch --yes fp'
+    expect(@gpg_command_executed).to eq 'gpg2 --no-default-keyring --secret-keyring stuff.gpg --delete-secret-and-public-key --batch --yes fp'
   end
 end

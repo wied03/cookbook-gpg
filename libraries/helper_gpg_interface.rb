@@ -2,7 +2,8 @@ module BswTech
   module Gpg
     class GpgInterface
       # Use :default if
-      def initialize
+      def initialize(suppress_trustdb_check)
+        @suppress_trustdb_check = suppress_trustdb_check
         @parser = BswTech::Gpg::GpgParser.new
         @keyring_specifier = BswTech::Gpg::KeyringSpecifier.new
         @command_runner = BswTech::CommandRunner.new
@@ -53,8 +54,9 @@ module BswTech
 
       def get_gpg_cmd(type, keyring)
         keyring_param = get_keyring_param type, keyring
+        trust_suppress = @suppress_trustdb_check ? ' --no-auto-check-trustdb' : ''
         # When not using the default keyring, gpg2 will complain about not being able to find a public key that we trust
-        "gpg2 --no-auto-check-trustdb#{keyring_param}".strip
+        "gpg2#{trust_suppress}#{keyring_param}".strip
       end
 
       def get_keyring_param(type, keyring)

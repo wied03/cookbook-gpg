@@ -3,6 +3,8 @@ class Chef
     class LoadKeyBaseResource < Chef::Resource::LWRPBase
       attribute :for_user, :kind_of => String, :required => true
       attribute :keyring_file, :kind_of => String
+      attribute :suppress_trust_db_check, :kind_of => [TrueClass, FalseClass], :default => false
+      attribute :import_owner_trust, :kind_of => [TrueClass, FalseClass], :default => true
 
       actions :replace
 
