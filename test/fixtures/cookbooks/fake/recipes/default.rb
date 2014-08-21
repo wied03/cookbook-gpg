@@ -50,3 +50,14 @@ with 'bob' do |username|
   end
 end
 
+with 'seymour' do |username|
+  user_with_home[username]
+
+  bsw_gpg_load_key_from_string 'keyring test with forced trust' do
+    for_user username
+    key_contents private_key_bits
+    keyring_file 'stuff_secret.gpg'
+    force_import_owner_trust true
+  end
+end
+
