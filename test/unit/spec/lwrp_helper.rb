@@ -18,13 +18,13 @@ module BswTech
       RSpec.configure do |config|
         config.before(:each) do
           stub_resources
-          @gpg_retriever = double()
-          BswTech::Gpg::GpgRetriever.stub(:new).and_return(@gpg_retriever)
-          @current_type_checked = nil
-          @external_type = nil
+          @gpg_interface = double
+          BswTech::Gpg::GpgInterface.stub(:new).and_return(@gpg_interface)
           @base64_used = nil
-          @shell_outs = []
-          @keyring_checked = :default
+          @current_key_checks = []
+          @keytrusts_imported = []
+          @keys_imported = []
+          @keys_deleted = []
         end
 
         config.after(:each) do
@@ -36,6 +36,7 @@ module BswTech
         runner_options = {}
         create_temp_cookbook(contents)
         RSpec.configure do |config|
+          # noinspection RubyResolve
           config.cookbook_path = [*config.cookbook_path] << generated_cookbook_path
         end
         lwrps_full = [*lwrps_under_test].map do |lwrp|
@@ -63,16 +64,41 @@ module BswTech
         FileUtils.rm_rf generated_cookbook_path
       end
 
-      def stub_retriever(current=[], draft)
-        allow(@gpg_retriever).to receive(:get_current_installed_keys) do |executor, type, keyring|
-          @current_type_checked = type
-          @keyring_checked = keyring if keyring
+      def stub_gpg_interface(current=[], draft)
+        allow(@gpg_interface).to receive(:get_current_installed_keys) do |username, type, keyring|
+          @current_key_checks << {
+              :type => type,
+              :username => username,
+              :keyring => keyring
+          }
           current
         end
-        allow(@gpg_retriever).to receive(:get_key_info_from_base64) do |executor, type, base64|
-          @external_type = type
+        allow(@gpg_interface).to receive(:get_key_header) do |base64|
           @base64_used = base64
           draft
+        end
+        allow(@gpg_interface).to receive(:import_trust) do |username, base64, keyring|
+          @keytrusts_imported << {
+              :base64 => base64,
+              :keyring => keyring,
+              :username => username
+          }
+          draft
+        end
+        allow(@gpg_interface).to receive(:import_keys) do |username, base64, keyring|
+          @keys_imported << {
+              :base64 => base64,
+              :keyring => keyring,
+              :username => username
+          }
+          draft
+        end
+        allow(@gpg_interface).to receive(:delete_keys) do |username, key_header_to_delete, keyring|
+          @keys_deleted << {
+              :username => username,
+              :keyring => keyring,
+              :key_header => key_header_to_delete
+          }
         end
       end
 
@@ -81,39 +107,6 @@ module BswTech
           total[item.command] = item.input
           total
         end
-      end
-
-      def setup_stub_commands(commands)
-        @command_mocks = commands
-        stub_setup = lambda do |shell_out|
-          @shell_outs << shell_out
-          command_text = shell_out.command
-          matched_mock = @command_mocks.find { |mock| mock[:command] == command_text }
-          if matched_mock
-            shell_out.stub(:error!)
-            shell_out.stub(:run_command) do
-              if matched_mock[:expected_input] != shell_out.input
-                fail "Expected input #{matched_mock[:expected_input]} but got #{shell_out.input}"
-              end
-            end
-            output = matched_mock[:stdout] || ''
-            shell_out.stub(:stdout).and_return(output)
-          else
-            shell_out.stub(:error!).and_raise "Unexpected command #{shell_out.command}"
-          end
-        end
-        original_new = Mixlib::ShellOut.method(:new)
-        Mixlib::ShellOut.stub(:new) do |*args|
-          command = original_new.call(*args)
-          stub_setup[command]
-          command
-        end
-      end
-
-      def verify_actual_commands_match_expected
-        actual = executed_command_lines
-        expected = @command_mocks.map { |cmd| cmd[:command] }
-        actual.keys.should == expected
       end
     end
   end
