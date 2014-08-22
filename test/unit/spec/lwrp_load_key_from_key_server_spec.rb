@@ -72,11 +72,7 @@ describe 'gpg::lwrp:load_key_from_key_server' do
                                       :keyring => :default,
                                       :username => 'root'
                                   }]
-    expect(@keytrusts_imported).to eq [{
-                                           :base64 => "-----BEGIN PGP PUBLIC KEY BLOCK-----\nfoobar",
-                                           :keyring => :default,
-                                           :username => 'root'
-                                       }]
+    expect(@keytrusts_imported).to eq []
     resource = @chef_run.find_resource 'bsw_gpg_load_key_from_key_server', 'some key'
     expect(resource.updated_by_last_action?).to eq(true)
   end

@@ -100,11 +100,7 @@ describe 'gpg::lwrp:load_key_from_string' do
                                       :keyring => :default,
                                       :username => 'root'
                                   }]
-    expect(@keytrusts_imported).to eq [{
-                                           :base64 => '-----BEGIN PGP PUBLIC KEY BLOCK-----',
-                                           :keyring => :default,
-                                           :username => 'root'
-                                       }]
+    expect(@keytrusts_imported).to eq []
     resource = @chef_run.find_resource 'bsw_gpg_load_key_from_string', 'some key'
     expect(resource.updated_by_last_action?).to eq(true)
   end
@@ -201,11 +197,7 @@ describe 'gpg::lwrp:load_key_from_string' do
                                       :keyring => :default,
                                       :username => 'root'
                                   }]
-    expect(@keytrusts_imported).to eq [{
-                                           :base64 => '-----BEGIN PGP PUBLIC KEY BLOCK-----',
-                                           :keyring => :default,
-                                           :username => 'root'
-                                       }]
+    expect(@keytrusts_imported).to eq []
     resource = @chef_run.find_resource 'bsw_gpg_load_key_from_string', 'some key'
     expect(resource.updated_by_last_action?).to eq(true)
   end
@@ -322,11 +314,7 @@ describe 'gpg::lwrp:load_key_from_string' do
                                       :keyring => :default,
                                       :username => 'root'
                                   }]
-    expect(@keytrusts_imported).to eq [{
-                                           :base64 => '-----BEGIN PGP PUBLIC KEY BLOCK-----',
-                                           :keyring => :default,
-                                           :username => 'root'
-                                       }]
+    expect(@keytrusts_imported).to eq []
     resource = @chef_run.find_resource 'bsw_gpg_load_key_from_string', 'some key'
     expect(resource.updated_by_last_action?).to eq(true)
   end
@@ -616,12 +604,12 @@ describe 'gpg::lwrp:load_key_from_string' do
                                                          type=:secret_key))
     # act
     temp_lwrp_recipe <<-EOF
-            bsw_gpg_load_key_from_string 'some key' do
-              key_contents '-----BEGIN PGP PRIVATE KEY BLOCK-----'
-              for_user 'root'
-              keyring_file 'something.gpg'
-              force_import_owner_trust true
-            end
+        bsw_gpg_load_key_from_string 'some key' do
+          key_contents '-----BEGIN PGP PRIVATE KEY BLOCK-----'
+          for_user 'root'
+          keyring_file 'something.gpg'
+          force_import_owner_trust true
+        end
     EOF
 
     # assert

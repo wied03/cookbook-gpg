@@ -1,5 +1,8 @@
 # Encoding: utf-8
 
+# TODO: Need to re-evaluate how we do the owner trust, it probably should only
+# be used when importing a private key into the default keyring
+
 require_relative 'spec_helper'
 
 describe 'Key contents LWRP - Root' do

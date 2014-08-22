@@ -85,24 +85,24 @@ end
 
 #### Force trusting (or not) of newly imported keys
 
-By default, after importing the key, these LWRPs runs the equivalent of echo "<keyFingerprint>:6:\n" | gpg2 --import-ownertrust unless a non-default keyring is being used.  If you wish to force the trust to be imported (or not imported) regardless of default or non default, keyring, you can do something like this.
+By default, after importing the key, if a private key is being imported into the default keyring, these LWRPs runs the equivalent of echo "<keyFingerprint>:6:\n" | gpg2 --import-ownertrust.  If you wish to force the trust to be imported (or not imported) regardless of the default, you can do something like this.
 
 ```ruby
-bsw_gpg_load_key_from_key_server 'some key' do
-  key_server 'keyserver.ubuntu.com'
-  key_id '561F9B9CAC40B2F7'
-  for_user 'root'
+bsw_gpg_load_key_from_chef_vault 'a chef vault key' do
+    data_bag 'thedatabag'
+    item 'the_item'
+    json_key 'json_key' # Expects to find a hash key with the base64 key contents in it            
+    for_user 'joe' # The user you want to install the key to
+    force_import_owner_trust false # Will prevent an import that otherwise would have occurred
+end
+bsw_gpg_load_key_from_chef_vault 'a chef vault key' do
+  data_bag 'thedatabag'
+  item 'the_item'
+  json_key 'json_key' # Expects to find a hash key with the base64 key contents in it            
+  for_user 'joe' # The user you want to install the key to
   keyring_file 'stuff_secret.gpg'
-  force_import_owner_trust true # Will cause an import that otherwise would not have occurred
+  force_import_owner_trust true # Will force an import that otherwise would NOT have occurred  
 end
-
-bsw_gpg_load_key_from_key_server 'some key' do
-  key_server 'keyserver.ubuntu.com'
-  key_id '561F9B9CAC40B2F7'
-  for_user 'root'
-  force_import_owner_trust false # Will prevent an import that otherwise would have occurred
-end
-
 ```
 
 Contributing

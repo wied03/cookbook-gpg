@@ -23,7 +23,7 @@ class Chef
           converge_by "Importing key #{draft_key_header.username} into keyring #{keyring_file} for user #{@new_resource.for_user}" do
             remove_existing_keys draft_key_header, current
             import_keys key_contents
-            if should_import_trust
+            if should_import_trust draft_key_header
               Chef::Log.info "Importing trust for key #{draft_key_header.username}"
               import_trust key_contents
             else
@@ -41,15 +41,20 @@ class Chef
 
       private
 
-      def should_import_trust
+      def should_import_trust(key_header)
         resource_says = @new_resource.force_import_owner_trust
         if resource_says != nil
           Chef::Log.debug "Using resource 'import trust' setting of #{resource_says}"
           return resource_says
         end
         if keyring_file == :default
-          Chef::Log.debug 'Will import trust since default keyring is in use'
-          true
+          if key_header.type == :secret_key
+            Chef::Log.debug 'Will import trust since default keyring is in use and a private key is being imported'
+            true
+          else
+            Chef::Log.debug 'Will NOT import trust since the default keyring is in use, but a public key is being imported'
+            false
+          end
         else
           Chef::Log.debug 'Will NOT import trust since custom keyring is in use'
           false
