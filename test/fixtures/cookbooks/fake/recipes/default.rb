@@ -61,3 +61,17 @@ with 'seymour' do |username|
   end
 end
 
+with 'john' do |username|
+  user_with_home[username]
+
+  bsw_gpg_load_key_from_string 'john private key' do
+    for_user username
+    key_contents private_key_bits
+  end
+
+  bsw_gpg_load_key_from_string 'john key in different keystore' do
+    for_user username
+    key_contents public_key_bits
+    keyring_file 'stuff.gpg'
+  end
+end

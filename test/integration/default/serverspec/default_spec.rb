@@ -56,3 +56,19 @@ describe 'Key Contents LWRP - Seymour - Secret Key - Non-default Keyring' do
     it { should return_stdout /.*C26E1EFE:6:$/ }
   end
 end
+
+describe 'Key Contents LWRP - John - Normal secret key + external publci key' do
+  describe command('sudo -u john -i gpg2 --export-ownertrust') do
+    it { should return_stdout /.*C26E1EFE:6:$/ }
+  end
+
+  describe command('sudo -u john -i gpg2 --list-secret-keys') do
+    it { should return_stdout /.*sec   2048R\/C26E1EFE.*/ }
+  end
+
+  describe command('sudo -u john -i gpg2 --list-keys --no-default-keyring --keyring stuff.gpg') do
+    it {
+      should return_stdout /.*pub   4096R\/B22D2CD5.*/
+    }
+  end
+end
