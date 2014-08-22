@@ -70,16 +70,25 @@ bsw_gpg_load_key_from_key_server 'some key' do
 end
 ```
 
-#### Ignore the trust-db rebuild
+#### Force the trust-db rebuild
 
-You can use this on any of the resources.  Effectively adds --no-auto-check-trustdb to all gpg keyring commands
+You can use this on any of the resources.  By default, the LWRP lets gpg2 update the trustdb whenever it's executing commands on the default keyring.  When it's a custom keyring, in order to avoid gpg2 complaining about not being able to find keys you trust, the LWRP will add --no-auto-check-trustdb.  If you want to override this behavior, you can do so like below
 
 ```ruby
+# TrustDB check would normally be disabled
 bsw_gpg_load_key_from_key_server 'some key' do
   key_server 'keyserver.ubuntu.com'
   key_id '561F9B9CAC40B2F7'
   for_user 'root'
-  suppress_trust_db_check true
+  keyring_file 'stuff.gpg'
+  disable_trust_db_check false
+end
+# TrustDB check would normally be enabled
+bsw_gpg_load_key_from_key_server 'some key' do
+  key_server 'keyserver.ubuntu.com'
+  key_id '561F9B9CAC40B2F7'
+  for_user 'root'
+  disable_trust_db_check true
 end
 ```
 
@@ -88,6 +97,7 @@ end
 By default, after importing the key, if a private key is being imported into the default keyring, these LWRPs runs the equivalent of echo "<keyFingerprint>:6:\n" | gpg2 --import-ownertrust.  If you wish to force the trust to be imported (or not imported) regardless of the default, you can do something like this.
 
 ```ruby
+# Example 1
 bsw_gpg_load_key_from_chef_vault 'a chef vault key' do
     data_bag 'thedatabag'
     item 'the_item'
@@ -95,6 +105,7 @@ bsw_gpg_load_key_from_chef_vault 'a chef vault key' do
     for_user 'joe' # The user you want to install the key to
     force_import_owner_trust false # Will prevent an import that otherwise would have occurred
 end
+# Example 1
 bsw_gpg_load_key_from_chef_vault 'a chef vault key' do
   data_bag 'thedatabag'
   item 'the_item'

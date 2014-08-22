@@ -518,7 +518,7 @@ describe 'gpg::lwrp:load_key_from_string' do
     expect(resource.updated_by_last_action?).to eq(true)
   end
 
-  it 'tells the GPG interface to not suppress trustdb checks by default' do
+  it 'tells the GPG interface to not force trustdb checks by default' do
     # arrange
     stub_gpg_interface(draft=BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
                                                          username='the username',
@@ -535,11 +535,10 @@ describe 'gpg::lwrp:load_key_from_string' do
 
     # assert
     resource = @chef_run.find_resource 'bsw_gpg_load_key_from_string', 'some key'
-    expect(resource.suppress_trust_db_check).to eq false
-    expect(@trustdb_ignore).to eq false
+    expect(resource.disable_trust_db_check).to eq nil
   end
 
-  it 'tells the GPG interface to suppress trustdb checks if we tell it to' do
+  it 'tells the GPG interface to disable trustdb checks if we tell it to' do
     # arrange
     stub_gpg_interface(draft=BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
                                                          username='the username',
@@ -551,14 +550,37 @@ describe 'gpg::lwrp:load_key_from_string' do
         bsw_gpg_load_key_from_string 'some key' do
           key_contents '-----BEGIN PGP PRIVATE KEY BLOCK-----'
           for_user 'root'
-          suppress_trust_db_check true
+          disable_trust_db_check true
         end
     EOF
 
     # assert
     resource = @chef_run.find_resource 'bsw_gpg_load_key_from_string', 'some key'
-    expect(resource.suppress_trust_db_check).to eq true
-    expect(@trustdb_ignore).to eq true
+    expect(resource.disable_trust_db_check).to eq true
+    expect(@trustdb_suppress).to eq true
+  end
+
+  it 'tells the GPG interface to enable trustdb checks if we tell it to' do
+    # arrange
+    stub_gpg_interface(draft=BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+                                                         username='the username',
+                                                         id='the id',
+                                                         type=:secret_key))
+
+    # act
+    temp_lwrp_recipe <<-EOF
+        bsw_gpg_load_key_from_string 'some key' do
+          key_contents '-----BEGIN PGP PRIVATE KEY BLOCK-----'
+          for_user 'root'
+          keyring_file 'foo.gpg'
+          disable_trust_db_check false
+        end
+    EOF
+
+    # assert
+    resource = @chef_run.find_resource 'bsw_gpg_load_key_from_string', 'some key'
+    expect(resource.disable_trust_db_check).to eq false
+    expect(@trustdb_suppress).to eq false
   end
 
   it 'will not trust the newly imported key if we tell it so' do

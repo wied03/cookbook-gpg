@@ -8,7 +8,7 @@ class Chef
       def initialize(new_resource, run_context)
         super
         @keyring_specifier = BswTech::Gpg::KeyringSpecifier.new
-        @gpg_interface = BswTech::Gpg::GpgInterface.new new_resource.suppress_trust_db_check
+        @gpg_interface = BswTech::Gpg::GpgInterface.new should_disable_trust_db_check
       end
 
       def whyrun_supported?
@@ -40,6 +40,12 @@ class Chef
       end
 
       private
+
+      def should_disable_trust_db_check
+        resource_says = @new_resource.disable_trust_db_check
+        return resource_says unless resource_says == nil
+        keyring_file != :default
+      end
 
       def should_import_trust(key_header)
         resource_says = @new_resource.force_import_owner_trust

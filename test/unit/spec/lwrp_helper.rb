@@ -19,9 +19,9 @@ module BswTech
         config.before(:each) do
           stub_resources
           @gpg_interface = double
-          @trustdb_ignore = nil
+          @trustdb_suppress = nil
           BswTech::Gpg::GpgInterface.stub(:new) do |suppress_trust_db|
-            @trustdb_ignore = suppress_trust_db
+            @trustdb_suppress = suppress_trust_db
             @gpg_interface
           end
           @base64_used = nil
