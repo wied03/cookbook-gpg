@@ -1,8 +1,5 @@
 # Encoding: utf-8
 
-# TODO: Need to re-evaluate how we do the owner trust, it probably should only
-# be used when importing a private key into the default keyring
-
 require_relative 'spec_helper'
 
 describe 'Key contents LWRP - Root' do
@@ -13,7 +10,7 @@ describe 'Key contents LWRP - Root' do
   end
 
   describe command('sudo -i gpg2 --export-ownertrust') do
-    it { should return_stdout /.*B22D2CD5:6:$/ }
+    it { should return_stdout /.*C26E1EFE:6:$/ }
   end
 
   describe command('sudo -i gpg2 --list-secret-keys') do
@@ -29,6 +26,7 @@ describe 'Key Contents LWRP - Joe - Public Key - Non-default Keyring' do
   # non default keyring, owner trusts are 1 per user
   describe command('sudo -u joe -i gpg2 --export-ownertrust') do
     it { should_not return_stdout /.*B22D2CD5:6:$/ }
+    it { should_not return_stdout /.*C26E1EFE:6:$/ }
   end
 end
 
@@ -44,7 +42,7 @@ describe 'Key Contents LWRP - Bob - Key server' do
   end
 
   describe command('sudo -u bob -i gpg2 --export-ownertrust') do
-    it { should return_stdout /.*AC40B2F7:6:$/ }
+    it { should_not return_stdout /.*AC40B2F7:6:$/ }
   end
 end
 
