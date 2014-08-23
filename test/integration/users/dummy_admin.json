@@ -1,0 +1,8 @@
+{
+    "name": "dummy_admin",
+    "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA3PMzHovWlrtlJ30nYRrP\no/dbYjU/1VosRzOw5nfOoB+8XhSG9Xloe7KMdKybS9gk71tlLadx7rL7j/SOlyun\nPIM2TdzqaswoEbFX+P7plmZY4nJFEAnlJSQqw/mLVbMhI6HTU8OI9oiuZ5E6dZbJ\n+GlJ/2JEhxpJWQDYj/HtNtNU6OuobzLDOGYj4ovAYRi57tyVPr+jifnTXTmiO2Lw\n2j/uK1Xk59Y+LZ9re5OZoFErwRYB7Tjy99j3A8WPF93CnkY/q6ywnmAQhXGxIrah\nBCWsl8oBLnX1Bw2PpDoWqfO4ZIwoMqgKbmgW4ztaQ8IGRDkgc5r54IpTYg5bVSLI\newIDAQAB\n-----END PUBLIC KEY-----",
+    "validator": false,
+    "admin": true,
+    "json_class": "Chef::ApiClient",
+    "chef_type": "client"
+}
