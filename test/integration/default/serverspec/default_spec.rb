@@ -57,7 +57,7 @@ describe 'Key Contents LWRP - Seymour - Secret Key - Non-default Keyring' do
   end
 end
 
-describe 'Key Contents LWRP - John - Normal secret key + external publci key' do
+describe 'Key Contents LWRP - John - Normal secret key + external public key' do
   describe command('sudo -u john -i gpg2 --export-ownertrust') do
     it { should return_stdout /.*C26E1EFE:6:$/ }
   end
@@ -70,5 +70,11 @@ describe 'Key Contents LWRP - John - Normal secret key + external publci key' do
     it {
       should return_stdout /.*pub   4096R\/B22D2CD5.*/
     }
+  end
+end
+
+describe 'Key Contents LWRP - Walt - Chef vault provided key' do
+  describe command('sudo -u walt -i gpg2 --list-secret-keys') do
+    it { should return_stdout /.*sec   2048R\/C26E1EFE.*/ }
   end
 end
