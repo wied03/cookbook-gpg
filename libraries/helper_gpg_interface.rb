@@ -2,11 +2,11 @@ module BswTech
   module Gpg
     class GpgInterface
       # Use :default if
-      def initialize(suppress_trustdb_check)
+      def initialize(suppress_trustdb_check, command_runner=nil)
         @suppress_trustdb_check = suppress_trustdb_check
         @parser = BswTech::Gpg::GpgParser.new
         @keyring_specifier = BswTech::Gpg::KeyringSpecifier.new
-        @command_runner = BswTech::CommandRunner.new
+        @command_runner = command_runner || BswTech::CommandRunner.new
       end
 
       # type is :secret_key or :public_key

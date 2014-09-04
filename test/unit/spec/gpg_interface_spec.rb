@@ -267,4 +267,23 @@ describe BswTech::Gpg::GpgInterface do
     # assert
     expect(@gpg_command_executed).to eq 'gpg2 --no-default-keyring --secret-keyring stuff.gpg --delete-secret-and-public-key --batch --yes fp'
   end
+
+  it 'lets me provide a custom command runner' do
+    # arrange
+    runner = double()
+    @gpg_interface = BswTech::Gpg::GpgInterface.new suppress_trustdb_check=false, runner
+    key_header = BswTech::Gpg::KeyHeader.new('fp', 'username', 'id', :secret_key)
+    got_call = false
+    allow(runner).to receive(:run) do |cmd, user|
+      got_call = true if cmd == 'gpg2 --no-default-keyring --secret-keyring stuff.gpg --delete-secret-and-public-key --batch --yes fp' && user == 'some_user'
+    end
+
+    # act
+    @gpg_interface.delete_keys username='some_user',
+                               key_header_to_delete=key_header,
+                               keyring='stuff.gpg'
+
+    # assert
+    expect(got_call).to eq(true)
+  end
 end
