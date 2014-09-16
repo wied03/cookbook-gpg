@@ -51,7 +51,7 @@ module BswTech
           else
             raise "Should not get to this point, no case statement for record #{fields}"
         end
-        if ring_or_external == :external and [:secret_key, :public_key].include?(result[:type])
+        if ring_or_external == :external and [:secret_key, :public_key].include?(result[:type]) and fields.length == 10
           result[:uid] = parse_user_id fields[9]
         end
         result
@@ -67,18 +67,18 @@ module BswTech
           first_key = records.find { |r| [:public_key, :secret_key].include?(r[:type]) }
           raise "Unable to find public or secret key in records #{records}" unless first_key
           records.delete first_key
-          # When looking at an external key, username is in the same record as the key ID
-          username = ring_or_external == :ring ?
-              records.find { |r| r[:type] == :user_id } :
-              {:id => first_key[:uid]}
-          raise "Unable to find username in records #{records}" unless username
-          if ring_or_external == :ring
+          # When looking at an external key, username can be in the same record as the key ID
+          username = records.find { |r| r[:type] == :user_id }
+          if username
             records.delete username
+          else
+            username = {:id => first_key[:uid]}
           end
+          raise "Unable to find username in records #{records}" unless username
           results << Gpg::KeyHeader.new(fingerprint=fingerprint[:contents],
-                                         username=username[:id],
-                                         id=first_key[:id],
-                                         type=first_key[:type])
+                                        username=username[:id],
+                                        id=first_key[:id],
+                                        type=first_key[:type])
         end
         results
       end

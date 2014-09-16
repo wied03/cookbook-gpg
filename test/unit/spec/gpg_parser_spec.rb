@@ -172,13 +172,34 @@ ssb::2048:1:05D96AC415DB901E:1408259046::::
     key.type.should == :secret_key
   end
 
+  it 'parses a new header OK' do
+    # arrange
+    gpg_output = <<-EOF
+pub:-:4096:1:561F9B9CAC40B2F7:1372608732:::-:
+fpr:::::::::16378A33A6EF16762922526E561F9B9CAC40B2F7:
+uid:::::::::Phusion Automated Software Signing (Used by automated tools to sign software packages) <auto-software-signing@phusion.nl>:
+sub:-:4096:1:CF693C004DB76CB6:1372608732::::
+    EOF
+
+    # act
+    result = BswTech::Gpg::GpgParser.new.parse_output_external gpg_output
+
+    # assert
+    result.should have(1).items
+    key = result[0]
+    key.fingerprint.should == '16378A33A6EF16762922526E561F9B9CAC40B2F7'
+    key.username.should == 'Phusion Automated Software Signing (Used by automated tools to sign software packages) <auto-software-signing@phusion.nl>'
+    key.id.should == 'AC40B2F7'
+    key.type.should == :public_key
+  end
+
   it 'parses 1 public external key OK' do
     # arrange
     gpg_output = <<-EOF
 pub:-:2048:1:4463F8F9CA62B81E:1408259046:1471331046::-:pkg_key dev <dev@aptly.bswtechconsulting.com>:
 fpr:::::::::A6BB3E7C28480ADBC59864CF4463F8F9CA62B81E:
 sub:-:2048:1:05D96AC415DB901E:1408259046:1471331046::: [expires: 2016-08-16]
-EOF
+    EOF
 
     # act
     result = BswTech::Gpg::GpgParser.new.parse_output_external gpg_output
