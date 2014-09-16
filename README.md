@@ -71,6 +71,7 @@ end
 ```
 
 When adding a private key with a custom keyring, you must supply both a public and private key file.  Resource will complain if you do not. For example:
+
 ```ruby
 bsw_gpg_load_key_from_string 'a string key' do
     key_contents '-----BEGIN PGP PRIVATE KEY BLOCK----- (rest of key here'

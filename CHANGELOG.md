@@ -3,6 +3,14 @@ gpg CHANGELOG
 
 This file is used to list changes made in each version of the gpg cookbook.
 
+0.2.1
+-----
+- [Brady] - README syntax fix
+
+0.2.0
+-----
+- [Brady] - It doesn't make sense to allow importing private keys into non default keyrings without requiring a public keyring path as well, so modified the LWRPs to have 2 different keyring_file parameters (see README).
+
 0.1.6
 -----
 - [Brady] - Handle output that changed with gnupg 2.0.26
