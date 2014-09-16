@@ -56,7 +56,8 @@ describe 'gpg::lwrp:load_key_from_chef_vault' do
     # assert
     expect(@current_key_checks).to eq([{
                                            :username => 'root',
-                                           :keyring => :default,
+                                           :keyring_public => :default,
+                                           :keyring_secret => :default,
                                            :type => :secret_key
                                        }])
     expect(@base64_used).to eq('-----BEGIN PGP PRIVATE KEY BLOCK-----')
@@ -64,12 +65,14 @@ describe 'gpg::lwrp:load_key_from_chef_vault' do
     expect(@keys_deleted).to be_empty
     expect(@keys_imported).to eq [{
                                       :base64 => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
-                                      :keyring => :default,
+                                      :keyring_public => :default,
+                                      :keyring_secret => :default,
                                       :username => 'root'
                                   }]
     expect(@keytrusts_imported).to eq [{
                                            :base64 => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
-                                           :keyring => :default,
+                                           :keyring_public => :default,
+                                           :keyring_secret => :default,
                                            :username => 'root'
                                        }]
     resource = @chef_run.find_resource 'bsw_gpg_load_key_from_chef_vault', 'some key'

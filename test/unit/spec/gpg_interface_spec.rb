@@ -3,7 +3,6 @@ $: << File.join(File.dirname(__FILE__), '../../..')
 require 'libraries/helper_key_header'
 require 'libraries/helper_gpg_parser'
 require 'libraries/helper_gpg_interface'
-require 'libraries/helper_gpg_keyring_specifier'
 require 'libraries/helper_command_runner'
 
 describe BswTech::Gpg::GpgInterface do
@@ -117,11 +116,11 @@ describe BswTech::Gpg::GpgInterface do
     @gpg_mock_response = 'gpg output here'
 
     # act
-    result = @gpg_interface.get_current_installed_keys 'some_user', :secret_key, 'stuff.gpg'
+    result = @gpg_interface.get_current_installed_keys 'some_user', :secret_key, 'stuff_public.gpg', 'stuff_secret.gpg'
 
     # assert
     expect(result).to eq(key_headers)
-    expect(@gpg_command_executed).to eq('gpg2 --no-default-keyring --secret-keyring stuff.gpg --list-secret-keys --with-fingerprint --with-colons')
+    expect(@gpg_command_executed).to eq('gpg2 --no-default-keyring --keyring stuff_public.gpg --secret-keyring stuff_secret.gpg --list-secret-keys --with-fingerprint --with-colons')
   end
 
   it 'fetches current public keys from a non default ring' do
@@ -131,11 +130,11 @@ describe BswTech::Gpg::GpgInterface do
     @gpg_mock_response = 'gpg output here'
 
     # act
-    result = @gpg_interface.get_current_installed_keys 'some_user', :public_key, 'stuff.gpg'
+    result = @gpg_interface.get_current_installed_keys 'some_user', :public_key, 'stuff_public.gpg', 'stuff_secret.gpg'
 
     # assert
     expect(result).to eq(key_headers)
-    expect(@gpg_command_executed).to eq('gpg2 --no-default-keyring --keyring stuff.gpg --list-keys --with-fingerprint --with-colons')
+    expect(@gpg_command_executed).to eq('gpg2 --no-default-keyring --keyring stuff_public.gpg --secret-keyring stuff_secret.gpg --list-keys --with-fingerprint --with-colons')
   end
 
   it 'imports keys properly into a default keyring' do
@@ -176,10 +175,11 @@ describe BswTech::Gpg::GpgInterface do
     # act
     @gpg_interface.import_keys username='some_user',
                                base64=@dummy_secret_key_base64,
-                               keyring='stuff.gpg'
+                               public_keyring='stuff_public.gpg',
+                               secret_keyring='stuff_secret.gpg'
 
     # assert
-    expect(@gpg_command_executed).to eq 'gpg2 --no-default-keyring --secret-keyring stuff.gpg --import'
+    expect(@gpg_command_executed).to eq 'gpg2 --no-default-keyring --keyring stuff_public.gpg --secret-keyring stuff_secret.gpg --import'
     expect(@gpg_input_supplied).to eq @dummy_secret_key_base64
   end
 
@@ -206,10 +206,11 @@ describe BswTech::Gpg::GpgInterface do
     # act
     @gpg_interface.import_trust username='some_user',
                                 base64=@dummy_secret_key_base64,
-                                keyring='stuff.gpg'
+                                public_keyring='stuff_public.gpg',
+                                secret_keyring='stuff_secret.gpg'
 
     # assert
-    expect(@gpg_command_executed).to eq 'gpg2 --no-default-keyring --secret-keyring stuff.gpg --import-ownertrust'
+    expect(@gpg_command_executed).to eq 'gpg2 --no-default-keyring --keyring stuff_public.gpg --secret-keyring stuff_secret.gpg --import-ownertrust'
     expect(@gpg_input_supplied).to eq "fp:6:\n"
   end
 
@@ -223,10 +224,11 @@ describe BswTech::Gpg::GpgInterface do
     # act
     @gpg_interface.import_trust username='some_user',
                                 base64=@dummy_secret_key_base64,
-                                keyring='stuff.gpg'
+                                public_keyring='stuff_public.gpg',
+                                keyring='stuff_secret.gpg'
 
     # assert
-    expect(@gpg_command_executed).to eq 'gpg2 --no-auto-check-trustdb --no-default-keyring --secret-keyring stuff.gpg --import-ownertrust'
+    expect(@gpg_command_executed).to eq 'gpg2 --no-auto-check-trustdb --no-default-keyring --keyring stuff_public.gpg --secret-keyring stuff_secret.gpg --import-ownertrust'
     expect(@gpg_input_supplied).to eq "fp:6:\n"
   end
 
@@ -262,10 +264,11 @@ describe BswTech::Gpg::GpgInterface do
     # act
     @gpg_interface.delete_keys username='some_user',
                                key_header_to_delete=key_header,
-                               keyring='stuff.gpg'
+                               public_keyring='stuff_public.gpg',
+                               secret_keyring='stuff_secret.gpg'
 
     # assert
-    expect(@gpg_command_executed).to eq 'gpg2 --no-default-keyring --secret-keyring stuff.gpg --delete-secret-and-public-key --batch --yes fp'
+    expect(@gpg_command_executed).to eq 'gpg2 --no-default-keyring --keyring stuff_public.gpg --secret-keyring stuff_secret.gpg --delete-secret-and-public-key --batch --yes fp'
   end
 
   it 'lets me provide a custom command runner' do
@@ -275,13 +278,14 @@ describe BswTech::Gpg::GpgInterface do
     key_header = BswTech::Gpg::KeyHeader.new('fp', 'username', 'id', :secret_key)
     got_call = false
     allow(runner).to receive(:run) do |cmd, user|
-      got_call = true if cmd == 'gpg2 --no-default-keyring --secret-keyring stuff.gpg --delete-secret-and-public-key --batch --yes fp' && user == 'some_user'
+      got_call = true if cmd == 'gpg2 --no-default-keyring --keyring stuff_public.gpg --secret-keyring stuff_secret.gpg --delete-secret-and-public-key --batch --yes fp' && user == 'some_user'
     end
 
     # act
     @gpg_interface.delete_keys username='some_user',
                                key_header_to_delete=key_header,
-                               keyring='stuff.gpg'
+                               keyring_public='stuff_public.gpg',
+                               keyring_secret='stuff_secret.gpg'
 
     # assert
     expect(got_call).to eq(true)

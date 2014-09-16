@@ -5,14 +5,13 @@ module BswTech
       def initialize(suppress_trustdb_check, command_runner=nil)
         @suppress_trustdb_check = suppress_trustdb_check
         @parser = BswTech::Gpg::GpgParser.new
-        @keyring_specifier = BswTech::Gpg::KeyringSpecifier.new
         @command_runner = command_runner || BswTech::CommandRunner.new
       end
 
       # type is :secret_key or :public_key
-      def get_current_installed_keys(username, type, keyring=:default)
+      def get_current_installed_keys(username, type, public_keyring=:default, secret_keyring=:default)
         list_param = type == :secret_key ? '--list-secret-keys' : '--list-keys'
-        command = get_gpg_cmd type, keyring
+        command = get_gpg_cmd public_keyring, secret_keyring
         raw_output = @command_runner.run command="#{command} #{list_param} --with-fingerprint --with-colons",
                                          as_user=username
         @parser.parse_output_ring raw_output
@@ -26,25 +25,24 @@ module BswTech
         result.first
       end
 
-      def import_trust(username, base64, keyring=:default)
+      def import_trust(username, base64, public_keyring=:default, secret_keyring=:default)
         key = get_key_header base64
-        gpg_command = get_gpg_cmd key.type, keyring
+        gpg_command = get_gpg_cmd public_keyring, secret_keyring
         @command_runner.run command="#{gpg_command} --import-ownertrust",
                             as_user=username,
                             input="#{key.fingerprint}:6:\n"
       end
 
-      def delete_keys(username, key_header_to_delete, keyring=:default)
+      def delete_keys(username, key_header_to_delete, public_keyring=:default, secret_keyring=:default)
         type = key_header_to_delete.type
         delete_param = type == :public_key ? '--delete-key' : '--delete-secret-and-public-key'
-        gpg_command = get_gpg_cmd type, keyring
+        gpg_command = get_gpg_cmd public_keyring, secret_keyring
         @command_runner.run command="#{gpg_command} #{delete_param} --batch --yes #{key_header_to_delete.fingerprint}",
                             as_user=username
       end
 
-      def import_keys(username, base64, keyring=:default)
-        key = get_key_header base64
-        gpg_cmd = get_gpg_cmd(key.type, keyring)
+      def import_keys(username, base64, public_keyring=:default, secret_keyring=:default)
+        gpg_cmd = get_gpg_cmd public_keyring, secret_keyring
         @command_runner.run command="#{gpg_cmd} --import",
                             as_user=username,
                             input=base64
@@ -52,15 +50,27 @@ module BswTech
 
       private
 
-      def get_gpg_cmd(type, keyring)
-        keyring_param = get_keyring_param type, keyring
+      def get_gpg_cmd(public_keyring, secret_keyring)
+        keyring_params = get_keyring_params public_keyring, secret_keyring
         trust_suppress = @suppress_trustdb_check ? ' --no-auto-check-trustdb' : ''
         # When not using the default keyring, gpg2 will complain about not being able to find a public key that we trust
-        "gpg2#{trust_suppress}#{keyring_param}".strip
+        "gpg2#{trust_suppress}#{keyring_params}".strip
       end
 
-      def get_keyring_param(type, keyring)
-        keyring == :default ? ' ' : @keyring_specifier.get_custom_keyring(type, keyring)
+      def get_keyring_params(public_keyring, secret_keyring)
+        ring_params = []
+        if public_keyring != :default
+          ring_params << get_custom_keyring(:public_key, public_keyring)
+        end
+        if secret_keyring != :default
+          ring_params << get_custom_keyring(:secret_key, secret_keyring)
+        end
+        ring_params.empty? ? ' ' : " --no-default-keyring #{ring_params.join ' '}"
+      end
+
+      def get_custom_keyring(type, keyring)
+        param = type == :secret_key ? '--secret-keyring' : '--keyring'
+        "#{param} #{keyring}"
       end
 
       def validate_base64(base64)

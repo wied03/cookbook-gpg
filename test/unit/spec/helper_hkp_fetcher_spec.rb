@@ -6,7 +6,6 @@ require 'libraries/helper_gpg_interface'
 require 'libraries/helper_command_runner'
 require 'libraries/helper_key_header'
 require 'libraries/helper_gpg_parser'
-require 'libraries/helper_gpg_keyring_specifier'
 
 describe BswTech::Hkp::KeyFetcher do
   before(:each) do
