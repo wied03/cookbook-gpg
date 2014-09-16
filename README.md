@@ -66,7 +66,17 @@ bsw_gpg_load_key_from_key_server 'some key' do
   key_server 'keyserver.ubuntu.com'
   key_id '561F9B9CAC40B2F7'
   for_user 'root'
-  keyring_file 'stuff_secret.gpg'
+  keyring_file_public 'stuff_public.gpg'  
+end
+```
+
+When adding a private key with a custom keyring, you must supply both a public and private key file.  Resource will complain if you do not. For example:
+```ruby
+bsw_gpg_load_key_from_string 'a string key' do
+    key_contents '-----BEGIN PGP PRIVATE KEY BLOCK----- (rest of key here'
+    for_user 'joe' # The user you want to install the key to
+    keyring_file_public 'stuff_public.gpg'
+    keyring_file_secret 'stuff_secret.gpg'
 end
 ```
 
@@ -80,7 +90,7 @@ bsw_gpg_load_key_from_key_server 'some key' do
   key_server 'keyserver.ubuntu.com'
   key_id '561F9B9CAC40B2F7'
   for_user 'root'
-  keyring_file 'stuff.gpg'
+  keyring_file_public 'stuff.gpg'
   disable_trust_db_check false
 end
 # TrustDB check would normally be enabled
@@ -111,7 +121,8 @@ bsw_gpg_load_key_from_chef_vault 'a chef vault key' do
   item 'the_item'
   json_key 'json_key' # Expects to find a hash key with the base64 key contents in it            
   for_user 'joe' # The user you want to install the key to
-  keyring_file 'stuff_secret.gpg'
+  keyring_file_secret 'stuff_secret.gpg'
+  keyring_file_public 'stuff_public.gpg'
   force_import_owner_trust true # Will force an import that otherwise would NOT have occurred  
 end
 ```

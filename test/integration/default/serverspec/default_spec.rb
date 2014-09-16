@@ -31,8 +31,12 @@ describe 'Key Contents LWRP - Joe - Public Key - Non-default Keyring' do
 end
 
 describe 'Key Contents LWRP - Joe - Secret Key - Non-default Keyring' do
-  describe command('sudo -u joe -i gpg2 --list-secret-keys --no-default-keyring --secret-keyring stuff_secret.gpg') do
+  describe command('sudo -u joe -i gpg2 --list-secret-keys --no-default-keyring --secret-keyring stuff_secret.gpg --keyring stuff_public.gpg') do
     it { should return_stdout /.*sec   2048R\/C26E1EFE.*/ }
+  end
+
+  describe command('sudo -u joe -i gpg2 --list-keys --no-default-keyring --secret-keyring stuff_secret.gpg --keyring stuff_public.gpg') do
+    it { should return_stdout /.*pub   2048R\/C26E1EFE.*/ }
   end
 end
 
@@ -47,8 +51,12 @@ describe 'Key Contents LWRP - Bob - Key server' do
 end
 
 describe 'Key Contents LWRP - Seymour - Secret Key - Non-default Keyring' do
-  describe command('sudo -u seymour -i gpg2 --list-secret-keys --no-default-keyring --secret-keyring stuff_secret.gpg') do
+  describe command('sudo -u seymour -i gpg2 --list-secret-keys --no-default-keyring --secret-keyring stuff_secret.gpg --keyring stuff_public.gpg') do
     it { should return_stdout /.*sec   2048R\/C26E1EFE.*/ }
+  end
+
+  describe command('sudo -u seymour -i gpg2 --list-keys --no-default-keyring --secret-keyring stuff_secret.gpg --keyring stuff_public.gpg') do
+    it { should return_stdout /.*pub   2048R\/C26E1EFE.*/ }
   end
 
   # we forced a trust here

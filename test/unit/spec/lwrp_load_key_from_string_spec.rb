@@ -53,7 +53,8 @@ describe 'gpg::lwrp:load_key_from_string' do
     # assert
     expect(@current_key_checks).to eq([{
                                            :username => 'root',
-                                           :keyring => :default,
+                                           :keyring_public => :default,
+                                           :keyring_secret => :default,
                                            :type => :secret_key
                                        }])
     expect(@base64_used).to eq('-----BEGIN PGP PRIVATE KEY BLOCK-----')
@@ -61,12 +62,14 @@ describe 'gpg::lwrp:load_key_from_string' do
     expect(@keys_deleted).to be_empty
     expect(@keys_imported).to eq [{
                                       :base64 => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
-                                      :keyring => :default,
+                                      :keyring_public => :default,
+                                      :keyring_secret => :default,
                                       :username => 'root'
                                   }]
     expect(@keytrusts_imported).to eq [{
                                            :base64 => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
-                                           :keyring => :default,
+                                           :keyring_public => :default,
+                                           :keyring_secret => :default,
                                            :username => 'root'
                                        }]
     resource = @chef_run.find_resource 'bsw_gpg_load_key_from_string', 'some key'
@@ -90,14 +93,16 @@ describe 'gpg::lwrp:load_key_from_string' do
     # assert
     expect(@current_key_checks).to eq([{
                                            :username => 'root',
-                                           :keyring => :default,
+                                           :keyring_public => :default,
+                                           :keyring_secret => :default,
                                            :type => :public_key
                                        }])
     expect(@base64_used).to eq('-----BEGIN PGP PUBLIC KEY BLOCK-----')
     expect(@keys_deleted).to be_empty
     expect(@keys_imported).to eq [{
                                       :base64 => '-----BEGIN PGP PUBLIC KEY BLOCK-----',
-                                      :keyring => :default,
+                                      :keyring_public => :default,
+                                      :keyring_secret => :default,
                                       :username => 'root'
                                   }]
     expect(@keytrusts_imported).to eq []
@@ -123,7 +128,8 @@ describe 'gpg::lwrp:load_key_from_string' do
     # assert
     expect(@current_key_checks).to eq([{
                                            :username => 'root',
-                                           :keyring => :default,
+                                           :keyring_public => :default,
+                                           :keyring_secret => :default,
                                            :type => :public_key
                                        }])
     expect(@base64_used).to eq('-----BEGIN PGP PUBLIC KEY BLOCK-----')
@@ -153,7 +159,8 @@ describe 'gpg::lwrp:load_key_from_string' do
     # assert
     expect(@current_key_checks).to eq([{
                                            :username => 'root',
-                                           :keyring => :default,
+                                           :keyring_public => :default,
+                                           :keyring_secret => :default,
                                            :type => :secret_key
                                        }])
     expect(@base64_used).to eq('-----BEGIN PGP PRIVATE KEY BLOCK-----')
@@ -187,14 +194,16 @@ describe 'gpg::lwrp:load_key_from_string' do
     # assert
     expect(@current_key_checks).to eq([{
                                            :username => 'root',
-                                           :keyring => :default,
+                                           :keyring_public => :default,
+                                           :keyring_secret => :default,
                                            :type => :public_key
                                        }])
     expect(@base64_used).to eq('-----BEGIN PGP PUBLIC KEY BLOCK-----')
     expect(@keys_deleted).to be_empty
     expect(@keys_imported).to eq [{
                                       :base64 => '-----BEGIN PGP PUBLIC KEY BLOCK-----',
-                                      :keyring => :default,
+                                      :keyring_public => :default,
+                                      :keyring_secret => :default,
                                       :username => 'root'
                                   }]
     expect(@keytrusts_imported).to eq []
@@ -225,19 +234,22 @@ describe 'gpg::lwrp:load_key_from_string' do
     # assert
     expect(@current_key_checks).to eq([{
                                            :username => 'root',
-                                           :keyring => :default,
+                                           :keyring_public => :default,
+                                           :keyring_secret => :default,
                                            :type => :secret_key
                                        }])
     expect(@base64_used).to eq('-----BEGIN PGP PRIVATE KEY BLOCK-----')
     expect(@keys_deleted).to be_empty
     expect(@keys_imported).to eq [{
                                       :base64 => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
-                                      :keyring => :default,
+                                      :keyring_public => :default,
+                                      :keyring_secret => :default,
                                       :username => 'root'
                                   }]
     expect(@keytrusts_imported).to eq [{
                                            :base64 => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
-                                           :keyring => :default,
+                                           :keyring_public => :default,
+                                           :keyring_secret => :default,
                                            :username => 'root'
                                        }]
     resource = @chef_run.find_resource 'bsw_gpg_load_key_from_string', 'some key'
@@ -261,19 +273,22 @@ describe 'gpg::lwrp:load_key_from_string' do
     # assert
     expect(@current_key_checks).to eq([{
                                            :username => 'someone_else',
-                                           :keyring => :default,
+                                           :keyring_public => :default,
+                                           :keyring_secret => :default,
                                            :type => :secret_key
                                        }])
     expect(@base64_used).to eq('-----BEGIN PGP PRIVATE KEY BLOCK-----')
     expect(@keys_deleted).to be_empty
     expect(@keys_imported).to eq [{
                                       :base64 => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
-                                      :keyring => :default,
+                                      :keyring_public => :default,
+                                      :keyring_secret => :default,
                                       :username => 'someone_else'
                                   }]
     expect(@keytrusts_imported).to eq [{
                                            :base64 => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
-                                           :keyring => :default,
+                                           :keyring_public => :default,
+                                           :keyring_secret => :default,
                                            :username => 'someone_else'
                                        }]
   end
@@ -300,18 +315,21 @@ describe 'gpg::lwrp:load_key_from_string' do
     # assert
     expect(@current_key_checks).to eq([{
                                            :username => 'root',
-                                           :keyring => :default,
+                                           :keyring_public => :default,
+                                           :keyring_secret => :default,
                                            :type => :public_key
                                        }])
     expect(@base64_used).to eq('-----BEGIN PGP PUBLIC KEY BLOCK-----')
     expect(@keys_deleted).to eq [{
                                      :username => 'root',
-                                     :keyring => :default,
+                                     :keyring_public => :default,
+                                     :keyring_secret => :default,
                                      :key_header => current
                                  }]
     expect(@keys_imported).to eq [{
                                       :base64 => '-----BEGIN PGP PUBLIC KEY BLOCK-----',
-                                      :keyring => :default,
+                                      :keyring_public => :default,
+                                      :keyring_secret => :default,
                                       :username => 'root'
                                   }]
     expect(@keytrusts_imported).to eq []
@@ -341,23 +359,27 @@ describe 'gpg::lwrp:load_key_from_string' do
     # assert
     expect(@current_key_checks).to eq([{
                                            :username => 'root',
-                                           :keyring => :default,
+                                           :keyring_public => :default,
+                                           :keyring_secret => :default,
                                            :type => :secret_key
                                        }])
     expect(@base64_used).to eq('-----BEGIN PGP PRIVATE KEY BLOCK-----')
     expect(@keys_deleted).to eq [{
                                      :username => 'root',
-                                     :keyring => :default,
+                                     :keyring_public => :default,
+                                     :keyring_secret => :default,
                                      :key_header => current
                                  }]
     expect(@keys_imported).to eq [{
                                       :base64 => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
-                                      :keyring => :default,
+                                      :keyring_public => :default,
+                                      :keyring_secret => :default,
                                       :username => 'root'
                                   }]
     expect(@keytrusts_imported).to eq [{
                                            :base64 => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
-                                           :keyring => :default,
+                                           :keyring_public => :default,
+                                           :keyring_secret => :default,
                                            :username => 'root'
                                        }]
     resource = @chef_run.find_resource 'bsw_gpg_load_key_from_string', 'some key'
@@ -375,27 +397,69 @@ describe 'gpg::lwrp:load_key_from_string' do
         bsw_gpg_load_key_from_string 'some key' do
           key_contents '-----BEGIN PGP PUBLIC KEY BLOCK-----'
           for_user 'root'
-          keyring_file 'something.gpg'
+          keyring_file_public 'something.gpg'
         end
     EOF
 
     # assert
     expect(@current_key_checks).to eq([{
                                            :username => 'root',
-                                           :keyring => 'something.gpg',
+                                           :keyring_public => 'something.gpg',
+                                           :keyring_secret => :default,
                                            :type => :public_key
                                        }])
     expect(@base64_used).to eq('-----BEGIN PGP PUBLIC KEY BLOCK-----')
     expect(@keys_deleted).to be_empty
     expect(@keys_imported).to eq [{
                                       :base64 => '-----BEGIN PGP PUBLIC KEY BLOCK-----',
-                                      :keyring => 'something.gpg',
+                                      :keyring_public => 'something.gpg',
+                                      :keyring_secret => :default,
                                       :username => 'root'
                                   }]
     # Trustdb doesn't like trusting keys in non default keyrings
     expect(@keytrusts_imported).to eq []
     resource = @chef_run.find_resource 'bsw_gpg_load_key_from_string', 'some key'
     expect(resource.updated_by_last_action?).to eq(true)
+  end
+
+  it 'complains if a custom keyring is used with a secret key but a public keyring file is not specified' do
+    # arrange
+    stub_gpg_interface(draft=BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+                                                         username='the username',
+                                                         id='the id',
+                                                         type=:secret_key))
+    action = lambda {
+      temp_lwrp_recipe <<-EOF
+      bsw_gpg_load_key_from_string 'some key' do
+        key_contents '-----BEGIN PGP PRIVATE KEY BLOCK-----'
+        for_user 'root'
+        keyring_file_secret 'something.gpg'
+      end
+      EOF
+    }
+
+    # act + assert
+    expect(action).to raise_exception "bsw_gpg_load_key_from_string[some key] (lwrp_gen::default line 1) had an error: RuntimeError: keyring_file_secret is a custom file (something.gpg) but no keyring_file_public was specified.  It's not a good idea to import a private key without a public keyring to also import the associated public key!"
+  end
+
+  it 'complains if a custom keyring is used with a secret key but a secret keyring file is not specified' do
+    # arrange
+    stub_gpg_interface(draft=BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+                                                         username='the username',
+                                                         id='the id',
+                                                         type=:secret_key))
+    action = lambda {
+      temp_lwrp_recipe <<-EOF
+        bsw_gpg_load_key_from_string 'some key' do
+          key_contents '-----BEGIN PGP PRIVATE KEY BLOCK-----'
+          for_user 'root'
+          keyring_file_public 'something.gpg'
+        end
+      EOF
+    }
+
+    # act + assert
+    expect(action).to raise_exception 'bsw_gpg_load_key_from_string[some key] (lwrp_gen::default line 1) had an error: RuntimeError: keyring_file_public is a custom file (something.gpg) but no keyring_file_secret was specified.  Cannot import a private key without a secret keyring to put it in!'
   end
 
   it 'allows specifying a custom keyring file with a secret key' do
@@ -409,21 +473,24 @@ describe 'gpg::lwrp:load_key_from_string' do
         bsw_gpg_load_key_from_string 'some key' do
           key_contents '-----BEGIN PGP PRIVATE KEY BLOCK-----'
           for_user 'root'
-          keyring_file 'something.gpg'
+          keyring_file_secret 'something.gpg'
+          keyring_file_public 'something_pub.gpg'
         end
     EOF
 
     # assert
     expect(@current_key_checks).to eq([{
                                            :username => 'root',
-                                           :keyring => 'something.gpg',
+                                           :keyring_secret => 'something.gpg',
+                                           :keyring_public => 'something_pub.gpg',
                                            :type => :secret_key
                                        }])
     expect(@base64_used).to eq('-----BEGIN PGP PRIVATE KEY BLOCK-----')
     expect(@keys_deleted).to be_empty
     expect(@keys_imported).to eq [{
                                       :base64 => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
-                                      :keyring => 'something.gpg',
+                                      :keyring_secret => 'something.gpg',
+                                      :keyring_public => 'something_pub.gpg',
                                       :username => 'root'
                                   }]
     # Trustdb doesn't like trusting keys in non default keyrings
@@ -448,25 +515,28 @@ describe 'gpg::lwrp:load_key_from_string' do
       bsw_gpg_load_key_from_string 'some key' do
         key_contents '-----BEGIN PGP PUBLIC KEY BLOCK-----'
         for_user 'root'
-        keyring_file 'something.gpg'
+        keyring_file_public 'something.gpg'
       end
     EOF
 
     # assert
     expect(@current_key_checks).to eq([{
                                            :username => 'root',
-                                           :keyring => 'something.gpg',
+                                           :keyring_public => 'something.gpg',
+                                           :keyring_secret => :default,
                                            :type => :public_key
                                        }])
     expect(@base64_used).to eq('-----BEGIN PGP PUBLIC KEY BLOCK-----')
     expect(@keys_deleted).to eq [{
                                      :username => 'root',
-                                     :keyring => 'something.gpg',
+                                     :keyring_public => 'something.gpg',
+                                     :keyring_secret => :default,
                                      :key_header => current
                                  }]
     expect(@keys_imported).to eq [{
                                       :base64 => '-----BEGIN PGP PUBLIC KEY BLOCK-----',
-                                      :keyring => 'something.gpg',
+                                      :keyring_public => 'something.gpg',
+                                      :keyring_secret => :default,
                                       :username => 'root'
                                   }]
     # Trustdb doesn't like trusting keys in non default keyrings
@@ -491,25 +561,29 @@ describe 'gpg::lwrp:load_key_from_string' do
       bsw_gpg_load_key_from_string 'some key' do
         key_contents '-----BEGIN PGP PRIVATE KEY BLOCK-----'
         for_user 'root'
-        keyring_file 'something.gpg'
+        keyring_file_secret 'something.gpg'
+        keyring_file_public 'something_pub.gpg'
       end
     EOF
 
     # assert
     expect(@current_key_checks).to eq([{
                                            :username => 'root',
-                                           :keyring => 'something.gpg',
+                                           :keyring_secret => 'something.gpg',
+                                           :keyring_public => 'something_pub.gpg',
                                            :type => :secret_key
                                        }])
     expect(@base64_used).to eq('-----BEGIN PGP PRIVATE KEY BLOCK-----')
     expect(@keys_deleted).to eq [{
                                      :username => 'root',
-                                     :keyring => 'something.gpg',
+                                     :keyring_secret => 'something.gpg',
+                                     :keyring_public => 'something_pub.gpg',
                                      :key_header => current
                                  }]
     expect(@keys_imported).to eq [{
                                       :base64 => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
-                                      :keyring => 'something.gpg',
+                                      :keyring_secret => 'something.gpg',
+                                      :keyring_public => 'something_pub.gpg',
                                       :username => 'root'
                                   }]
     # Trustdb doesn't like trusting keys in non default keyrings
@@ -572,7 +646,8 @@ describe 'gpg::lwrp:load_key_from_string' do
         bsw_gpg_load_key_from_string 'some key' do
           key_contents '-----BEGIN PGP PRIVATE KEY BLOCK-----'
           for_user 'root'
-          keyring_file 'foo.gpg'
+          keyring_file_secret 'foo.gpg'
+          keyring_file_public 'foo_pub.gpg'
           disable_trust_db_check false
         end
     EOF
@@ -602,7 +677,8 @@ describe 'gpg::lwrp:load_key_from_string' do
     # assert
     expect(@current_key_checks).to eq([{
                                            :username => 'root',
-                                           :keyring => :default,
+                                           :keyring_public => :default,
+                                           :keyring_secret => :default,
                                            :type => :secret_key
                                        }])
     expect(@base64_used).to eq('-----BEGIN PGP PRIVATE KEY BLOCK-----')
@@ -610,7 +686,8 @@ describe 'gpg::lwrp:load_key_from_string' do
     expect(@keys_deleted).to be_empty
     expect(@keys_imported).to eq [{
                                       :base64 => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
-                                      :keyring => :default,
+                                      :keyring_public => :default,
+                                      :keyring_secret => :default,
                                       :username => 'root'
                                   }]
     expect(@keytrusts_imported).to eq []
@@ -629,7 +706,8 @@ describe 'gpg::lwrp:load_key_from_string' do
         bsw_gpg_load_key_from_string 'some key' do
           key_contents '-----BEGIN PGP PRIVATE KEY BLOCK-----'
           for_user 'root'
-          keyring_file 'something.gpg'
+          keyring_file_secret 'something.gpg'
+          keyring_file_public 'something_pub.gpg'
           force_import_owner_trust true
         end
     EOF
@@ -637,19 +715,22 @@ describe 'gpg::lwrp:load_key_from_string' do
     # assert
     expect(@current_key_checks).to eq([{
                                            :username => 'root',
-                                           :keyring => 'something.gpg',
+                                           :keyring_secret => 'something.gpg',
+                                           :keyring_public => 'something_pub.gpg',
                                            :type => :secret_key
                                        }])
     expect(@base64_used).to eq('-----BEGIN PGP PRIVATE KEY BLOCK-----')
     expect(@keys_deleted).to be_empty
     expect(@keys_imported).to eq [{
                                       :base64 => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
-                                      :keyring => 'something.gpg',
+                                      :keyring_secret => 'something.gpg',
+                                      :keyring_public => 'something_pub.gpg',
                                       :username => 'root'
                                   }]
     expect(@keytrusts_imported).to eq [{
                                            :base64 => '-----BEGIN PGP PRIVATE KEY BLOCK-----',
-                                           :keyring => 'something.gpg',
+                                           :keyring_secret => 'something.gpg',
+                                           :keyring_public => 'something_pub.gpg',
                                            :username => 'root'
                                        }]
     resource = @chef_run.find_resource 'bsw_gpg_load_key_from_string', 'some key'

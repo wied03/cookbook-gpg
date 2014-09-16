@@ -69,11 +69,12 @@ module BswTech
       end
 
       def stub_gpg_interface(current=[], draft)
-        allow(@gpg_interface).to receive(:get_current_installed_keys) do |username, type, keyring|
+        allow(@gpg_interface).to receive(:get_current_installed_keys) do |username, type, public_keyring, secret_keyring|
           @current_key_checks << {
               :type => type,
               :username => username,
-              :keyring => keyring
+              :keyring_public => public_keyring,
+              :keyring_secret => secret_keyring
           }
           current
         end
@@ -81,26 +82,29 @@ module BswTech
           @base64_used = base64
           draft
         end
-        allow(@gpg_interface).to receive(:import_trust) do |username, base64, keyring|
+        allow(@gpg_interface).to receive(:import_trust) do |username, base64, public_keyring, secret_keyring|
           @keytrusts_imported << {
               :base64 => base64,
-              :keyring => keyring,
+              :keyring_public => public_keyring,
+              :keyring_secret => secret_keyring,
               :username => username
           }
           draft
         end
-        allow(@gpg_interface).to receive(:import_keys) do |username, base64, keyring|
+        allow(@gpg_interface).to receive(:import_keys) do |username, base64, public_keyring, secret_keyring|
           @keys_imported << {
               :base64 => base64,
-              :keyring => keyring,
+              :keyring_public => public_keyring,
+              :keyring_secret => secret_keyring,
               :username => username
           }
           draft
         end
-        allow(@gpg_interface).to receive(:delete_keys) do |username, key_header_to_delete, keyring|
+        allow(@gpg_interface).to receive(:delete_keys) do |username, key_header_to_delete, public_keyring, secret_keyring|
           @keys_deleted << {
               :username => username,
-              :keyring => keyring,
+              :keyring_public => public_keyring,
+              :keyring_secret => secret_keyring,
               :key_header => key_header_to_delete
           }
         end

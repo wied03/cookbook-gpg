@@ -62,14 +62,16 @@ describe 'gpg::lwrp:load_key_from_key_server' do
     expect(@base64_used).to eq("-----BEGIN PGP PUBLIC KEY BLOCK-----\nfoobar")
     expect(@current_key_checks).to eq([{
                                            :username => 'root',
-                                           :keyring => :default,
+                                           :keyring_public => :default,
+                                           :keyring_secret => :default,
                                            :type => :public_key
                                        }])
     # noinspection RubyResolve
     expect(@keys_deleted).to be_empty
     expect(@keys_imported).to eq [{
                                       :base64 => "-----BEGIN PGP PUBLIC KEY BLOCK-----\nfoobar",
-                                      :keyring => :default,
+                                      :keyring_public => :default,
+                                      :keyring_secret => :default,
                                       :username => 'root'
                                   }]
     expect(@keytrusts_imported).to eq []
@@ -101,7 +103,8 @@ describe 'gpg::lwrp:load_key_from_key_server' do
     expect(@base64_used).to eq("-----BEGIN PGP PUBLIC KEY BLOCK-----\nfoobar")
     expect(@current_key_checks).to eq([{
                                            :username => 'root',
-                                           :keyring => :default,
+                                           :keyring_public => :default,
+                                           :keyring_secret => :default,
                                            :type => :public_key
                                        }])
     expect(@keys_deleted).to be_empty
