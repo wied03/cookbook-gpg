@@ -13,6 +13,11 @@ with 'root' do |username|
   end
 end
 
+file '/tmp/joe_key_ran' do
+  action :nothing
+  content 'we got it!'
+end
+
 with 'joe' do |username|
   user_with_home(self, username)
 
@@ -20,6 +25,7 @@ with 'joe' do |username|
     for_user username
     key_contents public_key_bits
     keyring_file_public 'stuff.gpg'
+    notifies :create, 'file[/tmp/joe_key_ran]', :delayed
   end
 
   bsw_gpg_load_key_from_string 'keyring test with secret key' do
