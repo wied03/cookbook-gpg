@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-gem 'berkshelf', '> 3'
+gem 'berkshelf', '3.1.5'
 
 # Uncomment these lines if you want to live on the Edge:
 #
