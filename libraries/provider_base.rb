@@ -122,7 +122,7 @@ class Chef
       end
 
       def remove_existing_keys(draft_header, current_header)
-        key_to_delete = current_header.find { |x| x.usernames == draft_header.usernames }
+        key_to_delete = current_header.find { |x| ([*draft_header.usernames] & [*x.usernames]).any? }
         if key_to_delete
           Chef::Log.info "Deleting existing key for #{key_to_delete.usernames} from public keyring #{keyring_file_public}/secret keyring #{keyring_file_secret} in order to replace it"
           @gpg_interface.delete_keys username=for_user,

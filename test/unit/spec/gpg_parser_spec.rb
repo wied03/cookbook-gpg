@@ -4,6 +4,17 @@ require 'libraries/helper_key_header'
 require 'libraries/helper_gpg_parser'
 
 describe BswTech::Gpg::GpgParser do
+  it 'parses no keys properly' do
+    # arrange
+    gpg_output = ''
+
+    # act
+    result = BswTech::Gpg::GpgParser.new.parse_output_ring gpg_output
+
+    # assert
+    expect(result).to eq []
+  end
+
   it 'parses a 1 ring secret key' do
     # arrange
     gpg_output = <<-EOF
