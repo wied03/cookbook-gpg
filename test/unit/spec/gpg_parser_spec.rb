@@ -225,7 +225,7 @@ sub:-:2048:1:05D96AC415DB901E:1408259046:1471331046::: [expires: 2016-08-16]
     action = lambda { BswTech::Gpg::GpgParser.new.parse_output_external gpg_output }
 
     # assert
-    expect(action).to raise_exception 'Unable to find public or secret key in records []'
+    expect(action).to raise_exception /Unable to find public or secret key in records.*/
   end
 
   it 'parses a public key with multiple usernames' do
@@ -246,8 +246,8 @@ sub:u:2048:1:1BA7B926508C1AF7:1411066748:1474138748:::::e:
     result.should have(1).items
     key = result[0]
     expect(key.fingerprint).to eq '36F99E5103F443E6C3B0C7FA2DBE22CE37B8619D'
-    expect(key.usernames).to eq ['John Doe <john2@doe.com>',
-                                 'John Doe <john@doe.com>']
+    expect(key.usernames.sort).to eq ['John Doe <john2@doe2.com>',
+                                      'John Doe <john@doe.com>']
     expect(key.id).to eq '37B8619D'
     expect(key.type).to eq :public_key
   end
@@ -269,8 +269,8 @@ ssb::2048:1:1BA7B926508C1AF7:1411066748::::::::::
     result.should have(1).items
     key = result[0]
     expect(key.fingerprint).to eq '36F99E5103F443E6C3B0C7FA2DBE22CE37B8619D'
-    expect(key.usernames).to eq ['John Doe <john2@doe.com>',
-                                 'John Doe <john@doe.com>']
+    expect(key.usernames.sort).to eq ['John Doe <john2@doe2.com>',
+                                      'John Doe <john@doe.com>']
     expect(key.id).to eq '37B8619D'
     expect(key.type).to eq :secret_key
   end

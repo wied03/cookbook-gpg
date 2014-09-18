@@ -57,28 +57,36 @@ module BswTech
         result
       end
 
+      def get_key_header_from_records(records)
+        fingerprint = records.find { |r| r[:type] == :fingerprint }
+        raise "Unable to find fingerprint in records #{records}" unless fingerprint
+        first_key = records.find { |r| [:public_key, :secret_key].include?(r[:type]) }
+        raise "Unable to find public or secret key in records #{records}" unless first_key
+        # When looking at an external key, username can be in the same record as the key ID
+        username_records = records.select { |r| r[:type] == :user_id }
+        username_records = [{:id => first_key[:uid]}] if username_records.empty?
+        raise "Unable to find username in records #{records}" unless username_records.any?
+        usernames = username_records.map { |r| r[:id] }
+        user_single_mult = usernames.length == 1 ? usernames[0] : usernames
+        Gpg::KeyHeader.new(fingerprint=fingerprint[:contents],
+                           usernames=user_single_mult,
+                           id=first_key[:id],
+                           type=first_key[:type])
+      end
+
       def parse(ring_or_external, gpg_output)
         records = gpg_output.split("\n").map { |raw| parse_record ring_or_external, raw }.compact
         results = []
-        while records.any?
-          fingerprint = records.find { |r| r[:type] == :fingerprint }
-          raise "Unable to find fingerprint in records #{records}" unless fingerprint
-          records.delete fingerprint
-          first_key = records.find { |r| [:public_key, :secret_key].include?(r[:type]) }
-          raise "Unable to find public or secret key in records #{records}" unless first_key
-          records.delete first_key
-          # When looking at an external key, username can be in the same record as the key ID
-          username = records.find { |r| r[:type] == :user_id }
-          if username
-            records.delete username
-          else
-            username = {:id => first_key[:uid]}
+        records_for_current_key = []
+        for record in records
+          if [:public_key, :secret_key].include?(record[:type]) && records_for_current_key.any?
+            results << get_key_header_from_records(records_for_current_key)
+            records_for_current_key.clear
           end
-          raise "Unable to find username in records #{records}" unless username
-          results << Gpg::KeyHeader.new(fingerprint=fingerprint[:contents],
-                                        username=username[:id],
-                                        id=first_key[:id],
-                                        type=first_key[:type])
+          records_for_current_key << record
+        end
+        if records_for_current_key.any?
+          results << get_key_header_from_records(records_for_current_key)
         end
         results
       end
