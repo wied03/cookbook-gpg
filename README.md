@@ -2,6 +2,8 @@ gpg Cookbook
 ============
 LWRP focused cookbook that helps load public or private keys into your GPG keyring from either a string, a cookbook file, or a Chef vault item.  The cookbook will check to see if the key fingerprint and user name already exist in the key ring before converging.  The resources automatically choose secret vs. public keyrings based on the header of the base64 key contents.
 
+If a key with the same username/email address combo already exists in the keyring, it will be deleted first and replaced with the new key.  If either the old or new key has multiple uids, a match on ANY of the email addresses between old and new keys is considered to be a match and will cause the old key to be deleted and replaced.
+
 
 Requirements
 ------------
