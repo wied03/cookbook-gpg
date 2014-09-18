@@ -64,7 +64,9 @@ module BswTech
         raise "Unable to find public or secret key in records #{records}" unless first_key
         # When looking at an external key, username can be in the same record as the key ID
         username_records = records.select { |r| r[:type] == :user_id }
-        username_records = [{:id => first_key[:uid]}] if username_records.empty?
+        if first_key.include? :uid
+          username_records << {:id => first_key[:uid]}
+        end
         raise "Unable to find username in records #{records}" unless username_records.any?
         usernames = username_records.map { |r| r[:id] }
         user_single_mult = usernames.length == 1 ? usernames[0] : usernames

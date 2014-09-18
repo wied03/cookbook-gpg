@@ -239,7 +239,7 @@ sub:-:2048:1:05D96AC415DB901E:1408259046:1471331046::: [expires: 2016-08-16]
     expect(action).to raise_exception /Unable to find public or secret key in records.*/
   end
 
-  it 'parses a public key with multiple usernames' do
+  it 'parses an external public key with multiple usernames' do
     # arrange
     gpg_output = <<-EOF
 tru::1:1411066794:1474138748:3:1:5
@@ -263,7 +263,7 @@ sub:u:2048:1:1BA7B926508C1AF7:1411066748:1474138748:::::e:
     expect(key.type).to eq :public_key
   end
 
-  it 'parses a secret key with multiple usernames' do
+  it 'parses an external secret key with multiple usernames' do
     # arrange
     gpg_output = <<-EOF
 sec::2048:1:2DBE22CE37B8619D:1411066748:1474138748:::::::::
@@ -283,6 +283,97 @@ ssb::2048:1:1BA7B926508C1AF7:1411066748::::::::::
     expect(key.usernames.sort).to eq ['John Doe <john2@doe2.com>',
                                       'John Doe <john@doe.com>']
     expect(key.id).to eq '37B8619D'
+    expect(key.type).to eq :secret_key
+  end
+
+  it 'parses an external public key with multiple usernames in gpg 2.0.22 format' do
+    # arrange
+    gpg_output = <<-EOF
+pub:-:2048:1:E2165290F291A664:1411070340:1474142340::-:John Doe <john@doe.com>:
+fpr:::::::::85F100D09E9DFF4353DF461CE2165290F291A664:
+uid:::::::::John Doe <john2@doe2.com>:
+sub:-:2048:1:9CB992C6F1BDD31A:1411070340:1474142340::: [expires: 2016-09-17]
+    EOF
+
+    # act
+    result = BswTech::Gpg::GpgParser.new.parse_output_external gpg_output
+
+    # assert
+    result.should have(1).items
+    key = result[0]
+    expect(key.fingerprint).to eq '85F100D09E9DFF4353DF461CE2165290F291A664'
+    expect([*key.usernames].sort).to eq ['John Doe <john2@doe2.com>',
+                                         'John Doe <john@doe.com>']
+    expect(key.id).to eq 'F291A664'
+    expect(key.type).to eq :public_key
+  end
+
+  it 'parses an external secret key with multiple usernames in gpg 2.0.22 format' do
+    # arrange
+    gpg_output = <<-EOF
+sec::2048:1:9C77A0112E6F7924:1411073355:1474145355:::John Doe <john@doe.com>:
+fpr:::::::::38F6F36CBF7D1D54CADE2E2C9C77A0112E6F7924:
+uid:::::::::John Doe <john2@doe2.com>:
+ssb::2048:1:FE70C2755D731658:1411073355::::
+    EOF
+
+    # act
+    result = BswTech::Gpg::GpgParser.new.parse_output_external gpg_output
+
+    # assert
+    result.should have(1).items
+    key = result[0]
+    expect(key.fingerprint).to eq '38F6F36CBF7D1D54CADE2E2C9C77A0112E6F7924'
+    expect([*key.usernames].sort).to eq ['John Doe <john2@doe2.com>',
+                                         'John Doe <john@doe.com>']
+    expect(key.id).to eq '2E6F7924'
+    expect(key.type).to eq :secret_key
+  end
+
+  it 'parses a ring public key with multiple usernames' do
+    # arrange
+    gpg_output = <<-EOF
+tru::1:1411072882:0:3:1:5
+pub:-:2048:1:E2165290F291A664:1411070340:1474142340::-:::scESC:
+fpr:::::::::85F100D09E9DFF4353DF461CE2165290F291A664:
+uid:-::::1411070365::B32D279CBB4B9ABF26BE2CC705D8780D572FC13E::John Doe <john2@doe2.com>:
+uid:-::::1411070340::22DFC50E5CED717233C90C47C03E044A7EA483DC::John Doe <john@doe.com>:
+sub:-:2048:1:9CB992C6F1BDD31A:1411070340:1474142340:::::e:
+    EOF
+
+    # act
+    result = BswTech::Gpg::GpgParser.new.parse_output_ring gpg_output
+
+    # assert
+    result.should have(1).items
+    key = result[0]
+    expect(key.fingerprint).to eq '85F100D09E9DFF4353DF461CE2165290F291A664'
+    expect([*key.usernames].sort).to eq ['John Doe <john2@doe2.com>',
+                                         'John Doe <john@doe.com>']
+    expect(key.id).to eq 'F291A664'
+    expect(key.type).to eq :public_key
+  end
+
+  it 'parses a ring secret key with multiple usernames' do
+    # arrange
+    gpg_output = <<-EOF
+sec::2048:1:9C77A0112E6F7924:1411073355:1474145355:::::::::
+fpr:::::::::38F6F36CBF7D1D54CADE2E2C9C77A0112E6F7924:
+uid:::::::22DFC50E5CED717233C90C47C03E044A7EA483DC::John Doe <john@doe.com>:
+uid:::::::B32D279CBB4B9ABF26BE2CC705D8780D572FC13E::John Doe <john2@doe2.com>:
+ssb::2048:1:FE70C2755D731658:1411073355::::::::::
+    EOF
+
+    # act
+    result = BswTech::Gpg::GpgParser.new.parse_output_ring gpg_output
+
+    # assert
+    result.should have(1).items
+    key = result[0]
+    expect(key.fingerprint).to eq '38F6F36CBF7D1D54CADE2E2C9C77A0112E6F7924'
+    expect([*key.usernames].sort).to eq ['John Doe <john2@doe2.com>',
+                                         'John Doe <john@doe.com>']
+    expect(key.id).to eq '2E6F7924'
     expect(key.type).to eq :secret_key
   end
 end
