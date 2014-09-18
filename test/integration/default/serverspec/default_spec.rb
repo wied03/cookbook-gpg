@@ -90,3 +90,11 @@ describe 'Key Contents LWRP - Walt - Chef vault provided key' do
     it { should return_stdout /.*sec   2048R\/C26E1EFE.*/ }
   end
 end
+
+describe 'Key Contents LWRP - Jason - 2 user IDs' do
+  describe command('sudo -u jason -i gpg2 --list-keys') do
+    it { should return_stdout /.*pub   2048R\/F291A664.*/ }
+    it { should return_stdout /.*uid\s+John Doe <john2@doe2.com>.*/ }
+    it { should return_stdout /.*uid\s+John Doe <john@doe.com>.*/ }
+  end
+end

@@ -77,6 +77,7 @@ describe 'gpg::lwrp:load_key_from_string' do
   end
 
   it 'works properly when importing a public key that is not already there' do
+    # arrange
     stub_gpg_interface(draft=BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
                                                          username='the username',
                                                          id='the id',
@@ -110,9 +111,76 @@ describe 'gpg::lwrp:load_key_from_string' do
     expect(resource.updated_by_last_action?).to eq(true)
   end
 
+  it 'works properly when importing a key with multiple usernames that is not already there' do
+    # arrange
+    stub_gpg_interface(draft=BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+                                                         usernames=['the username 1', 'the username 2'],
+                                                         id='the id',
+                                                         type=:public_key))
+
+    # act
+    temp_lwrp_recipe <<-EOF
+      bsw_gpg_load_key_from_string 'some key' do
+        key_contents '-----BEGIN PGP PUBLIC KEY BLOCK-----'
+        for_user 'root'
+      end
+    EOF
+
+    # assert
+    expect(@current_key_checks).to eq([{
+                                           :username => 'root',
+                                           :keyring_public => :default,
+                                           :keyring_secret => :default,
+                                           :type => :public_key
+                                       }])
+    expect(@base64_used).to eq('-----BEGIN PGP PUBLIC KEY BLOCK-----')
+    expect(@keys_deleted).to be_empty
+    expect(@keys_imported).to eq [{
+                                      :base64 => '-----BEGIN PGP PUBLIC KEY BLOCK-----',
+                                      :keyring_public => :default,
+                                      :keyring_secret => :default,
+                                      :username => 'root'
+                                  }]
+    expect(@keytrusts_imported).to eq []
+    resource = @chef_run.find_resource 'bsw_gpg_load_key_from_string', 'some key'
+    expect(resource.updated_by_last_action?).to eq(true)
+  end
+
   it 'does not do anything if the correct public key is already there' do
+    # arrange
     key = BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
                                       username='the username',
+                                      id='the id',
+                                      type=:public_key)
+    stub_gpg_interface(current=[key], draft=key)
+
+    # act
+    temp_lwrp_recipe <<-EOF
+      bsw_gpg_load_key_from_string 'some key' do
+        key_contents '-----BEGIN PGP PUBLIC KEY BLOCK-----'
+        for_user 'root'
+      end
+    EOF
+
+    # assert
+    expect(@current_key_checks).to eq([{
+                                           :username => 'root',
+                                           :keyring_public => :default,
+                                           :keyring_secret => :default,
+                                           :type => :public_key
+                                       }])
+    expect(@base64_used).to eq('-----BEGIN PGP PUBLIC KEY BLOCK-----')
+    expect(@keys_deleted).to be_empty
+    expect(@keys_imported).to be_empty
+    expect(@keytrusts_imported).to be_empty
+    resource = @chef_run.find_resource 'bsw_gpg_load_key_from_string', 'some key'
+    expect(resource.updated_by_last_action?).to eq(false)
+  end
+
+  it 'does not do anything if a key with multiple usernames is already there' do
+    # arrange
+    key = BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+                                      usernames=['the username 1', 'the username 2'],
                                       id='the id',
                                       type=:public_key)
     stub_gpg_interface(current=[key], draft=key)
@@ -310,6 +378,138 @@ describe 'gpg::lwrp:load_key_from_string' do
         key_contents '-----BEGIN PGP PUBLIC KEY BLOCK-----'
         for_user 'root'
       end
+    EOF
+
+    # assert
+    expect(@current_key_checks).to eq([{
+                                           :username => 'root',
+                                           :keyring_public => :default,
+                                           :keyring_secret => :default,
+                                           :type => :public_key
+                                       }])
+    expect(@base64_used).to eq('-----BEGIN PGP PUBLIC KEY BLOCK-----')
+    expect(@keys_deleted).to eq [{
+                                     :username => 'root',
+                                     :keyring_public => :default,
+                                     :keyring_secret => :default,
+                                     :key_header => current
+                                 }]
+    expect(@keys_imported).to eq [{
+                                      :base64 => '-----BEGIN PGP PUBLIC KEY BLOCK-----',
+                                      :keyring_public => :default,
+                                      :keyring_secret => :default,
+                                      :username => 'root'
+                                  }]
+    expect(@keytrusts_imported).to eq []
+    resource = @chef_run.find_resource 'bsw_gpg_load_key_from_string', 'some key'
+    expect(resource.updated_by_last_action?).to eq(true)
+  end
+
+  it 'overwrites an existing key with a single username and multiple usernames on the new key' do
+    # arrange
+    current = BswTech::Gpg::KeyHeader.new(fingerprint='6D1CF3288469F260C2119B9F76C95D74390AA6C9',
+                                          username='the username',
+                                          id='the id',
+                                          type=:public_key)
+    stub_gpg_interface(current=[current],
+                       draft=BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+                                                         usernames=['the username', 'the username 2'],
+                                                         id='the id',
+                                                         type=:public_key))
+    # act
+    temp_lwrp_recipe <<-EOF
+        bsw_gpg_load_key_from_string 'some key' do
+          key_contents '-----BEGIN PGP PUBLIC KEY BLOCK-----'
+          for_user 'root'
+        end
+    EOF
+
+    # assert
+    expect(@current_key_checks).to eq([{
+                                           :username => 'root',
+                                           :keyring_public => :default,
+                                           :keyring_secret => :default,
+                                           :type => :public_key
+                                       }])
+    expect(@base64_used).to eq('-----BEGIN PGP PUBLIC KEY BLOCK-----')
+    expect(@keys_deleted).to eq [{
+                                     :username => 'root',
+                                     :keyring_public => :default,
+                                     :keyring_secret => :default,
+                                     :key_header => current
+                                 }]
+    expect(@keys_imported).to eq [{
+                                      :base64 => '-----BEGIN PGP PUBLIC KEY BLOCK-----',
+                                      :keyring_public => :default,
+                                      :keyring_secret => :default,
+                                      :username => 'root'
+                                  }]
+    expect(@keytrusts_imported).to eq []
+    resource = @chef_run.find_resource 'bsw_gpg_load_key_from_string', 'some key'
+    expect(resource.updated_by_last_action?).to eq(true)
+  end
+
+  it 'overwrites an existing key with multiple usernames and multiple usernames on the new key' do
+    # arrange
+    current = BswTech::Gpg::KeyHeader.new(fingerprint='6D1CF3288469F260C2119B9F76C95D74390AA6C9',
+                                          usernames=['the username 2', 'the username 3'],
+                                          id='the id',
+                                          type=:public_key)
+    stub_gpg_interface(current=[current],
+                       draft=BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+                                                         usernames=['the username', 'the username 2'],
+                                                         id='the id',
+                                                         type=:public_key))
+    # act
+    temp_lwrp_recipe <<-EOF
+            bsw_gpg_load_key_from_string 'some key' do
+              key_contents '-----BEGIN PGP PUBLIC KEY BLOCK-----'
+              for_user 'root'
+            end
+    EOF
+
+    # assert
+    expect(@current_key_checks).to eq([{
+                                           :username => 'root',
+                                           :keyring_public => :default,
+                                           :keyring_secret => :default,
+                                           :type => :public_key
+                                       }])
+    expect(@base64_used).to eq('-----BEGIN PGP PUBLIC KEY BLOCK-----')
+    expect(@keys_deleted).to eq [{
+                                     :username => 'root',
+                                     :keyring_public => :default,
+                                     :keyring_secret => :default,
+                                     :key_header => current
+                                 }]
+    expect(@keys_imported).to eq [{
+                                      :base64 => '-----BEGIN PGP PUBLIC KEY BLOCK-----',
+                                      :keyring_public => :default,
+                                      :keyring_secret => :default,
+                                      :username => 'root'
+                                  }]
+    expect(@keytrusts_imported).to eq []
+    resource = @chef_run.find_resource 'bsw_gpg_load_key_from_string', 'some key'
+    expect(resource.updated_by_last_action?).to eq(true)
+  end
+
+  it 'overwrites an existing key with multiple usernames and a single username on the new key' do
+    # arrange
+    current = BswTech::Gpg::KeyHeader.new(fingerprint='6D1CF3288469F260C2119B9F76C95D74390AA6C9',
+                                          usernames=['the username 2', 'the username 3'],
+                                          id='the id',
+                                          type=:public_key)
+    stub_gpg_interface(current=[current],
+                       draft=BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
+                                                         usernames='the username 2',
+                                                         id='the id',
+                                                         type=:public_key))
+    # act
+    temp_lwrp_recipe <<-EOF
+                bsw_gpg_load_key_from_string 'some key' do
+                  key_contents '-----BEGIN PGP PUBLIC KEY BLOCK-----'
+                  for_user 'root'
+                end
     EOF
 
     # assert

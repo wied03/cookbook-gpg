@@ -62,3 +62,14 @@ with 'john' do |username|
     keyring_file_public 'stuff.gpg'
   end
 end
+
+multiple_bits = cookbook_file_contents 'multiple_id.pem', 'fake'
+
+with 'jason' do |username|
+  user_with_home(self, username)
+
+  bsw_gpg_load_key_from_string 'jason key with multiple usernames' do
+    for_user username
+    key_contents multiple_bits
+  end
+end
