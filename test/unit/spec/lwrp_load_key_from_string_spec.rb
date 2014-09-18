@@ -110,6 +110,15 @@ describe 'gpg::lwrp:load_key_from_string' do
     expect(resource.updated_by_last_action?).to eq(true)
   end
 
+  it 'works properly when importing a key with multiple usernames that is not already there' do
+    # arrange
+
+    # act
+
+    # assert
+    pending 'Write this test'
+  end
+
   it 'does not do anything if the correct public key is already there' do
     key = BswTech::Gpg::KeyHeader.new(fingerprint='4D1CF3288469F260C2119B9F76C95D74390AA6C9',
                                       username='the username',
@@ -138,6 +147,15 @@ describe 'gpg::lwrp:load_key_from_string' do
     expect(@keytrusts_imported).to be_empty
     resource = @chef_run.find_resource 'bsw_gpg_load_key_from_string', 'some key'
     expect(resource.updated_by_last_action?).to eq(false)
+  end
+
+  it 'does not do anything if a key with multiple usernames is already there' do
+    # arrange
+
+    # act
+
+    # assert
+    pending 'Write this test'
   end
 
   it 'does not do anything if the correct secret key is already there' do
@@ -335,6 +353,33 @@ describe 'gpg::lwrp:load_key_from_string' do
     expect(@keytrusts_imported).to eq []
     resource = @chef_run.find_resource 'bsw_gpg_load_key_from_string', 'some key'
     expect(resource.updated_by_last_action?).to eq(true)
+  end
+
+  it 'overwrites an existing key with a single username and multiple usernames on the new key' do
+    # arrange
+
+    # act
+
+    # assert
+    pending 'Write this test'
+  end
+
+  it 'overwrites an existing key with multiple usernames and multiple usernames on the new key' do
+    # arrange
+
+    # act
+
+    # assert
+    pending 'Write this test'
+  end
+
+  it 'overwrites an existing key with multiple usernames and a single username on the new key' do
+    # arrange
+
+    # act
+
+    # assert
+    pending 'Write this test'
   end
 
   it 'overwrites the existing secret key for the user if the fingerprint has changed' do

@@ -20,14 +20,14 @@ class Chef
         validate_keyrings_compatible_with_type draft_key_header.type
         current = get_current_key_details draft_key_header.type
         if does_key_needs_to_be_installed draft_key_header, current
-          converge_by "Importing key #{draft_key_header.username} into public keyring #{keyring_file_public}/secret keyring #{keyring_file_secret} for user #{for_user}" do
+          converge_by "Importing key #{draft_key_header.usernames} into public keyring #{keyring_file_public}/secret keyring #{keyring_file_secret} for user #{for_user}" do
             remove_existing_keys draft_key_header, current
             import_keys key_contents
             if should_import_trust draft_key_header
-              Chef::Log.info "Importing trust for key #{draft_key_header.username}"
+              Chef::Log.info "Importing trust for key #{draft_key_header.usernames}"
               import_trust key_contents
             else
-              Chef::Log.info "Skipping trust import for key #{draft_key_header.username}"
+              Chef::Log.info "Skipping trust import for key #{draft_key_header.usernames}"
             end
           end
         end
@@ -122,9 +122,9 @@ class Chef
       end
 
       def remove_existing_keys(draft_header, current_header)
-        key_to_delete = current_header.find { |x| x.username == draft_header.username }
+        key_to_delete = current_header.find { |x| x.usernames == draft_header.usernames }
         if key_to_delete
-          Chef::Log.info "Deleting existing key for #{key_to_delete.username} from public keyring #{keyring_file_public}/secret keyring #{keyring_file_secret} in order to replace it"
+          Chef::Log.info "Deleting existing key for #{key_to_delete.usernames} from public keyring #{keyring_file_public}/secret keyring #{keyring_file_secret} in order to replace it"
           @gpg_interface.delete_keys username=for_user,
                                      key_header_to_delete=current_header,
                                      keyring_file_public,

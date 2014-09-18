@@ -25,7 +25,7 @@ describe BswTech::Hkp::KeyFetcher do
     interface = BswTech::Gpg::GpgInterface.new false
     actual = interface.get_key_header actual
     expect(actual.fingerprint).to eq(@expected_key.fingerprint)
-    expect(actual.username).to eq(@expected_key.username)
+    expect(actual.usernames).to eq(@expected_key.usernames)
     expect(actual.id).to eq(@expected_key.id)
     expect(actual.type).to eq(@expected_key.type)
   end
