@@ -7,3 +7,6 @@ description 'Installs/Configures gpg using an LWRP based approach'
 long_description IO.read(File.join(File.dirname(__FILE__), 'README.md'))
 version '0.2.2'
 supports 'ubuntu', '14.04'
+supports 'redhat'
+supports 'centos'
+supports 'scientific'
