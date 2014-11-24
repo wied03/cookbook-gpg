@@ -14,13 +14,13 @@ gem 'berkshelf', '3.1.5'
 #   gem "vagrant-omnibus", github: "schisamo/vagrant-omnibus"
 # end
 
-gem 'chef', '>= 11.8'
+gem 'chef', '11.16.4'
 gem 'rake', '>= 10.2'
 gem 'rubocop', '= 0.23'
 gem 'foodcritic', '>= 3.0'
 gem 'test-kitchen'
-gem 'chefspec', '>= 3.4'
-gem 'serverspec', '>= 1.6'
+gem 'chefspec', '4.1.1'
+gem 'serverspec', '2.3.1'
 gem 'guard', '>= 2.6'
 gem 'guard-rubocop', '>= 1.1'
 gem 'guard-foodcritic', '>= 1.0.2'

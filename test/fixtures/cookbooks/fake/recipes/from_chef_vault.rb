@@ -1,5 +1,8 @@
 private_key_bits = cookbook_file_contents 'joe_secret.pem', 'fake'
 
+node.default['build-essential']['compile_time'] = true
+include_recipe 'build-essential::default'
+
 # Need this to write to data bags, etc.
 chef_gem 'cheffish' do
   version '0.7.1'

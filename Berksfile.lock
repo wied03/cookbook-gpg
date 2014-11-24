@@ -1,0 +1,13 @@
+DEPENDENCIES
+  bsw_gpg
+    path: .
+    metadata: true
+  fake
+    path: test/fixtures/cookbooks/fake
+
+GRAPH
+  bsw_gpg (0.2.2)
+  build-essential (2.1.3)
+  fake (1.0.0)
+    bsw_gpg (>= 0.0.0)
+    build-essential (>= 0.0.0)
