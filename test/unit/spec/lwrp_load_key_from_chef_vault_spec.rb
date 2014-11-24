@@ -41,7 +41,7 @@ describe 'gpg::lwrp:load_key_from_chef_vault' do
                                                          id='the id',
                                                          type=:secret_key))
     stub_vault_entry = {'json_key' => '-----BEGIN PGP PRIVATE KEY BLOCK-----'}
-    ChefVault::Item.stub!(:load).with('thedatabag', 'the_item').and_return stub_vault_entry
+    allow(ChefVault::Item).to receive(:load).with('thedatabag', 'the_item').and_return stub_vault_entry
 
     # act
     temp_lwrp_recipe <<-EOF

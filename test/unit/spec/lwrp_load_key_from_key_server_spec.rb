@@ -18,7 +18,7 @@ describe 'gpg::lwrp:load_key_from_key_server' do
 
   def stub_hkp_retrieval(key_id, expected_key_server, key_contents)
     key_fetcher = double
-    BswTech::Hkp::KeyFetcher.stub(:new).and_return key_fetcher
+    allow(BswTech::Hkp::KeyFetcher).to receive(:new).and_return key_fetcher
     allow(key_fetcher).to receive(:fetch_key).with(expected_key_server, key_id).and_return key_contents
   end
 

@@ -26,7 +26,7 @@ task style: ['style:chef', 'style:ruby']
 require 'rspec/core/rake_task'
 desc 'Run ChefSpec unit tests'
 RSpec::Core::RakeTask.new(:spec) do |t, args|
-  t.rspec_opts = 'test/unit/spec'
+  t.pattern = 'test/unit/spec/**/*_spec.rb'
 end
 
 # The default rake task should just run it all

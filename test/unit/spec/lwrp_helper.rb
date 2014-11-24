@@ -1,4 +1,5 @@
 require 'chefspec'
+require 'rspec/collection_matchers'
 
 module BswTech
   module ChefSpec
@@ -20,7 +21,7 @@ module BswTech
           stub_resources
           @gpg_interface = double
           @trustdb_suppress = nil
-          BswTech::Gpg::GpgInterface.stub(:new) do |suppress_trust_db|
+          allow(BswTech::Gpg::GpgInterface).to receive(:new) do |suppress_trust_db|
             @trustdb_suppress = suppress_trust_db
             @gpg_interface
           end
@@ -46,7 +47,7 @@ module BswTech
         lwrps_full = [*lwrps_under_test].map do |lwrp|
           "#{cookbook_under_test}_#{lwrp}"
         end
-        @chef_run = ::ChefSpec::Runner.new(runner_options.merge(step_into: lwrps_full))
+        @chef_run = ::ChefSpec::SoloRunner.new(runner_options.merge(step_into: lwrps_full))
         @chef_run.converge("#{generated_cookbook_name}::default")
       end
 

@@ -8,7 +8,7 @@ require 'libraries/helper_command_runner'
 describe BswTech::Gpg::GpgInterface do
   before(:each) do
     @parser = double
-    BswTech::Gpg::GpgParser.stub(:new).and_return @parser
+    allow(BswTech::Gpg::GpgParser).to receive(:new).and_return @parser
     @gpg_command_executed = nil
     @gpg_mock_response = nil
     @gpg_input_supplied = nil
