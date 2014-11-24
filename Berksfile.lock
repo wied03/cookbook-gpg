@@ -11,3 +11,5 @@ GRAPH
   fake (1.0.0)
     bsw_gpg (>= 0.0.0)
     build-essential (>= 0.0.0)
+    selinux (= 0.8.0)
+  selinux (0.8.0)
