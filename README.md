@@ -8,7 +8,10 @@ If a key with the same username/email address combo already exists in the keyrin
 Requirements
 ------------
 
-Ubuntu 14.04
+- Ubuntu
+- CentOS
+- RHEL
+- Scientific Linux
 
 Attributes
 ----------

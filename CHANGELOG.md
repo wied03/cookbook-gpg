@@ -3,6 +3,11 @@ gpg CHANGELOG
 
 This file is used to list changes made in each version of the gpg cookbook.
 
+0.2.3
+-----
+- [Brady] - RSpec3 updates
+- [intoximeter] - ChefSpec matchers and updated metadata compatibility
+
 0.2.2
 -----
 - [Brady] - Handle multiple key UIDs (thanks to http://github.com/bkw for pointing this out)
