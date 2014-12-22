@@ -6,7 +6,7 @@ DEPENDENCIES
     path: test/fixtures/cookbooks/fake
 
 GRAPH
-  bsw_gpg (0.2.2)
+  bsw_gpg (0.2.3)
   build-essential (2.1.3)
   fake (1.0.0)
     bsw_gpg (>= 0.0.0)
