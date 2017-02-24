@@ -19,7 +19,7 @@ module BswTech
 
       def get_key_header(base64)
         validate_base64 base64
-        raw_output = @command_runner.run command='gpg2 --with-fingerprint --with-colons', as_user=:default, input=base64
+        raw_output = @command_runner.run command='gpg --batch --no-tty --with-fingerprint --with-colons', as_user=:default, input=base64
         result = @parser.parse_output_external raw_output
         raise "Multiple keys returned from a single base64 import should not happen!  Keys returned: #{result}" if result.length > 1
         result.first
@@ -54,7 +54,7 @@ module BswTech
         keyring_params = get_keyring_params public_keyring, secret_keyring
         trust_suppress = @suppress_trustdb_check ? ' --no-auto-check-trustdb' : ''
         # When not using the default keyring, gpg2 will complain about not being able to find a public key that we trust
-        "gpg2#{trust_suppress}#{keyring_params}".strip
+        "gpg2 --batch --no-tty#{trust_suppress}#{keyring_params}".strip
       end
 
       def get_keyring_params(public_keyring, secret_keyring)

@@ -5,11 +5,12 @@ include_recipe 'build-essential::default'
 
 # Need this to write to data bags, etc.
 chef_gem 'cheffish' do
-  version '0.7.1'
+  version '5.0.0'
+  compile_time true
 end
 
 chef_gem 'chef-vault' do
-  version '2.2.1'
+  compile_time true
 end
 
 require 'cheffish'
