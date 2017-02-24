@@ -16,4 +16,5 @@ platforms:
 suites:
   - name: default
     run_list: recipe[fake::default]
+    data_bags_path: "test/fixtures/data_bags"
     attributes:

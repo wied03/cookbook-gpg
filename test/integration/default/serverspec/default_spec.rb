@@ -90,6 +90,18 @@ describe 'Key Contents LWRP - Walt - Chef vault provided key' do
   end
 end
 
+describe 'Key Contents LWRP - Den - Data bag provided key' do
+  describe command('sudo -u den -i gpg2 --batch --no-tty --list-keys --with-colons') do
+    its(:stdout) { should match /^pub:[^:]*:2048:1:E708B60D0514625A/ }
+  end
+end
+
+describe 'Key Contents LWRP - Edward - Encrypted data bag provided key' do
+  describe command('sudo -u edward -i gpg2 --batch --no-tty --list-secret-keys --with-colons') do
+    its(:stdout) { should match /^sec:[^:]*:2048:1:E708B60D0514625A/ }
+  end
+end
+
 describe 'Key Contents LWRP - Jason - 2 user IDs' do
   describe command('sudo -u jason -i gpg2 --batch --no-tty --list-keys --with-colons') do
     its(:stdout) { should match /^pub:[^:]*:2048:1:F6CB10D5990621B2/ }

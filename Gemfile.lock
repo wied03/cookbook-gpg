@@ -136,6 +136,11 @@ GEM
     json (2.0.3)
     kitchen-vagrant (1.0.2)
       test-kitchen (~> 1.4)
+    knife-solo (0.6.0)
+      chef (>= 10.20)
+      erubis (~> 2.7.0)
+      net-ssh (>= 2.7, < 4.0)
+    knife-solo_data_bag (2.1.0)
     libyajl2 (1.2.0)
     listen (3.1.5)
       rb-fsevent (~> 0.9, >= 0.9.4)
@@ -167,7 +172,7 @@ GEM
       net-ssh (>= 2.6.5)
     net-sftp (2.1.2)
       net-ssh (>= 2.6.5)
-    net-ssh (4.1.0)
+    net-ssh (3.2.0)
     net-ssh-gateway (1.3.0)
       net-ssh (>= 2.6.5)
     net-ssh-multi (1.2.1)
@@ -317,6 +322,8 @@ DEPENDENCIES
   guard-foodcritic (>= 1.0.2)
   guard-rubocop (>= 1.1)
   kitchen-vagrant
+  knife-solo
+  knife-solo_data_bag (>= 2.1.0)
   mixlib-shellout
   rake (>= 10.2)
   rspec-collection_matchers
