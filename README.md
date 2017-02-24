@@ -62,6 +62,29 @@ bsw_gpg_load_key_from_key_server 'some key' do
 end
 ```
 
+#### Install from a data bag
+
+```ruby
+bsw_gpg_load_key_from_data_bag 'some key' do
+  data_bag 'thedatabag'
+  item 'the_item'
+  json_key 'public_key' # Expects to find a hash key with the base64 key contents in it
+  for_user 'joe'
+end
+```
+
+#### Install from an encrypted data bag
+
+```ruby
+bsw_gpg_load_key_from_encrypted_data_bag 'some key' do
+  data_bag 'thedatabag'
+  item 'the_item'
+  secret 'secret`
+  json_key 'private_key' # Expects to find a hash key with the base64 key contents in it
+  for_user 'joe'
+end
+```
+
 #### Use a non-default keyring
 
 You can use this on any of the resources
