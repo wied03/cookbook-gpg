@@ -1,6 +1,7 @@
 class Chef
   class Provider
     class BswGpgLoadKeyFromString < BaseGpgProvider
+      provides :bsw_gpg_load_key_from_string
       def initialize(new_resource, run_context)
         super
       end
