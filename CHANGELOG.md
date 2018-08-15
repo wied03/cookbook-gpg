@@ -3,6 +3,10 @@ gpg CHANGELOG
 
 This file is used to list changes made in each version of the gpg cookbook.
 
+0.2.4
+-----
+- [krishper] - Chef 13 compatibility update.
+
 0.2.3
 -----
 - [Brady] - RSpec3 updates
